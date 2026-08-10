@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Budget &amp; Économies</title>
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --panel:#ffffff;
+    --text:#1f2937;
+    --muted:#6b7280;
+    --border:#c9cdd3;
+    --accent:#2563eb;
+    --ok:#1a7a1a;
+    --bad:#c22626;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+
+    --revenus-band:#ffd966;
+    --revenus-sub:#ffe599;
+    --revenus-cell:#fff2cc;
+
+    --fixes-band:#95b3d7;
+    --fixes-sub:#b8cce4;
+    --fixes-cell:#dbe5f1;
+
+    --variables-band:#b2a1c7;
+    --variables-sub:#ccc0d9;
+    --variables-cell:#e5dfec;
+
+    --economies-band:#6aa84f;
+    --economies-sub:#b6d7a8;
+    --economies-cell:#d9ead3;
+
+    --total-row:#ffff00;
+    --reste-row:#c2d69b;
+  }
+  * { box-sizing: border-box; }
+  body{
+    margin:0; font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  header{
+    background: var(--panel); border-bottom:1px solid var(--border);
+    padding: 14px 20px; display:flex; align-items:center; flex-wrap:wrap; gap:12px;
+    position: sticky; top:0; z-index: 20; box-shadow: var(--shadow);
+  }
+  header h1{ font-size:18px; margin:0; margin-right:auto; }
+  .year-nav{ display:flex; align-items:center; gap:8px; font-weight:700; }
+  .year-nav button{ padding:4px 10px; }
+  .btn{
+    background: var(--panel); border:1px solid var(--border); color: var(--text);
+    padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; font-family: inherit;
+  }
+  .btn:hover{ background:#eef0f3; }
+  .btn.primary{ background: var(--accent); color:#fff; border-color:var(--accent); }
+  .btn.primary:hover{ background:#1d4ed8; }
+  .btn.danger{ color: var(--bad); border-color:#eab8b8; }
+  .btn.danger:hover{ background:#fdf0f0; }
+  .btn.small{ padding:3px 8px; font-size:12px; }
+  .drive-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; background:#c9cdd3; margin-right:6px; vertical-align:middle; }
+  .drive-dot.is-connected{ background: var(--ok); }
+  .drive-dot.is-syncing{ background: var(--accent); animation: driveSyncPulse 1s ease-in-out infinite; }
+  .drive-dot.is-error{ background: var(--bad); }
+  @keyframes driveSyncPulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  nav.tabs{
+    display:flex; flex-wrap:wrap; gap:4px; padding:8px 20px; background: var(--panel);
+    border-bottom:1px solid var(--border); position:sticky; top:57px; z-index:19;
+  }
+  nav.tabs button{
+    border:none; background:transparent; padding:7px 12px; border-radius:4px; cursor:pointer;
+    font-size:13px; color: var(--muted); font-weight:700; font-family: inherit;
+  }
+  nav.tabs button:hover{ background:#eef0f3; }
+  nav.tabs button.active{ background: var(--accent); color:#fff; }
+  main{ padding:20px; max-width:1300px; margin:0 auto; }
+  .card{
+    background: var(--panel); border:1px solid var(--border); border-radius:6px;
+    padding:16px 18px; margin-bottom:18px; box-shadow: var(--shadow);
+  }
+  .card h2{ margin:0 0 12px 0; font-size:16px; }
+  .cat-header{
+    display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; margin-bottom:8px;
+  }
+  .dot{ width:12px; height:12px; border-radius:2px; display:inline-block; border:1px solid rgba(0,0,0,0.25); }
+  .dot.cat-Revenus{ background: var(--revenus-band); }
+  .dot.cat-Frais-fixes{ background: var(--fixes-band); }
+  .dot.cat-Frais-variables{ background: var(--variables-band); }
+  .dot.cat-Economies{ background: var(--economies-band); }
+
+  /* Spreadsheet-style grid */
+  table.grid{ width:100%; border-collapse: collapse; font-size:13px; }
+  table.grid th, table.grid td{
+    border:1px solid #b7bcc4; padding:4px 8px; text-align:left;
+  }
+  table.grid thead th{
+    background:#f0f2f5; color:var(--muted); font-weight:700; font-size:11.5px;
+    text-transform:uppercase; letter-spacing:0.02em; text-align:center;
+  }
+  .num{ text-align:right; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  .pos{ color: var(--ok); }
+  .neg{ color: var(--bad); }
+  tr.band td{ font-weight:700; font-size:13.5px; }
+  tr.group-total td{ font-weight:700; background: var(--total-row) !important; }
+  tr.cat-total td{ font-weight:700; background: var(--total-row) !important; font-size:14px; }
+  tr.orphan td{ color: var(--muted); font-style: italic; }
+  .reste-row td{ font-weight:700; background: var(--reste-row) !important; font-size:14px; }
+
+  input[type="number"], input[type="text"], input[type="date"], select{
+    padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px;
+    background:#fff; color: var(--text); width:100%; font-family: inherit;
+  }
+  .inline-input{ width:100px; border:1px solid #9aa0aa; }
+  .add-form{ display:grid; grid-template-columns: 130px 150px 130px 150px 110px 130px 110px 1fr 90px; gap:8px; align-items:end; margin-bottom:14px; }
+  .add-form label{ font-size:11px; color:var(--muted); display:block; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.02em; }
+  .sub-row{ display:flex; align-items:center; gap:8px; padding:5px 0; }
+  .sub-row .name{ flex:1; }
+  .sub-add-row{ display:flex; gap:8px; margin-top:8px; }
+  .sub-add-row input{ flex:1; }
+  .group-block{ border:1px solid var(--border); border-radius:6px; padding:10px 12px; margin-bottom:12px; }
+  .group-block-header{ display:flex; align-items:center; gap:8px; font-weight:700; margin-bottom:6px; }
+  .group-add-row{ display:flex; gap:8px; margin-top:10px; }
+  .group-add-row input{ flex:1; }
+  .summary-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin-top:14px; }
+  .summary-box{ background:#f7f8fa; border-radius:6px; padding:10px 12px; border:1px solid var(--border); }
+  .summary-box .label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.02em; }
+  .summary-box .value{ font-size:18px; font-weight:700; margin-top:2px; }
+  .muted{ color:var(--muted); font-size:12px; }
+  .table-wrap{ overflow-x:auto; }
+  .empty-hint{ color:var(--muted); font-size:13px; padding:10px 0; }
+  #file-input{ display:none; }
+  footer{ text-align:center; color:var(--muted); font-size:12px; padding:20px; }
+  @media (max-width: 800px){
+    .add-form{ grid-template-columns: 1fr 1fr; }
+  }
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<header>
+  <h1>💶 Suivi Budget &amp; Économies</h1>
+  <div class="year-nav">
+    <button class="btn" data-action="prev-year">◀</button>
+    <span id="year-label">----</span>
+    <button class="btn" data-action="next-year">▶</button>
+  </div>
+  <button class="btn" data-action="export">Exporter (JSON)</button>
+  <button class="btn" data-action="import">Importer (JSON)</button>
+  <input type="file" id="file-input" accept="application/json">
+  <button class="btn" id="btn-drive-connect" title="Connecter Google Drive">
+    <span id="drive-dot" class="drive-dot"></span><span id="drive-status-label">Drive : non connecté</span>
+  </button>
+  <button class="btn small" id="btn-drive-force">Forcer synchro</button>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+
+<main id="app"></main>
+
+<footer>Outil autonome — données stockées dans ce navigateur (localStorage). Pense à exporter régulièrement pour sauvegarder / transférer tes données.</footer>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — se branche sur la clé
+   localStorage existante de l'appli (STORAGE_KEY) au lieu de la
+   remplacer. Réutilisable : changer APP_NS pour un autre outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'budget';
+  var APP_STORAGE_KEY = 'axelBudgetTracker_v2'; /* doit rester identique à STORAGE_KEY du script principal */
+  var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
+  var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  function getLocalRecord() {
+    var value = null;
+    try { value = localStorage.getItem(APP_STORAGE_KEY); } catch (e) { value = null; }
+    if (!value) return null;
+    var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10);
+    if (!modified) modified = Date.now(); /* données pré-existantes jamais trackées : on les considère actuelles */
+    return { value: value, modified: modified };
+  }
+
+  function setLocalRecord(value, modified) {
+    try {
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connecté', connected: 'Drive : connecté', ok: 'Drive : synchronisé', sync: 'Drive : synchro…', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName() { return 'storage__' + APP_NS + '__state.json'; }
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  function driveCreateFile(record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(record) {
+    return driveFindFile().then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(record); });
+  }
+
+  async function syncFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var local = getLocalRecord();
+      var existing = await driveFindFile();
+      if (!existing) {
+        if (local) await drivePushRecord(local);
+        setSyncStatus('ok');
+        return;
+      }
+      var remote = await driveGetRecord(existing.id);
+      if (!remote) { setSyncStatus('ok'); return; }
+
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        setLocalRecord(remote.value, remote.modified);
+        setSyncStatus('ok');
+        if (changed) {
+          setSyncStatus('sync');
+          setTimeout(function () { location.reload(); }, 700);
+        }
+      } else if (local.modified > remote.modified) {
+        await driveUpdateFile(existing.id, local);
+        setSyncStatus('ok');
+      } else {
+        setSyncStatus('ok');
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord à Drive (bouton "Drive : non connecté").'); return; }
+      var local = getLocalRecord();
+      if (!local) { alert('Rien en local à synchroniser.'); return; }
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () {
+        setSyncStatus('ok');
+        alert('Synchro forcée : OK (' + Math.round(local.value.length / 1024) + ' Ko envoyés)');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        alert('Erreur : ' + e.message);
+      });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  /* Point d'accroche appelé par saveState() dans le script principal après
+     chaque sauvegarde réussie, pour pousser la nouvelle version vers Drive. */
+  window.__driveNotifySave = function () {
+    var modified = Date.now();
+    localStorage.setItem(MODIFIED_KEY, String(modified));
+    if (hasValidToken()) {
+      var local = getLocalRecord();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive :', e);
+      });
+    }
+  };
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "axelBudgetTracker_v2";
+  // Historique : v1 = premier jet (4 catégories, sans groupes) ; v2 = refonte façon
+  // tableur Excel (couleurs par catégorie, groupes façon HABITATION/PRÊTS/…, vue
+  // annuelle Théorique/Réel par mois) ; v3 = résumé du mois remonté en haut + graphique
+  // d'évolution annuelle ; v4 = comptes courants multiples (affectation d'un compte
+  // à chaque dépense, filtre « Tous les comptes » ou par compte sur les onglets Mois et
+  // Année), et colonnes % du budget dépenses du mois par catégorie/sous-catégorie.
+  // v5 = onglet dédié Épargne (suivi jour/mois/an par sous-catégorie, ajout rapide,
+  // graphique cumul réel vs objectif théorique par sous-catégorie, journal chronologique).
+  // v6 = épargne : terme (court/moyen/long) et disponibilité immédiate par
+  // sous-catégorie, filtrables dans l'onglet Épargne ; retraits d'épargne avec
+  // compte crédité (en plus des dépôts), suivis nets dans les totaux et graphiques.
+  // v7 = virements entre comptes courants (par mois, avec sens entrant/sortant
+  // affiché quand on filtre par compte) ; sans impact sur les catégories du budget.
+  // v8 = solde réel par compte courant (calculé à partir du solde initial + tout
+  // l'historique : revenus, dépenses, dépôts/retraits d'épargne, virements). Un
+  // retrait d'épargne ou un virement impacte donc directement le solde des comptes
+  // concernés. Solde affiché dans Configuration et dans la barre de filtre par compte.
+  // v9 = retour en arrière sur le solde par compte de la v8 (jugé trop complexe /
+  // pas ce qui était demandé). Les virements restent : ils déplacent simplement le
+  // montant du compte source vers le compte destination dans la liste des virements,
+  // sans calcul de solde cumulé ni solde initial.
+  // v10 = budgets théoriques totalement séparés par compte courant (thèmes/sous-
+  // thèmes communs, mais chaque compte gère son propre théorique, éditable
+  // uniquement quand on filtre sur ce compte). La vue "Tous les comptes" affiche
+  // la somme des budgets de chaque compte, en lecture seule.
+  // v11 = un virement impacte maintenant le solde réel de chaque compte concerné :
+  // "Virements sortants" (comme une dépense) chez l'émetteur, "Virements entrants"
+  // (comme un revenu) chez le destinataire, reflétés dans le résumé du mois, le bilan
+  // annuel et le graphique de solde — uniquement quand on filtre sur un compte précis.
+  // À incrémenter à chaque évolution notable de l'outil.
+  var APP_VERSION = "v11";
+  var CATS = ["Revenus", "Frais fixes", "Frais variables", "Economies"];
+  var CAT_SLUG = { "Revenus":"Revenus", "Frais fixes":"Frais-fixes", "Frais variables":"Frais-variables", "Economies":"Economies" };
+  var CAT_FLAT = { "Revenus": true, "Frais fixes": false, "Frais variables": false, "Economies": true };
+  var CAT_PALETTE = {
+    "Revenus":          { band:"var(--revenus-band)",   sub:"var(--revenus-sub)",   cell:"var(--revenus-cell)" },
+    "Frais fixes":      { band:"var(--fixes-band)",      sub:"var(--fixes-sub)",     cell:"var(--fixes-cell)" },
+    "Frais variables":  { band:"var(--variables-band)",  sub:"var(--variables-sub)", cell:"var(--variables-cell)" },
+    "Economies":        { band:"var(--economies-band)",  sub:"var(--economies-sub)", cell:"var(--economies-cell)" }
+  };
+  var MONTH_NAMES = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  var MONTH_SHORT = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
+  var TERM_LABELS = { "court": "Court terme", "moyen": "Moyen terme", "long": "Long terme" };
+  var TERM_ORDER = ["court", "moyen", "long"];
+
+  var state = null;
+
+  // ---------- Default structure (matches a typical French household budget) ----------
+
+  function defaultState(){
+    return {
+      version: 2,
+      categories: {
+        "Revenus": { flat:true, subs: ["Salaire", "Complément"] },
+        "Frais fixes": { flat:false, groups: [
+          { name:"HABITATION", subs:["Loyer","Électricité","Gaz","Eau","Internet"] },
+          { name:"PRÊTS", subs:["Prêt principal"] },
+          { name:"ASSURANCES", subs:["Habitation","Voiture","Santé"] },
+          { name:"ABONNEMENTS", subs:["Téléphone","Streaming"] },
+          { name:"IMPÔTS", subs:["Taxe d'habitation"] },
+          { name:"FRAIS BANCAIRES", subs:["Frais de tenue de compte"] }
+        ]},
+        "Frais variables": { flat:false, groups: [
+          { name:"VOITURE", subs:["Essence","Entretien"] },
+          { name:"PERSONNEL", subs:["Alimentaire","Matériel","Divers"] },
+          { name:"MEDECIN", subs:["Généraliste","Pharmacie"] },
+          { name:"DIVERS", subs:["Loisirs","Voyages"] }
+        ]},
+        "Economies": { flat:true, subs: ["Livret A", "PEL", "PER"] }
+      },
+      economyMeta: {
+        "Livret A": { term: "court", liquid: true },
+        "PEL": { term: "moyen", liquid: false },
+        "PER": { term: "long", liquid: false }
+      },
+      accounts: [
+        { id: "acc-bpl", name: "BPL" },
+        { id: "acc-boursorama", name: "Boursorama" },
+        { id: "acc-cic", name: "CIC" }
+      ],
+      budgets: {},
+      years: {},
+      currentYear: (new Date()).getFullYear(),
+      currentTab: "config",
+      currentAccountFilter: "",
+      currentEpargneTermFilter: "",
+      currentEpargneLiquidFilter: ""
+    };
+  }
+
+  function loadState(){
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch(e){ raw = null; }
+    if (raw){
+      try { state = JSON.parse(raw); }
+      catch(e){ state = defaultState(); }
+    } else {
+      state = defaultState();
+    }
+    if (!state.categories) state.categories = defaultState().categories;
+    if (!state.accounts) state.accounts = [];
+    if (!state.economyMeta) state.economyMeta = {};
+    if (!state.budgets) state.budgets = {};
+    if (!state.years) state.years = {};
+    if (!state.currentYear) state.currentYear = (new Date()).getFullYear();
+    if (!state.currentTab) state.currentTab = "config";
+    if (state.currentAccountFilter === undefined) state.currentAccountFilter = "";
+    if (state.currentEpargneTermFilter === undefined) state.currentEpargneTermFilter = "";
+    if (state.currentEpargneLiquidFilter === undefined) state.currentEpargneLiquidFilter = "";
+    ensureYearTx(state.currentYear);
+  }
+
+  function saveState(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (window.__driveNotifySave) window.__driveNotifySave();
+    }
+    catch(e){ alert("Impossible de sauvegarder (stockage plein ou indisponible)."); }
+  }
+
+  function ensureYearTx(year){
+    var y = String(year);
+    if (!state.years[y]) state.years[y] = {};
+    for (var m=0; m<12; m++){
+      if (!state.years[y][m]) state.years[y][m] = [];
+    }
+    if (!state.transfers) state.transfers = {};
+    if (!state.transfers[y]) state.transfers[y] = {};
+    for (var m2=0; m2<12; m2++){
+      if (!state.transfers[y][m2]) state.transfers[y][m2] = [];
+    }
+  }
+
+  // ---------- Category / group helpers ----------
+
+  // Returns a uniform array of groups for a category: [{name, subs:[...]}, ...]
+  // Flat categories are represented as a single group with name "".
+  function getGroups(cat){
+    var c = state.categories[cat];
+    if (!c) return [];
+    if (c.flat) return [{ name: "", subs: c.subs || [] }];
+    return c.groups || [];
+  }
+
+  function findGroupObj(cat, groupName){
+    var c = state.categories[cat];
+    if (!c) return null;
+    if (c.flat) return c; // subs live directly on the category object
+    var groups = c.groups || [];
+    for (var i=0;i<groups.length;i++){ if (groups[i].name === groupName) return groups[i]; }
+    return null;
+  }
+
+  function budgetKey(cat, group, sub){ return cat + "||" + (group||"") + "||" + sub; }
+
+  // Chaque compte a son propre budget théorique, indépendant. accountKey est soit l'id
+  // d'un compte réel, soit "" (compte "non précisé" / repli utilisé quand aucun compte
+  // n'est configuré du tout).
+  function ensureMonthBudget(year, month, accountKey){
+    accountKey = accountKey || "";
+    var y = String(year);
+    if (!state.budgets[y]) state.budgets[y] = {};
+    if (!state.budgets[y][month]) state.budgets[y][month] = {};
+    if (state.budgets[y][month][accountKey]) return state.budgets[y][month][accountKey];
+
+    var prev = findPreviousBudget(year, month, accountKey);
+    var obj = {};
+    CATS.forEach(function(cat){
+      getGroups(cat).forEach(function(g){
+        (g.subs || []).forEach(function(sub){
+          var key = budgetKey(cat, g.name, sub);
+          obj[key] = prev && (key in prev) ? prev[key] : 0;
+        });
+      });
+    });
+    state.budgets[y][month][accountKey] = obj;
+    return obj;
+  }
+
+  function findPreviousBudget(year, month, accountKey){
+    var y = year, m = month;
+    for (var i=0; i<36; i++){
+      m -= 1;
+      if (m < 0){ m = 11; y -= 1; }
+      var ys = String(y);
+      if (state.budgets[ys] && state.budgets[ys][m] && state.budgets[ys][m][accountKey]) return state.budgets[ys][m][accountKey];
+    }
+    return null;
+  }
+
+  function getBudget(year, month, accountKey, cat, group, sub){
+    var obj = ensureMonthBudget(year, month, accountKey);
+    return obj[budgetKey(cat, group, sub)] || 0;
+  }
+
+  function setBudget(year, month, accountKey, cat, group, sub, value){
+    var obj = ensureMonthBudget(year, month, accountKey);
+    obj[budgetKey(cat, group, sub)] = value;
+    saveState();
+  }
+
+  // Liste des "comptes budgétaires" à sommer pour une vue donnée :
+  // - un compte précis si on filtre dessus
+  // - chaque compte réel configuré si on est en vue "Tous les comptes"
+  // - le compte de repli "" si aucun compte n'est configuré du tout
+  function budgetAccountKeysFor(accountFilter){
+    if (accountFilter) return [accountFilter];
+    var accounts = state.accounts || [];
+    if (accounts.length === 0) return [""];
+    return accounts.map(function(a){ return a.id; });
+  }
+
+  // Retourne la clé de compte sur laquelle on peut éditer le budget théorique pour cette
+  // vue, ou null si la vue est agrégée sur plusieurs comptes (non éditable directement).
+  function editableAccountKeyFor(accountFilter){
+    if (accountFilter) return accountFilter;
+    var accounts = state.accounts || [];
+    return (accounts.length === 0) ? "" : null;
+  }
+
+  function addGroup(cat, name){
+    name = (name||"").trim();
+    if (!name) return;
+    var c = state.categories[cat];
+    if (!c || c.flat) return;
+    if (!c.groups) c.groups = [];
+    for (var i=0;i<c.groups.length;i++){ if (c.groups[i].name === name){ alert("Ce groupe existe déjà."); return; } }
+    c.groups.push({ name: name, subs: [] });
+    saveState();
+    render();
+  }
+
+  function renameGroup(cat, oldName){
+    var newName = prompt("Renommer le groupe « " + oldName + " » en :", oldName);
+    if (!newName) return;
+    newName = newName.trim();
+    if (!newName || newName === oldName) return;
+    var c = state.categories[cat];
+    var groups = c.groups || [];
+    for (var i=0;i<groups.length;i++){ if (groups[i].name === newName){ alert("Un groupe porte déjà ce nom."); return; } }
+    var g = null;
+    for (var j=0;j<groups.length;j++){ if (groups[j].name === oldName){ g = groups[j]; break; } }
+    if (!g) return;
+    g.name = newName;
+    // rename budget keys & transactions referencing this group
+    for (var y in state.budgets){
+      for (var m in state.budgets[y]){
+        for (var ak in state.budgets[y][m]){
+          var bucket = state.budgets[y][m][ak];
+          (g.subs||[]).forEach(function(sub){
+            var oldKey = budgetKey(cat, oldName, sub), newKey = budgetKey(cat, newName, sub);
+            if (oldKey in bucket){
+              bucket[newKey] = bucket[oldKey];
+              delete bucket[oldKey];
+            }
+          });
+        }
+      }
+    }
+    for (var y2 in state.years){
+      for (var m2 in state.years[y2]){
+        state.years[y2][m2].forEach(function(tx){
+          if (tx.category === cat && tx.group === oldName) tx.group = newName;
+        });
+      }
+    }
+    saveState();
+    render();
+  }
+
+  function deleteGroup(cat, name){
+    if (!confirm("Supprimer le groupe « " + name + " » et toutes ses sous-catégories ?\n(L'historique des dépenses déjà saisies restera visible.)")) return;
+    var c = state.categories[cat];
+    var groups = c.groups || [];
+    var idx = -1;
+    for (var i=0;i<groups.length;i++){ if (groups[i].name === name){ idx = i; break; } }
+    if (idx !== -1) groups.splice(idx, 1);
+    saveState();
+    render();
+  }
+
+  // ---------- Épargne : métadonnées par sous-catégorie (terme, disponibilité) ----------
+
+  function getEconomyMeta(sub){
+    var meta = state.economyMeta && state.economyMeta[sub];
+    return meta || { term: "court", liquid: true };
+  }
+
+  function setEconomyMeta(sub, term, liquid){
+    if (!state.economyMeta) state.economyMeta = {};
+    state.economyMeta[sub] = { term: term, liquid: !!liquid };
+    saveState();
+  }
+
+  // ---------- Accounts (comptes courants) ----------
+
+  function findAccount(id){
+    if (!id) return null;
+    var accounts = state.accounts || [];
+    for (var i=0;i<accounts.length;i++){ if (accounts[i].id === id) return accounts[i]; }
+    return null;
+  }
+
+  function accountLabel(id){
+    if (!id) return "Non précisé";
+    var a = findAccount(id);
+    return a ? a.name : "Compte supprimé";
+  }
+
+  function addAccount(name){
+    name = (name || "").trim();
+    if (!name) return;
+    if (!state.accounts) state.accounts = [];
+    for (var i=0;i<state.accounts.length;i++){ if (state.accounts[i].name === name){ alert("Ce compte existe déjà."); return; } }
+    state.accounts.push({ id: "acc" + Date.now() + Math.floor(Math.random()*10000), name: name });
+    saveState();
+    render();
+  }
+
+  function renameAccount(id){
+    var a = findAccount(id);
+    if (!a) return;
+    var newName = prompt("Renommer le compte « " + a.name + " » en :", a.name);
+    if (!newName) return;
+    newName = newName.trim();
+    if (!newName) return;
+    a.name = newName;
+    saveState();
+    render();
+  }
+
+  function deleteAccount(id){
+    var a = findAccount(id);
+    if (!a) return;
+    if (!confirm("Supprimer le compte « " + a.name + " » ?\n(Les dépenses déjà associées à ce compte resteront visibles, avec la mention « Compte supprimé ».)")) return;
+    var idx = state.accounts.indexOf(a);
+    if (idx !== -1) state.accounts.splice(idx, 1);
+    if (state.currentAccountFilter === id) state.currentAccountFilter = "";
+    saveState();
+    render();
+  }
+
+  function addSubcategory(cat, groupName, name){
+    name = (name || "").trim();
+    if (!name) return;
+    var g = findGroupObj(cat, groupName);
+    if (!g) return;
+    if (!g.subs) g.subs = [];
+    if (g.subs.indexOf(name) !== -1){ alert("Cette sous-catégorie existe déjà dans ce groupe."); return; }
+    g.subs.push(name);
+    saveState();
+    render();
+  }
+
+  function addEconomySubcategory(name, term, liquid){
+    name = (name || "").trim();
+    if (!name) return;
+    var g = findGroupObj("Economies", "");
+    if (!g) return;
+    if (!g.subs) g.subs = [];
+    if (g.subs.indexOf(name) !== -1){ alert("Cette sous-catégorie existe déjà."); return; }
+    g.subs.push(name);
+    setEconomyMeta(name, term, liquid);
+    saveState();
+    render();
+  }
+
+  function renameSubcategory(cat, groupName, oldName){
+    var newName = prompt("Renommer « " + oldName + " » en :", oldName);
+    if (!newName) return;
+    newName = newName.trim();
+    if (!newName || newName === oldName) return;
+    var g = findGroupObj(cat, groupName);
+    if (!g) return;
+    if (g.subs.indexOf(newName) !== -1){ alert("Une sous-catégorie porte déjà ce nom dans ce groupe."); return; }
+    var idx = g.subs.indexOf(oldName);
+    if (idx !== -1) g.subs[idx] = newName;
+    for (var y in state.budgets){
+      for (var m in state.budgets[y]){
+        for (var ak in state.budgets[y][m]){
+          var bucket2 = state.budgets[y][m][ak];
+          var oldKey = budgetKey(cat, groupName, oldName), newKey = budgetKey(cat, groupName, newName);
+          if (oldKey in bucket2){
+            bucket2[newKey] = bucket2[oldKey];
+            delete bucket2[oldKey];
+          }
+        }
+      }
+    }
+    for (var y2 in state.years){
+      for (var m2 in state.years[y2]){
+        state.years[y2][m2].forEach(function(tx){
+          if (tx.category === cat && tx.group === groupName && tx.subcategory === oldName) tx.subcategory = newName;
+        });
+      }
+    }
+    if (cat === "Economies" && state.economyMeta && (oldName in state.economyMeta)){
+      state.economyMeta[newName] = state.economyMeta[oldName];
+      delete state.economyMeta[oldName];
+    }
+    saveState();
+    render();
+  }
+
+  function deleteSubcategory(cat, groupName, name){
+    if (!confirm("Supprimer la sous-catégorie « " + name + " » ?\n(Les dépenses déjà saisies avec ce nom resteront visibles comme historique.)")) return;
+    var g = findGroupObj(cat, groupName);
+    if (!g) return;
+    var idx = g.subs.indexOf(name);
+    if (idx !== -1) g.subs.splice(idx, 1);
+    if (cat === "Economies" && state.economyMeta){ delete state.economyMeta[name]; }
+    saveState();
+    render();
+  }
+
+  function addTransaction(year, month, data){
+    ensureYearTx(year);
+    var tx = {
+      id: "tx" + Date.now() + Math.floor(Math.random()*10000),
+      date: data.date,
+      category: data.category,
+      group: data.group || "",
+      subcategory: data.subcategory,
+      account: data.account || "",
+      txType: data.txType || "depot",
+      amount: data.amount,
+      note: data.note || ""
+    };
+    state.years[String(year)][month].push(tx);
+    saveState();
+  }
+
+  function deleteTransaction(year, month, id){
+    var arr = state.years[String(year)][month];
+    var idx = -1;
+    for (var i=0;i<arr.length;i++){ if (arr[i].id === id){ idx = i; break; } }
+    if (idx !== -1) arr.splice(idx, 1);
+    saveState();
+    render();
+  }
+
+  // ---------- Virements entre comptes courants ----------
+
+  function addTransfer(year, month, data){
+    ensureYearTx(year);
+    var t = {
+      id: "tr" + Date.now() + Math.floor(Math.random()*10000),
+      date: data.date,
+      fromAccount: data.fromAccount,
+      toAccount: data.toAccount,
+      amount: data.amount,
+      note: data.note || ""
+    };
+    state.transfers[String(year)][month].push(t);
+    saveState();
+  }
+
+  function deleteTransfer(year, month, id){
+    var arr = state.transfers[String(year)][month];
+    var idx = -1;
+    for (var i=0;i<arr.length;i++){ if (arr[i].id === id){ idx = i; break; } }
+    if (idx !== -1) arr.splice(idx, 1);
+    saveState();
+    render();
+  }
+
+  // ---------- Computation ----------
+
+  function computeMonthRecap(year, month, accountFilter){
+    ensureYearTx(year);
+    var budgetKeys = budgetAccountKeysFor(accountFilter);
+    budgetKeys.forEach(function(ak){ ensureMonthBudget(year, month, ak); });
+    var txs = state.years[String(year)][month];
+    if (accountFilter){
+      txs = txs.filter(function(tx){ return (tx.account || "") === accountFilter; });
+    }
+    var recap = {};
+    CATS.forEach(function(cat){
+      var groups = getGroups(cat).map(function(g){
+        var subs = {};
+        (g.subs||[]).forEach(function(sub){
+          var theo = 0;
+          budgetKeys.forEach(function(ak){ theo += getBudget(year, month, ak, cat, g.name, sub); });
+          subs[sub] = { theo: theo, real: 0, orphan:false };
+        });
+        return { name: g.name, subs: subs, totalTheo:0, totalReal:0 };
+      });
+      recap[cat] = { groups: groups, totalTheo:0, totalReal:0 };
+    });
+    txs.forEach(function(tx){
+      var catRecap = recap[tx.category];
+      if (!catRecap) return;
+      var grp = null;
+      for (var i=0;i<catRecap.groups.length;i++){ if (catRecap.groups[i].name === (tx.group||"")){ grp = catRecap.groups[i]; break; } }
+      if (!grp){
+        grp = { name: tx.group || "", subs:{}, totalTheo:0, totalReal:0, orphanGroup:true };
+        catRecap.groups.push(grp);
+      }
+      if (!grp.subs[tx.subcategory]){
+        grp.subs[tx.subcategory] = { theo:0, real:0, orphan:true };
+      }
+      var signedAmount = (tx.category === "Economies" && tx.txType === "retrait") ? -tx.amount : tx.amount;
+      grp.subs[tx.subcategory].real += signedAmount;
+    });
+    // roll up totals
+    CATS.forEach(function(cat){
+      var catRecap = recap[cat];
+      catRecap.groups.forEach(function(g){
+        var gt = 0, gr = 0;
+        for (var sub in g.subs){ gt += g.subs[sub].theo; gr += g.subs[sub].real; }
+        g.totalTheo = gt; g.totalReal = gr;
+        catRecap.totalTheo += gt; catRecap.totalReal += gr;
+      });
+    });
+    return recap;
+  }
+
+  function globalTotals(recap){
+    var revenusReal = recap["Revenus"].totalReal, revenusTheo = recap["Revenus"].totalTheo;
+    var depensesReal = recap["Frais fixes"].totalReal + recap["Frais variables"].totalReal;
+    var depensesTheo = recap["Frais fixes"].totalTheo + recap["Frais variables"].totalTheo;
+    var economiesReal = recap["Economies"].totalReal, economiesTheo = recap["Economies"].totalTheo;
+    return {
+      revenusReal: revenusReal, revenusTheo: revenusTheo,
+      depensesReal: depensesReal, depensesTheo: depensesTheo,
+      economiesReal: economiesReal, economiesTheo: economiesTheo,
+      soldeReal: revenusReal - depensesReal - economiesReal,
+      soldeTheo: revenusTheo - depensesTheo - economiesTheo
+    };
+  }
+
+  // Year recap: same nested shape, but each sub holds {theo[12], real[12], totalTheo, totalReal}
+  function computeYearRecap(year, accountFilter){
+    var combined = {};
+    CATS.forEach(function(cat){
+      var groups = getGroups(cat).map(function(g){
+        var subs = {};
+        (g.subs||[]).forEach(function(sub){
+          subs[sub] = { theo:[0,0,0,0,0,0,0,0,0,0,0,0], real:[0,0,0,0,0,0,0,0,0,0,0,0], totalTheo:0, totalReal:0 };
+        });
+        return { name: g.name, subs: subs, totalTheo:0, totalReal:0 };
+      });
+      combined[cat] = { groups: groups, totalTheo:0, totalReal:0, totalTheoByMonth:[0,0,0,0,0,0,0,0,0,0,0,0], totalRealByMonth:[0,0,0,0,0,0,0,0,0,0,0,0] };
+    });
+    for (var m=0; m<12; m++){
+      var mr = computeMonthRecap(year, m, accountFilter);
+      CATS.forEach(function(cat){
+        var cCombined = combined[cat];
+        mr[cat].groups.forEach(function(mg){
+          var cg = null;
+          for (var i=0;i<cCombined.groups.length;i++){ if (cCombined.groups[i].name === mg.name){ cg = cCombined.groups[i]; break; } }
+          if (!cg){ cg = { name: mg.name, subs:{}, totalTheo:0, totalReal:0 }; cCombined.groups.push(cg); }
+          for (var subName in mg.subs){
+            if (!cg.subs[subName]){
+              cg.subs[subName] = { theo:[0,0,0,0,0,0,0,0,0,0,0,0], real:[0,0,0,0,0,0,0,0,0,0,0,0], totalTheo:0, totalReal:0 };
+            }
+            cg.subs[subName].theo[m] = mg.subs[subName].theo;
+            cg.subs[subName].real[m] = mg.subs[subName].real;
+            cg.subs[subName].totalTheo += mg.subs[subName].theo;
+            cg.subs[subName].totalReal += mg.subs[subName].real;
+          }
+        });
+        cCombined.totalTheoByMonth[m] += mr[cat].totalTheo;
+        cCombined.totalRealByMonth[m] += mr[cat].totalReal;
+        cCombined.totalTheo += mr[cat].totalTheo;
+        cCombined.totalReal += mr[cat].totalReal;
+      });
+    }
+    // group-level totals
+    CATS.forEach(function(cat){
+      combined[cat].groups.forEach(function(g){
+        var gt=0, gr=0;
+        for (var sub in g.subs){ gt += g.subs[sub].totalTheo; gr += g.subs[sub].totalReal; }
+        g.totalTheo = gt; g.totalReal = gr;
+      });
+    });
+    return combined;
+  }
+
+  // ---------- Formatting / escaping ----------
+
+  function formatMoney(n){
+    n = n || 0;
+    var s = n.toFixed(2).replace(".", ",");
+    var parts = s.split(",");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return parts.join(",") + " €";
+  }
+
+  function pctStr(value, denom){
+    if (!denom) return "—";
+    return (value / denom * 100).toFixed(1).replace(".", ",") + " %";
+  }
+
+  function txTypeLabel(tx){
+    if (tx.category !== "Economies") return "—";
+    return (tx.txType === "retrait") ? "Retrait" : "Dépôt";
+  }
+
+  function txAmountHtml(tx){
+    if (tx.category === "Economies"){
+      if (tx.txType === "retrait") return '<span class="neg">− ' + formatMoney(tx.amount) + '</span>';
+      return '<span class="pos">+ ' + formatMoney(tx.amount) + '</span>';
+    }
+    return formatMoney(tx.amount);
+  }
+
+  function escapeHtml(s){
+    s = (s === undefined || s === null) ? "" : String(s);
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function todayISO(){
+    var d = new Date();
+    var mm = (d.getMonth()+1); if (mm<10) mm = "0"+mm;
+    var dd = d.getDate(); if (dd<10) dd = "0"+dd;
+    return d.getFullYear() + "-" + mm + "-" + dd;
+  }
+
+  function defaultDateFor(year, month){
+    var today = new Date();
+    if (today.getFullYear() === year && today.getMonth() === month) return todayISO();
+    var mm = (month+1); if (mm<10) mm = "0"+mm;
+    return year + "-" + mm + "-01";
+  }
+
+  // ---------- Rendering ----------
+
+  function render(){
+    renderTabs();
+    document.getElementById("year-label").textContent = state.currentYear;
+    var app = document.getElementById("app");
+    if (state.currentTab === "config"){
+      app.innerHTML = renderConfigHtml();
+    } else if (state.currentTab === "year"){
+      app.innerHTML = renderYearHtml(state.currentYear, state.currentAccountFilter);
+    } else if (state.currentTab === "epargne"){
+      app.innerHTML = renderEpargneHtml(state.currentYear, state.currentAccountFilter);
+    } else {
+      var m = parseInt(state.currentTab, 10);
+      app.innerHTML = renderMonthHtml(state.currentYear, m, state.currentAccountFilter);
+    }
+  }
+
+  function renderTabs(){
+    var tabs = document.getElementById("tabs");
+    var html = [];
+    html.push(tabBtn("config", "⚙️ Configuration"));
+    for (var m=0; m<12; m++){
+      html.push(tabBtn(String(m), MONTH_NAMES[m]));
+    }
+    html.push(tabBtn("year", "📊 Vue annuelle"));
+    html.push(tabBtn("epargne", "💰 Épargne"));
+    tabs.innerHTML = html.join("");
+  }
+
+  function tabBtn(key, label){
+    var active = (state.currentTab === key) ? " active" : "";
+    return '<button class="' + active + '" data-action="switch-tab" data-tab="' + escapeHtml(key) + '">' + escapeHtml(label) + '</button>';
+  }
+
+  function renderAccountFilterBar(activeAccountId){
+    var accounts = state.accounts || [];
+    var html = [];
+    html.push('<div class="card" style="padding:12px 18px;">');
+    html.push('<div class="row-flex"><strong style="margin-right:4px">Compte :</strong>');
+    var allActive = !activeAccountId ? " active" : "";
+    html.push('<button class="btn small' + (allActive ? ' primary' : '') + '" data-action="filter-account" data-account="">Tous les comptes</button>');
+    accounts.forEach(function(a){
+      var isActive = (activeAccountId === a.id) ? ' primary' : '';
+      html.push('<button class="btn small' + isActive + '" data-action="filter-account" data-account="' + escapeHtml(a.id) + '">' + escapeHtml(a.name) + '</button>');
+    });
+    if (accounts.length === 0){
+      html.push('<span class="muted">Ajoute un compte dans Configuration pour activer le suivi par compte.</span>');
+    }
+    html.push('</div></div>');
+    return html.join("");
+  }
+
+  // ---------- Configuration tab ----------
+
+  function renderConfigHtml(){
+    var html = [];
+    html.push('<div class="card"><h2>Comptes courants</h2>');
+    html.push('<p class="muted">Ajoute tes comptes courants (une ou plusieurs banques) pour préciser, à chaque dépense, d\'où vient l\'argent, et pour avoir un suivi séparé par compte en plus du suivi groupé.</p>');
+    var accounts = state.accounts || [];
+    if (accounts.length === 0){
+      html.push('<div class="empty-hint">Aucun compte pour l\'instant.</div>');
+    } else {
+      accounts.forEach(function(a){
+        html.push('<div class="sub-row">');
+        html.push('<span class="name">' + escapeHtml(a.name) + '</span>');
+        html.push('<button class="btn small" data-action="rename-account" data-account="' + escapeHtml(a.id) + '">Renommer</button>');
+        html.push('<button class="btn small danger" data-action="delete-account" data-account="' + escapeHtml(a.id) + '">Supprimer</button>');
+        html.push('</div>');
+      });
+    }
+    html.push('<div class="sub-add-row">');
+    html.push('<input type="text" placeholder="Nouveau compte (ex: BPL, Boursorama…)…" id="new-account">');
+    html.push('<button class="btn primary" data-action="add-account" data-input="new-account">Ajouter</button>');
+    html.push('</div></div>');
+
+    html.push('<div class="card"><h2>Catégories &amp; sous-catégories</h2>');
+    html.push('<p class="muted">Gère ici la structure de ton budget. Le budget théorique de chaque sous-catégorie se règle directement dans l\'onglet de chaque mois.</p></div>');
+    CATS.forEach(function(cat){
+      html.push('<div class="card">');
+      html.push('<div class="cat-header"><span class="dot cat-' + CAT_SLUG[cat] + '"></span>' + escapeHtml(cat) + '</div>');
+      if (CAT_FLAT[cat] && cat === "Economies"){
+        html.push(renderEconomiesConfig());
+      } else if (CAT_FLAT[cat]){
+        html.push(renderFlatConfig(cat));
+      } else {
+        html.push(renderGroupedConfig(cat));
+      }
+      html.push('</div>');
+    });
+    return html.join("");
+  }
+
+  function termOptionsHtml(selectedTerm){
+    var html = [];
+    TERM_ORDER.forEach(function(t){
+      var sel = (t === selectedTerm) ? " selected" : "";
+      html.push('<option value="' + t + '"' + sel + '>' + TERM_LABELS[t] + '</option>');
+    });
+    return html.join("");
+  }
+
+  function renderEconomiesConfig(){
+    var html = [];
+    html.push('<p class="muted">Précise, pour chaque sous-catégorie d\'épargne, son terme (court/moyen/long) et si l\'argent est disponible immédiatement (ex: Livret A) ou non (ex: PER). C\'est filtrable dans l\'onglet Épargne.</p>');
+    var subs = (state.categories["Economies"].subs || []);
+    if (subs.length === 0){
+      html.push('<div class="empty-hint">Aucune sous-catégorie pour l\'instant.</div>');
+    } else {
+      subs.forEach(function(sub){
+        var meta = getEconomyMeta(sub);
+        html.push('<div class="sub-row">');
+        html.push('<span class="name">' + escapeHtml(sub) + '</span>');
+        html.push('<select style="width:140px" data-action="set-economy-term" data-sub="' + escapeHtml(sub) + '">' + termOptionsHtml(meta.term) + '</select>');
+        html.push('<label style="display:flex;align-items:center;gap:5px;font-size:13px;white-space:nowrap;"><input type="checkbox" data-action="set-economy-liquid" data-sub="' + escapeHtml(sub) + '"' + (meta.liquid ? ' checked' : '') + '> Disponible tout de suite</label>');
+        html.push('<button class="btn small" data-action="rename-sub" data-cat="Economies" data-group="" data-sub="' + escapeHtml(sub) + '">Renommer</button>');
+        html.push('<button class="btn small danger" data-action="delete-sub" data-cat="Economies" data-group="" data-sub="' + escapeHtml(sub) + '">Supprimer</button>');
+        html.push('</div>');
+      });
+    }
+    html.push('<div class="sub-add-row" style="flex-wrap:wrap">');
+    html.push('<input type="text" placeholder="Nouvelle sous-catégorie…" id="new-sub-Economies" style="flex:1;min-width:160px">');
+    html.push('<select id="new-sub-Economies-term" style="width:140px">' + termOptionsHtml("court") + '</select>');
+    html.push('<label style="display:flex;align-items:center;gap:5px;font-size:13px;white-space:nowrap;"><input type="checkbox" id="new-sub-Economies-liquid" checked> Disponible tout de suite</label>');
+    html.push('<button class="btn primary" data-action="add-economy-sub">Ajouter</button>');
+    html.push('</div>');
+    return html.join("");
+  }
+
+  function renderFlatConfig(cat){
+    var html = [];
+    var subs = (state.categories[cat].subs || []);
+    if (subs.length === 0){
+      html.push('<div class="empty-hint">Aucune sous-catégorie pour l\'instant.</div>');
+    } else {
+      subs.forEach(function(sub){
+        html.push('<div class="sub-row">');
+        html.push('<span class="name">' + escapeHtml(sub) + '</span>');
+        html.push('<button class="btn small" data-action="rename-sub" data-cat="' + escapeHtml(cat) + '" data-group="" data-sub="' + escapeHtml(sub) + '">Renommer</button>');
+        html.push('<button class="btn small danger" data-action="delete-sub" data-cat="' + escapeHtml(cat) + '" data-group="" data-sub="' + escapeHtml(sub) + '">Supprimer</button>');
+        html.push('</div>');
+      });
+    }
+    html.push('<div class="sub-add-row">');
+    html.push('<input type="text" placeholder="Nouvelle sous-catégorie…" id="new-sub-' + CAT_SLUG[cat] + '">');
+    html.push('<button class="btn primary" data-action="add-sub" data-cat="' + escapeHtml(cat) + '" data-group="" data-input="new-sub-' + CAT_SLUG[cat] + '">Ajouter</button>');
+    html.push('</div>');
+    return html.join("");
+  }
+
+  function renderGroupedConfig(cat){
+    var html = [];
+    var groups = state.categories[cat].groups || [];
+    if (groups.length === 0){
+      html.push('<div class="empty-hint">Aucun groupe pour l\'instant.</div>');
+    }
+    groups.forEach(function(g){
+      var gid = CAT_SLUG[cat] + "-" + g.name.replace(/[^a-zA-Z0-9]/g, "");
+      html.push('<div class="group-block">');
+      html.push('<div class="group-block-header"><span class="dot cat-' + CAT_SLUG[cat] + '"></span>' + escapeHtml(g.name) + '</div>');
+      var subs = g.subs || [];
+      if (subs.length === 0){
+        html.push('<div class="empty-hint">Aucune sous-catégorie dans ce groupe.</div>');
+      } else {
+        subs.forEach(function(sub){
+          html.push('<div class="sub-row">');
+          html.push('<span class="name">' + escapeHtml(sub) + '</span>');
+          html.push('<button class="btn small" data-action="rename-sub" data-cat="' + escapeHtml(cat) + '" data-group="' + escapeHtml(g.name) + '" data-sub="' + escapeHtml(sub) + '">Renommer</button>');
+          html.push('<button class="btn small danger" data-action="delete-sub" data-cat="' + escapeHtml(cat) + '" data-group="' + escapeHtml(g.name) + '" data-sub="' + escapeHtml(sub) + '">Supprimer</button>');
+          html.push('</div>');
+        });
+      }
+      html.push('<div class="sub-add-row">');
+      html.push('<input type="text" placeholder="Nouvelle sous-catégorie…" id="new-sub-' + gid + '">');
+      html.push('<button class="btn primary" data-action="add-sub" data-cat="' + escapeHtml(cat) + '" data-group="' + escapeHtml(g.name) + '" data-input="new-sub-' + gid + '">Ajouter</button>');
+      html.push('</div>');
+      html.push('<div class="row-flex" style="margin-top:8px">');
+      html.push('<button class="btn small" data-action="rename-group" data-cat="' + escapeHtml(cat) + '" data-group="' + escapeHtml(g.name) + '">Renommer le groupe</button>');
+      html.push('<button class="btn small danger" data-action="delete-group" data-cat="' + escapeHtml(cat) + '" data-group="' + escapeHtml(g.name) + '">Supprimer le groupe</button>');
+      html.push('</div>');
+      html.push('</div>');
+    });
+    html.push('<div class="group-add-row">');
+    html.push('<input type="text" placeholder="Nouveau groupe (ex: HABITATION)…" id="new-group-' + CAT_SLUG[cat] + '">');
+    html.push('<button class="btn primary" data-action="add-group" data-cat="' + escapeHtml(cat) + '" data-input="new-group-' + CAT_SLUG[cat] + '">Ajouter un groupe</button>');
+    html.push('</div>');
+    return html.join("");
+  }
+
+  // ---------- Add-transaction form helpers ----------
+
+  function categoryOptionsHtml(selectedCat){
+    var html = [];
+    CATS.forEach(function(cat){
+      var sel = (cat === selectedCat) ? " selected" : "";
+      html.push('<option value="' + escapeHtml(cat) + '"' + sel + '>' + escapeHtml(cat) + '</option>');
+    });
+    return html.join("");
+  }
+
+  function groupOptionsHtml(cat, selectedGroup){
+    var html = [];
+    if (CAT_FLAT[cat]){
+      html.push('<option value="">—</option>');
+      return html.join("");
+    }
+    var groups = state.categories[cat].groups || [];
+    groups.forEach(function(g){
+      var sel = (g.name === selectedGroup) ? " selected" : "";
+      html.push('<option value="' + escapeHtml(g.name) + '"' + sel + '>' + escapeHtml(g.name) + '</option>');
+    });
+    return html.join("");
+  }
+
+  function subOptionsHtml(cat, groupName, selectedSub){
+    var html = [];
+    var g = findGroupObj(cat, groupName);
+    var subs = g ? (g.subs || []) : [];
+    subs.forEach(function(sub){
+      var sel = (sub === selectedSub) ? " selected" : "";
+      html.push('<option value="' + escapeHtml(sub) + '"' + sel + '>' + escapeHtml(sub) + '</option>');
+    });
+    return html.join("");
+  }
+
+  function firstGroupName(cat){
+    if (CAT_FLAT[cat]) return "";
+    var groups = state.categories[cat].groups || [];
+    return groups.length ? groups[0].name : "";
+  }
+
+  function accountOptionsHtml(selectedId){
+    var accounts = state.accounts || [];
+    if (accounts.length === 0){
+      return '<option value="">Aucun compte configuré</option>';
+    }
+    var html = [];
+    accounts.forEach(function(a){
+      var sel = (a.id === selectedId) ? " selected" : "";
+      html.push('<option value="' + escapeHtml(a.id) + '"' + sel + '>' + escapeHtml(a.name) + '</option>');
+    });
+    return html.join("");
+  }
+
+  // ---------- Month tab ----------
+
+  function accountTransferTotals(transfersList, accountId){
+    var out = 0, inn = 0;
+    (transfersList || []).forEach(function(t){
+      if (t.fromAccount === accountId) out += t.amount;
+      if (t.toAccount === accountId) inn += t.amount;
+    });
+    return { out: out, inn: inn };
+  }
+
+  function renderMonthHtml(year, month, accountFilter){
+    var recap = computeMonthRecap(year, month, accountFilter);
+    var totals = globalTotals(recap);
+    var denomTheo = recap["Frais fixes"].totalTheo + recap["Frais variables"].totalTheo;
+    var denomReal = recap["Frais fixes"].totalReal + recap["Frais variables"].totalReal;
+    var txs = state.years[String(year)][month];
+    if (accountFilter){ txs = txs.filter(function(tx){ return (tx.account||"") === accountFilter; }); }
+    txs = txs.slice().sort(function(a,b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+
+    var html = [];
+    var defaultCat = "Frais variables";
+    var defaultGroup = firstGroupName(defaultCat);
+    var defaultAccount = (state.accounts && state.accounts.length) ? state.accounts[0].id : "";
+
+    html.push(renderAccountFilterBar(accountFilter));
+
+    var monthTransfersList = state.transfers[String(year)][month] || [];
+    var transferTotals = accountFilter ? accountTransferTotals(monthTransfersList, accountFilter) : { out: 0, inn: 0 };
+    var soldeRealWithTransfers = totals.soldeReal - transferTotals.out + transferTotals.inn;
+
+    html.push('<div class="card"><h2>Résumé du mois' + (accountFilter ? ' — ' + escapeHtml(accountLabel(accountFilter)) : '') + '</h2>');
+    html.push('<div class="summary-grid">');
+    html.push(summaryBox("Revenus (réel)", totals.revenusReal, "pos"));
+    html.push(summaryBox("Dépenses (réel)", totals.depensesReal, "neg"));
+    html.push(summaryBox("Épargne (réel)", totals.economiesReal, ""));
+    if (accountFilter){
+      html.push(summaryBox("Virements sortants", -transferTotals.out, transferTotals.out ? "neg" : ""));
+      html.push(summaryBox("Virements entrants", transferTotals.inn, transferTotals.inn ? "pos" : ""));
+      html.push(summaryBox("Solde réel (avec virements)", soldeRealWithTransfers, soldeRealWithTransfers >= 0 ? "pos" : "neg"));
+    } else {
+      html.push(summaryBox("Solde réel", totals.soldeReal, totals.soldeReal >= 0 ? "pos" : "neg"));
+    }
+    html.push(summaryBox("Solde théorique", totals.soldeTheo, totals.soldeTheo >= 0 ? "pos" : "neg"));
+    html.push('</div></div>');
+
+    html.push('<div class="card"><h2>Ajouter une dépense / un revenu — ' + MONTH_NAMES[month] + ' ' + year + '</h2>');
+    html.push('<div class="add-form">');
+    html.push('<div><label>Date</label><input type="date" id="f-date" value="' + defaultDateFor(year, month) + '"></div>');
+    html.push('<div><label>Catégorie</label><select id="f-cat">' + categoryOptionsHtml(defaultCat) + '</select></div>');
+    html.push('<div><label>Groupe</label><select id="f-group">' + groupOptionsHtml(defaultCat, defaultGroup) + '</select></div>');
+    html.push('<div><label>Sous-catégorie</label><select id="f-sub">' + subOptionsHtml(defaultCat, defaultGroup, null) + '</select></div>');
+    html.push('<div id="f-savtype-wrap" style="display:' + (defaultCat === "Economies" ? '' : 'none') + '"><label>Type</label><select id="f-savtype"><option value="depot">Dépôt</option><option value="retrait">Retrait</option></select></div>');
+    html.push('<div><label id="f-account-label">Compte</label><select id="f-account">' + accountOptionsHtml(defaultAccount) + '</select></div>');
+    html.push('<div><label>Montant (€)</label><input type="number" step="0.01" min="0" id="f-amount" placeholder="0,00"></div>');
+    html.push('<div><label>Note</label><input type="text" id="f-note" placeholder="Optionnel"></div>');
+    html.push('<div><button class="btn primary" data-action="add-tx" data-year="' + year + '" data-month="' + month + '" style="width:100%">Ajouter</button></div>');
+    html.push('</div></div>');
+
+    html.push(renderTransferForm(year, month));
+
+    var editAccountKey = editableAccountKeyFor(accountFilter);
+    if (editAccountKey === null){
+      html.push('<div class="card" style="padding:12px 18px;"><p class="muted" style="margin:0">Chaque compte a son propre budget théorique. En vue "Tous les comptes", le théorique affiché est la somme des budgets de chaque compte (lecture seule) — sélectionne un compte ci-dessus pour l\'éditer.</p></div>');
+    }
+
+    CATS.forEach(function(cat){
+      html.push('<div class="card">');
+      html.push('<div class="cat-header"><span class="dot cat-' + CAT_SLUG[cat] + '"></span>' + escapeHtml(cat) + '</div>');
+      html.push(renderMonthCategoryTable(year, month, cat, recap[cat], denomTheo, denomReal, editAccountKey));
+      html.push('</div>');
+    });
+
+    html.push('<div class="card"><h2>Écritures du mois (' + txs.length + ')</h2>');
+    if (txs.length === 0){
+      html.push('<div class="empty-hint">Aucune écriture pour ce mois.</div>');
+    } else {
+      html.push('<div class="table-wrap"><table class="grid"><thead><tr><th>Date</th><th>Catégorie</th><th>Groupe</th><th>Sous-catégorie</th><th>Type</th><th>Compte</th><th>Montant</th><th>Note</th><th></th></tr></thead><tbody>');
+      txs.forEach(function(tx){
+        html.push('<tr>');
+        html.push('<td>' + escapeHtml(tx.date) + '</td>');
+        html.push('<td><span class="dot cat-' + CAT_SLUG[tx.category] + '" style="margin-right:6px"></span>' + escapeHtml(tx.category) + '</td>');
+        html.push('<td>' + escapeHtml(tx.group || "—") + '</td>');
+        html.push('<td>' + escapeHtml(tx.subcategory) + '</td>');
+        html.push('<td>' + escapeHtml(txTypeLabel(tx)) + '</td>');
+        html.push('<td>' + escapeHtml(accountLabel(tx.account)) + '</td>');
+        html.push('<td class="num">' + txAmountHtml(tx) + '</td>');
+        html.push('<td>' + escapeHtml(tx.note) + '</td>');
+        html.push('<td><button class="btn danger small" data-action="delete-tx" data-year="' + year + '" data-month="' + month + '" data-id="' + escapeHtml(tx.id) + '">✕</button></td>');
+        html.push('</tr>');
+      });
+      html.push('</tbody></table></div>');
+    }
+    html.push('</div>');
+
+    html.push(renderTransferList(year, month, accountFilter));
+
+    return html.join("");
+  }
+
+  function renderTransferForm(year, month){
+    var accounts = state.accounts || [];
+    var html = [];
+    html.push('<div class="card"><h2>Ajouter un virement entre comptes</h2>');
+    if (accounts.length < 2){
+      html.push('<div class="empty-hint">Ajoute au moins deux comptes dans Configuration pour pouvoir faire un virement.</div></div>');
+      return html.join("");
+    }
+    var fromDefault = accounts[0].id;
+    var toDefault = accounts[1].id;
+    html.push('<div class="add-form">');
+    html.push('<div><label>Date</label><input type="date" id="v-date" value="' + defaultDateFor(year, month) + '"></div>');
+    html.push('<div><label>Compte source</label><select id="v-from">' + accountOptionsHtml(fromDefault) + '</select></div>');
+    html.push('<div><label>Compte destination</label><select id="v-to">' + accountOptionsHtml(toDefault) + '</select></div>');
+    html.push('<div><label>Montant (€)</label><input type="number" step="0.01" min="0" id="v-amount" placeholder="0,00"></div>');
+    html.push('<div><label>Note</label><input type="text" id="v-note" placeholder="Optionnel"></div>');
+    html.push('<div><button class="btn primary" data-action="add-transfer" data-year="' + year + '" data-month="' + month + '" style="width:100%">Virer</button></div>');
+    html.push('</div>');
+    html.push('<p class="muted">Un virement entre tes propres comptes n\'a aucun impact sur les catégories du budget (ni revenu, ni dépense) — il sert juste à garder une trace.</p>');
+    html.push('</div>');
+    return html.join("");
+  }
+
+  function renderTransferList(year, month, accountFilter){
+    ensureYearTx(year);
+    var transfers = state.transfers[String(year)][month] || [];
+    if (accountFilter){
+      transfers = transfers.filter(function(t){ return t.fromAccount === accountFilter || t.toAccount === accountFilter; });
+    }
+    transfers = transfers.slice().sort(function(a,b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+
+    var html = [];
+    html.push('<div class="card"><h2>Virements du mois (' + transfers.length + ')</h2>');
+    if (transfers.length === 0){
+      html.push('<div class="empty-hint">Aucun virement pour ce mois.</div>');
+    } else {
+      html.push('<div class="table-wrap"><table class="grid"><thead><tr><th>Date</th><th>De</th><th>Vers</th>' + (accountFilter ? '<th>Sens</th>' : '') + '<th>Montant</th><th>Note</th><th></th></tr></thead><tbody>');
+      transfers.forEach(function(t){
+        html.push('<tr>');
+        html.push('<td>' + escapeHtml(t.date) + '</td>');
+        html.push('<td>' + escapeHtml(accountLabel(t.fromAccount)) + '</td>');
+        html.push('<td>' + escapeHtml(accountLabel(t.toAccount)) + '</td>');
+        if (accountFilter){
+          var outgoing = (t.fromAccount === accountFilter);
+          html.push('<td class="' + (outgoing ? "neg" : "pos") + '">' + (outgoing ? "Sortant" : "Entrant") + '</td>');
+        }
+        html.push('<td class="num">' + formatMoney(t.amount) + '</td>');
+        html.push('<td>' + escapeHtml(t.note) + '</td>');
+        html.push('<td><button class="btn danger small" data-action="delete-transfer" data-year="' + year + '" data-month="' + month + '" data-id="' + escapeHtml(t.id) + '">✕</button></td>');
+        html.push('</tr>');
+      });
+      html.push('</tbody></table></div>');
+    }
+    html.push('</div>');
+    return html.join("");
+  }
+
+  function summaryBox(label, value, cls){
+    return '<div class="summary-box"><div class="label">' + escapeHtml(label) + '</div><div class="value ' + cls + '">' + formatMoney(value) + '</div></div>';
+  }
+
+  function ecartClass(cat, ecart){
+    if (ecart === 0) return "";
+    var expense = (cat === "Frais fixes" || cat === "Frais variables" || cat === "Economies");
+    return expense ? (ecart > 0 ? "neg" : "pos") : (ecart >= 0 ? "pos" : "neg");
+  }
+
+  function renderMonthCategoryTable(year, month, cat, catRecap, denomTheo, denomReal, editAccountKey){
+    var pal = CAT_PALETTE[cat];
+    var flat = CAT_FLAT[cat];
+    var showPct = !flat; // pourcentage du budget dépenses du mois, uniquement pour Frais fixes / Frais variables
+    var colCount = showPct ? 6 : 4;
+    var html = [];
+    html.push('<div class="table-wrap"><table class="grid"><thead><tr><th>Sous-catégorie</th><th>Théorique</th>');
+    if (showPct) html.push('<th>% budget</th>');
+    html.push('<th>Réel</th>');
+    if (showPct) html.push('<th>% budget</th>');
+    html.push('<th>Écart</th></tr></thead><tbody>');
+
+    catRecap.groups.forEach(function(g){
+      if (!flat){
+        html.push('<tr class="band" style="background:' + pal.band + '"><td colspan="' + colCount + '">' + escapeHtml(g.name) + (g.orphanGroup ? ' (supprimé)' : '') + '</td></tr>');
+      }
+      var subNames = Object.keys(g.subs);
+      subNames.forEach(function(sub){
+        var s = g.subs[sub];
+        var ecart = s.real - s.theo;
+        var rowClass = s.orphan ? ' class="orphan"' : "";
+        html.push('<tr' + rowClass + '>');
+        html.push('<td style="background:' + pal.sub + '">' + escapeHtml(sub) + (s.orphan ? ' (supprimée)' : '') + '</td>');
+        if (s.orphan){
+          html.push('<td class="num" style="background:' + pal.cell + '">—</td>');
+          if (showPct) html.push('<td class="num" style="background:' + pal.cell + '">—</td>');
+        } else if (editAccountKey !== null){
+          html.push('<td class="num" style="background:' + pal.cell + '"><input type="number" step="0.01" class="inline-input" data-action="edit-budget" data-year="' + year + '" data-month="' + month + '" data-account="' + escapeHtml(editAccountKey) + '" data-cat="' + escapeHtml(cat) + '" data-group="' + escapeHtml(g.name) + '" data-sub="' + escapeHtml(sub) + '" value="' + s.theo + '"></td>');
+          if (showPct) html.push('<td class="num" style="background:' + pal.cell + '">' + pctStr(s.theo, denomTheo) + '</td>');
+        } else {
+          html.push('<td class="num" style="background:' + pal.cell + '">' + formatMoney(s.theo) + '</td>');
+          if (showPct) html.push('<td class="num" style="background:' + pal.cell + '">' + pctStr(s.theo, denomTheo) + '</td>');
+        }
+        html.push('<td class="num" style="background:' + pal.cell + '">' + formatMoney(s.real) + '</td>');
+        if (showPct) html.push('<td class="num" style="background:' + pal.cell + '">' + pctStr(s.real, denomReal) + '</td>');
+        html.push('<td class="num ' + ecartClass(cat, ecart) + '" style="background:' + pal.cell + '">' + formatMoney(ecart) + '</td>');
+        html.push('</tr>');
+      });
+      if (!flat){
+        html.push('<tr class="group-total"><td>Total ' + escapeHtml(g.name) + '</td><td class="num">' + formatMoney(g.totalTheo) + '</td>');
+        if (showPct) html.push('<td class="num">' + pctStr(g.totalTheo, denomTheo) + '</td>');
+        html.push('<td class="num">' + formatMoney(g.totalReal) + '</td>');
+        if (showPct) html.push('<td class="num">' + pctStr(g.totalReal, denomReal) + '</td>');
+        html.push('<td class="num">' + formatMoney(g.totalReal - g.totalTheo) + '</td></tr>');
+      }
+    });
+
+    html.push('<tr class="cat-total"><td>TOTAL ' + escapeHtml(cat).toUpperCase() + '</td><td class="num">' + formatMoney(catRecap.totalTheo) + '</td>');
+    if (showPct) html.push('<td class="num">' + pctStr(catRecap.totalTheo, denomTheo) + '</td>');
+    html.push('<td class="num">' + formatMoney(catRecap.totalReal) + '</td>');
+    if (showPct) html.push('<td class="num">' + pctStr(catRecap.totalReal, denomReal) + '</td>');
+    html.push('<td class="num">' + formatMoney(catRecap.totalReal - catRecap.totalTheo) + '</td></tr>');
+    html.push('</tbody></table></div>');
+    return html.join("");
+  }
+
+  // ---------- Year tab ----------
+
+  function renderYearHtml(year, accountFilter){
+    var combined = computeYearRecap(year, accountFilter);
+    var denomTheo = combined["Frais fixes"].totalTheo + combined["Frais variables"].totalTheo;
+    var denomReal = combined["Frais fixes"].totalReal + combined["Frais variables"].totalReal;
+    var html = [];
+
+    html.push(renderAccountFilterBar(accountFilter));
+
+    html.push('<div class="card"><h2>Vue d\'ensemble — ' + year + (accountFilter ? ' — ' + escapeHtml(accountLabel(accountFilter)) : '') + '</h2>');
+    html.push('<p class="muted">Colonnes Théorique / Réel pour chaque mois, comme dans un tableur classique.</p>');
+    html.push('</div>');
+
+    html.push('<div class="card"><h2>Évolution sur l\'année (réel)</h2>');
+    html.push(renderYearChartSvg(combined, year, accountFilter));
+    html.push('</div>');
+
+    CATS.forEach(function(cat){
+      html.push('<div class="card">');
+      html.push('<div class="cat-header"><span class="dot cat-' + CAT_SLUG[cat] + '"></span>' + escapeHtml(cat) + '</div>');
+      html.push(renderYearCategoryTable(cat, combined[cat], denomTheo, denomReal));
+      html.push('</div>');
+    });
+
+    var revenusReal = combined["Revenus"].totalReal, revenusTheo = combined["Revenus"].totalTheo;
+    var depensesReal = combined["Frais fixes"].totalReal + combined["Frais variables"].totalReal;
+    var depensesTheo = combined["Frais fixes"].totalTheo + combined["Frais variables"].totalTheo;
+    var economiesReal = combined["Economies"].totalReal, economiesTheo = combined["Economies"].totalTheo;
+    var soldeReal = revenusReal - depensesReal - economiesReal;
+    var soldeTheo = revenusTheo - depensesTheo - economiesTheo;
+
+    var yearTransfersList = [];
+    for (var ym=0; ym<12; ym++){ yearTransfersList = yearTransfersList.concat(state.transfers[String(year)][ym] || []); }
+    var yearTransferTotals = accountFilter ? accountTransferTotals(yearTransfersList, accountFilter) : { out: 0, inn: 0 };
+    var soldeRealWithTransfers = soldeReal - yearTransferTotals.out + yearTransferTotals.inn;
+
+    html.push('<div class="card"><h2>Bilan annuel</h2><div class="summary-grid">');
+    html.push(summaryBox("Revenus (réel)", revenusReal, "pos"));
+    html.push(summaryBox("Dépenses (réel)", depensesReal, "neg"));
+    html.push(summaryBox("Épargne (réel)", economiesReal, ""));
+    if (accountFilter){
+      html.push(summaryBox("Virements sortants", -yearTransferTotals.out, yearTransferTotals.out ? "neg" : ""));
+      html.push(summaryBox("Virements entrants", yearTransferTotals.inn, yearTransferTotals.inn ? "pos" : ""));
+      html.push(summaryBox("Solde annuel réel (avec virements)", soldeRealWithTransfers, soldeRealWithTransfers >= 0 ? "pos" : "neg"));
+    } else {
+      html.push(summaryBox("Solde annuel réel", soldeReal, soldeReal >= 0 ? "pos" : "neg"));
+    }
+    html.push(summaryBox("Solde annuel théorique", soldeTheo, soldeTheo >= 0 ? "pos" : "neg"));
+    html.push('</div></div>');
+
+    return html.join("");
+  }
+
+  function renderYearCategoryTable(cat, catCombined, denomTheo, denomReal){
+    var pal = CAT_PALETTE[cat];
+    var flat = CAT_FLAT[cat];
+    var showPct = !flat;
+    var bandColspan = showPct ? 29 : 27;
+    var html = [];
+    html.push('<div class="table-wrap"><table class="grid"><thead><tr><th rowspan="2" style="vertical-align:middle">Sous-catégorie</th>');
+    for (var m=0;m<12;m++){ html.push('<th colspan="2">' + MONTH_SHORT[m] + '</th>'); }
+    html.push('<th colspan="' + (showPct ? 4 : 2) + '">Total</th></tr><tr>');
+    for (var m2=0;m2<12;m2++){ html.push('<th>Théo.</th><th>Réel</th>'); }
+    html.push('<th>Théo.</th><th>Réel</th>');
+    if (showPct) html.push('<th>% Théo</th><th>% Réel</th>');
+    html.push('</tr></thead><tbody>');
+
+    catCombined.groups.forEach(function(g){
+      if (!flat){
+        html.push('<tr class="band" style="background:' + pal.band + '"><td colspan="' + bandColspan + '">' + escapeHtml(g.name) + '</td></tr>');
+      }
+      var subNames = Object.keys(g.subs);
+      subNames.forEach(function(sub){
+        var s = g.subs[sub];
+        html.push('<tr><td style="background:' + pal.sub + '">' + escapeHtml(sub) + '</td>');
+        for (var mm=0; mm<12; mm++){
+          html.push('<td class="num" style="background:' + pal.cell + '">' + formatMoney(s.theo[mm]) + '</td>');
+          html.push('<td class="num" style="background:' + pal.cell + '">' + formatMoney(s.real[mm]) + '</td>');
+        }
+        html.push('<td class="num" style="background:' + pal.cell + '">' + formatMoney(s.totalTheo) + '</td>');
+        html.push('<td class="num" style="background:' + pal.cell + '">' + formatMoney(s.totalReal) + '</td>');
+        if (showPct){
+          html.push('<td class="num" style="background:' + pal.cell + '">' + pctStr(s.totalTheo, denomTheo) + '</td>');
+          html.push('<td class="num" style="background:' + pal.cell + '">' + pctStr(s.totalReal, denomReal) + '</td>');
+        }
+        html.push('</tr>');
+      });
+      if (!flat){
+        html.push('<tr class="group-total"><td>Total ' + escapeHtml(g.name) + '</td>');
+        for (var mm2=0; mm2<12; mm2++){
+          var gt=0, gr=0;
+          for (var sub2 in g.subs){ gt += g.subs[sub2].theo[mm2]; gr += g.subs[sub2].real[mm2]; }
+          html.push('<td class="num">' + formatMoney(gt) + '</td><td class="num">' + formatMoney(gr) + '</td>');
+        }
+        html.push('<td class="num">' + formatMoney(g.totalTheo) + '</td><td class="num">' + formatMoney(g.totalReal) + '</td>');
+        if (showPct){
+          html.push('<td class="num">' + pctStr(g.totalTheo, denomTheo) + '</td>');
+          html.push('<td class="num">' + pctStr(g.totalReal, denomReal) + '</td>');
+        }
+        html.push('</tr>');
+      }
+    });
+
+    html.push('<tr class="cat-total"><td>TOTAL ' + escapeHtml(cat).toUpperCase() + '</td>');
+    for (var mm3=0; mm3<12; mm3++){
+      html.push('<td class="num">' + formatMoney(catCombined.totalTheoByMonth[mm3]) + '</td><td class="num">' + formatMoney(catCombined.totalRealByMonth[mm3]) + '</td>');
+    }
+    html.push('<td class="num">' + formatMoney(catCombined.totalTheo) + '</td><td class="num">' + formatMoney(catCombined.totalReal) + '</td>');
+    if (showPct){
+      html.push('<td class="num">' + pctStr(catCombined.totalTheo, denomTheo) + '</td>');
+      html.push('<td class="num">' + pctStr(catCombined.totalReal, denomReal) + '</td>');
+    }
+    html.push('</tr>');
+    html.push('</tbody></table></div>');
+    return html.join("");
+  }
+
+  // ---------- Épargne tab (dédié, suivi jour/mois/an par sous-catégorie) ----------
+
+  function cumulativeArray(arr){
+    var out = [], sum = 0;
+    for (var i=0;i<arr.length;i++){ sum += arr[i]; out.push(sum); }
+    return out;
+  }
+
+  // Adds a transaction, inferring the correct year/month bucket from the date itself
+  // (used by the Épargne tab, which isn't tied to a single month).
+  function addTransactionForDate(dateStr, data){
+    var parts = dateStr.split("-");
+    var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
+    ensureYearTx(y);
+    addTransaction(y, m, data);
+    return { year: y, month: m };
+  }
+
+  function renderEpargneFilterBar(termFilter, liquidFilter){
+    var html = [];
+    html.push('<div class="card" style="padding:12px 18px;">');
+    html.push('<div class="row-flex">');
+    html.push('<strong style="margin-right:4px">Terme :</strong>');
+    html.push('<select data-action="filter-epargne-term" style="width:160px">');
+    html.push('<option value=""' + (termFilter === "" ? " selected" : "") + '>Tous les termes</option>');
+    TERM_ORDER.forEach(function(t){
+      html.push('<option value="' + t + '"' + (termFilter === t ? " selected" : "") + '>' + TERM_LABELS[t] + '</option>');
+    });
+    html.push('</select>');
+    html.push('<strong style="margin:0 4px 0 14px">Disponibilité :</strong>');
+    html.push('<select data-action="filter-epargne-liquid" style="width:200px">');
+    html.push('<option value=""' + (liquidFilter === "" ? " selected" : "") + '>Toutes</option>');
+    html.push('<option value="liquid"' + (liquidFilter === "liquid" ? " selected" : "") + '>Disponible tout de suite</option>');
+    html.push('<option value="illiquid"' + (liquidFilter === "illiquid" ? " selected" : "") + '>Non disponible</option>');
+    html.push('</select>');
+    html.push('</div></div>');
+    return html.join("");
+  }
+
+  function renderEpargneHtml(year, accountFilter){
+    var combined = computeYearRecap(year, accountFilter);
+    var econ = combined["Economies"];
+    var group = econ.groups[0] || { subs: {} };
+    var termFilter = state.currentEpargneTermFilter || "";
+    var liquidFilter = state.currentEpargneLiquidFilter || "";
+
+    var allSubNames = Object.keys(group.subs);
+    var subNames = allSubNames.filter(function(sub){
+      var meta = getEconomyMeta(sub);
+      if (termFilter && meta.term !== termFilter) return false;
+      if (liquidFilter === "liquid" && !meta.liquid) return false;
+      if (liquidFilter === "illiquid" && meta.liquid) return false;
+      return true;
+    });
+
+    var filteredTotalReal = 0, filteredTotalTheo = 0;
+    subNames.forEach(function(sub){ filteredTotalReal += group.subs[sub].totalReal; filteredTotalTheo += group.subs[sub].totalTheo; });
+
+    var html = [];
+    html.push(renderAccountFilterBar(accountFilter));
+    html.push(renderEpargneFilterBar(termFilter, liquidFilter));
+
+    html.push('<div class="card"><h2>Résumé de l\'épargne — ' + year + (accountFilter ? ' — ' + escapeHtml(accountLabel(accountFilter)) : '') + '</h2>');
+    html.push('<div class="summary-grid">');
+    html.push(summaryBox("Épargné (réel)", filteredTotalReal, "pos"));
+    html.push(summaryBox("Objectif théorique", filteredTotalTheo, ""));
+    html.push(summaryBox("Écart", filteredTotalReal - filteredTotalTheo, (filteredTotalReal - filteredTotalTheo) >= 0 ? "pos" : "neg"));
+    html.push('</div></div>');
+
+    var defaultAccount = (state.accounts && state.accounts.length) ? state.accounts[0].id : "";
+    html.push('<div class="card"><h2>Ajouter un versement / un retrait</h2>');
+    html.push('<div class="add-form">');
+    html.push('<div><label>Date</label><input type="date" id="e-date" value="' + todayISO() + '"></div>');
+    html.push('<div><label>Sous-catégorie</label><select id="e-sub">' + subOptionsHtml("Economies", "", null) + '</select></div>');
+    html.push('<div><label>Type</label><select id="e-savtype"><option value="depot">Dépôt</option><option value="retrait">Retrait</option></select></div>');
+    html.push('<div><label id="e-account-label">Compte</label><select id="e-account">' + accountOptionsHtml(defaultAccount) + '</select></div>');
+    html.push('<div><label>Montant (€)</label><input type="number" step="0.01" min="0" id="e-amount" placeholder="0,00"></div>');
+    html.push('<div><label>Note</label><input type="text" id="e-note" placeholder="Optionnel"></div>');
+    html.push('<div><button class="btn primary" data-action="add-epargne-tx" style="width:100%">Ajouter</button></div>');
+    html.push('</div>');
+    html.push('<p class="muted">Un retrait vient en déduction du total épargné et précise le compte courant crédité.</p>');
+    html.push('</div>');
+
+    if (allSubNames.length === 0){
+      html.push('<div class="card"><div class="empty-hint">Aucune sous-catégorie d\'épargne configurée. Ajoutes-en dans Configuration.</div></div>');
+    } else if (subNames.length === 0){
+      html.push('<div class="card"><div class="empty-hint">Aucune sous-catégorie ne correspond à ce filtre.</div></div>');
+    }
+
+    subNames.forEach(function(sub){
+      var s = group.subs[sub];
+      var meta = getEconomyMeta(sub);
+      var cumulReal = cumulativeArray(s.real);
+      var cumulTheo = cumulativeArray(s.theo);
+      html.push('<div class="card">');
+      html.push('<div class="cat-header"><span class="dot cat-Economies"></span>' + escapeHtml(sub));
+      html.push('<span class="btn small" style="cursor:default">' + TERM_LABELS[meta.term] + '</span>');
+      html.push('<span class="btn small" style="cursor:default">' + (meta.liquid ? "Disponible tout de suite" : "Non disponible") + '</span>');
+      html.push('</div>');
+      html.push('<div class="table-wrap"><table class="grid"><thead><tr><th>Mois</th>');
+      for (var m=0;m<12;m++){ html.push('<th>' + MONTH_SHORT[m] + '</th>'); }
+      html.push('<th>Total</th></tr></thead><tbody>');
+      html.push('<tr><td style="background:var(--economies-sub)">Théorique</td>');
+      for (var m2=0;m2<12;m2++){ html.push('<td class="num" style="background:var(--economies-cell)">' + formatMoney(s.theo[m2]) + '</td>'); }
+      html.push('<td class="num" style="background:var(--economies-cell)">' + formatMoney(s.totalTheo) + '</td></tr>');
+      html.push('<tr><td style="background:var(--economies-sub)">Réel (net)</td>');
+      for (var m3=0;m3<12;m3++){ html.push('<td class="num" style="background:var(--economies-cell)">' + formatMoney(s.real[m3]) + '</td>'); }
+      html.push('<td class="num" style="background:var(--economies-cell)">' + formatMoney(s.totalReal) + '</td></tr>');
+      html.push('</tbody></table></div>');
+      html.push('<div style="margin-top:14px">');
+      html.push(buildLineChart([
+        { label: "Cumul réel (net des retraits)", color: "#2f7d32", values: cumulReal },
+        { label: "Cumul théorique (objectif)", color: "#6b7280", values: cumulTheo, dashed: true }
+      ], MONTH_SHORT));
+      html.push('</div>');
+      html.push('</div>');
+    });
+
+    // Journal chronologique de tous les versements/retraits d'épargne de l'année (sous-catégories filtrées)
+    var subSet = {};
+    subNames.forEach(function(sub){ subSet[sub] = true; });
+    var journal = [];
+    for (var mi=0; mi<12; mi++){
+      var txs = state.years[String(year)][mi] || [];
+      txs.forEach(function(tx){
+        if (tx.category !== "Economies") return;
+        if (!subSet[tx.subcategory]) return;
+        if (accountFilter && (tx.account||"") !== accountFilter) return;
+        journal.push({ tx: tx, month: mi });
+      });
+    }
+    journal.sort(function(a,b){ return a.tx.date < b.tx.date ? -1 : (a.tx.date > b.tx.date ? 1 : 0); });
+
+    html.push('<div class="card"><h2>Journal des versements &amp; retraits (' + journal.length + ')</h2>');
+    if (journal.length === 0){
+      html.push('<div class="empty-hint">Aucune écriture pour l\'instant.</div>');
+    } else {
+      html.push('<div class="table-wrap"><table class="grid"><thead><tr><th>Date</th><th>Sous-catégorie</th><th>Type</th><th>Compte</th><th>Montant</th><th>Note</th><th></th></tr></thead><tbody>');
+      journal.forEach(function(entry){
+        var tx = entry.tx;
+        html.push('<tr>');
+        html.push('<td>' + escapeHtml(tx.date) + '</td>');
+        html.push('<td>' + escapeHtml(tx.subcategory) + '</td>');
+        html.push('<td>' + escapeHtml(txTypeLabel(tx)) + '</td>');
+        html.push('<td>' + escapeHtml(accountLabel(tx.account)) + '</td>');
+        html.push('<td class="num">' + txAmountHtml(tx) + '</td>');
+        html.push('<td>' + escapeHtml(tx.note) + '</td>');
+        html.push('<td><button class="btn danger small" data-action="delete-tx" data-year="' + year + '" data-month="' + entry.month + '" data-id="' + escapeHtml(tx.id) + '">✕</button></td>');
+        html.push('</tr>');
+      });
+      html.push('</tbody></table></div>');
+    }
+    html.push('</div>');
+
+    return html.join("");
+  }
+
+  // ---------- Year chart (native SVG, no dependency) ----------
+
+  function renderYearChartSvg(combined, year, accountFilter){
+    var revenus = combined["Revenus"].totalRealByMonth;
+    var fixesA = combined["Frais fixes"].totalRealByMonth;
+    var variablesA = combined["Frais variables"].totalRealByMonth;
+    var economies = combined["Economies"].totalRealByMonth;
+    var depenses = [], solde = [];
+    for (var m=0; m<12; m++){
+      depenses.push(fixesA[m] + variablesA[m]);
+      var monthNet = revenus[m] - depenses[m] - economies[m];
+      if (accountFilter){
+        var tt = accountTransferTotals(state.transfers[String(year)][m] || [], accountFilter);
+        monthNet = monthNet - tt.out + tt.inn;
+      }
+      solde.push(monthNet);
+    }
+    var series = [
+      { label: "Revenus", color: "#d9a400", values: revenus },
+      { label: "Dépenses", color: "#c22626", values: depenses },
+      { label: "Épargne", color: "#2f7d32", values: economies },
+      { label: "Solde" + (accountFilter ? " (avec virements)" : ""), color: "#2563eb", values: solde }
+    ];
+    return buildLineChart(series, MONTH_SHORT);
+  }
+
+  function buildLineChart(series, labels){
+    var width = 880, height = 380;
+    var padLeft = 70, padRight = 20, padTop = 20, padBottom = 40;
+    var plotW = width - padLeft - padRight;
+    var plotH = height - padTop - padBottom;
+
+    var allVals = [];
+    series.forEach(function(s){ s.values.forEach(function(v){ allVals.push(v); }); });
+    var minV = Math.min.apply(null, allVals.concat([0]));
+    var maxV = Math.max.apply(null, allVals.concat([0]));
+    var range = maxV - minV;
+    if (range === 0) range = 1;
+    minV -= range * 0.1;
+    maxV += range * 0.1;
+    range = maxV - minV;
+
+    function xFor(i){ return padLeft + (labels.length === 1 ? 0 : (i / (labels.length - 1)) * plotW); }
+    function yFor(v){ return padTop + plotH - ((v - minV) / range) * plotH; }
+
+    var svg = [];
+    svg.push('<svg viewBox="0 0 ' + width + ' ' + height + '" style="width:100%;height:auto;font-family:Calibri, Arial, sans-serif;">');
+
+    // horizontal gridlines with value labels
+    var steps = 5;
+    for (var g=0; g<=steps; g++){
+      var val = minV + (range * g / steps);
+      var y = yFor(val);
+      svg.push('<line x1="' + padLeft + '" y1="' + y.toFixed(1) + '" x2="' + (padLeft+plotW) + '" y2="' + y.toFixed(1) + '" stroke="#e2e5e9" stroke-width="1"/>');
+      svg.push('<text x="' + (padLeft-8) + '" y="' + (y+4).toFixed(1) + '" font-size="11" fill="#6b7280" text-anchor="end">' + escapeHtml(formatMoney(val)) + '</text>');
+    }
+
+    // zero line, bolder
+    if (minV < 0 && maxV > 0){
+      var y0 = yFor(0);
+      svg.push('<line x1="' + padLeft + '" y1="' + y0.toFixed(1) + '" x2="' + (padLeft+plotW) + '" y2="' + y0.toFixed(1) + '" stroke="#9aa0aa" stroke-width="1.5"/>');
+    }
+
+    // x-axis month labels
+    labels.forEach(function(lab, i){
+      var x = xFor(i);
+      svg.push('<text x="' + x.toFixed(1) + '" y="' + (height-padBottom+18) + '" font-size="11" fill="#6b7280" text-anchor="middle">' + escapeHtml(lab) + '</text>');
+    });
+
+    // series lines + points
+    series.forEach(function(s){
+      var pts = [];
+      for (var i=0;i<s.values.length;i++){ pts.push(xFor(i).toFixed(1) + "," + yFor(s.values[i]).toFixed(1)); }
+      svg.push('<polyline points="' + pts.join(" ") + '" fill="none" stroke="' + s.color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"' + (s.dashed ? ' stroke-dasharray="7,5"' : '') + '/>');
+      for (var j=0;j<s.values.length;j++){
+        var cx = xFor(j).toFixed(1), cy = yFor(s.values[j]).toFixed(1);
+        svg.push('<circle cx="' + cx + '" cy="' + cy + '" r="3.5" fill="' + s.color + '"><title>' + escapeHtml(s.label) + ' — ' + escapeHtml(labels[j]) + ' : ' + escapeHtml(formatMoney(s.values[j])) + '</title></circle>');
+      }
+    });
+
+    svg.push('</svg>');
+
+    // legend
+    var legend = ['<div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;justify-content:center;">'];
+    series.forEach(function(s){
+      legend.push('<span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;"><span style="width:12px;height:12px;border-radius:2px;background:' + s.color + ';display:inline-block;"></span>' + escapeHtml(s.label) + '</span>');
+    });
+    legend.push('</div>');
+
+    return svg.join("") + legend.join("");
+  }
+
+  // ---------- Event wiring ----------
+
+  function onAppClick(e){
+    var el = e.target.closest("[data-action]");
+    if (!el) return;
+    var action = el.getAttribute("data-action");
+
+    if (action === "add-sub"){
+      var cat = el.getAttribute("data-cat");
+      var group = el.getAttribute("data-group");
+      var inputId = el.getAttribute("data-input");
+      var input = document.getElementById(inputId);
+      addSubcategory(cat, group, input ? input.value : "");
+    } else if (action === "rename-sub"){
+      renameSubcategory(el.getAttribute("data-cat"), el.getAttribute("data-group"), el.getAttribute("data-sub"));
+    } else if (action === "delete-sub"){
+      deleteSubcategory(el.getAttribute("data-cat"), el.getAttribute("data-group"), el.getAttribute("data-sub"));
+    } else if (action === "add-group"){
+      var cat2 = el.getAttribute("data-cat");
+      var input2 = document.getElementById(el.getAttribute("data-input"));
+      addGroup(cat2, input2 ? input2.value : "");
+    } else if (action === "rename-group"){
+      renameGroup(el.getAttribute("data-cat"), el.getAttribute("data-group"));
+    } else if (action === "delete-group"){
+      deleteGroup(el.getAttribute("data-cat"), el.getAttribute("data-group"));
+    } else if (action === "add-account"){
+      var accInput = document.getElementById(el.getAttribute("data-input"));
+      addAccount(accInput ? accInput.value : "");
+      if (accInput) accInput.value = "";
+    } else if (action === "add-economy-sub"){
+      var nameInput = document.getElementById("new-sub-Economies");
+      var termInput = document.getElementById("new-sub-Economies-term");
+      var liquidInput = document.getElementById("new-sub-Economies-liquid");
+      addEconomySubcategory(nameInput ? nameInput.value : "", termInput ? termInput.value : "court", liquidInput ? liquidInput.checked : true);
+    } else if (action === "rename-account"){
+      renameAccount(el.getAttribute("data-account"));
+    } else if (action === "delete-account"){
+      deleteAccount(el.getAttribute("data-account"));
+    } else if (action === "filter-account"){
+      state.currentAccountFilter = el.getAttribute("data-account") || "";
+      saveState();
+      render();
+    } else if (action === "add-tx"){
+      var year = parseInt(el.getAttribute("data-year"), 10);
+      var month = parseInt(el.getAttribute("data-month"), 10);
+      var date = document.getElementById("f-date").value;
+      var fcat = document.getElementById("f-cat").value;
+      var fgroup = document.getElementById("f-group").value;
+      var fsub = document.getElementById("f-sub").value;
+      var faccount = document.getElementById("f-account").value;
+      var fsavtypeEl = document.getElementById("f-savtype");
+      var fsavtype = fsavtypeEl ? fsavtypeEl.value : "depot";
+      var amountRaw = document.getElementById("f-amount").value;
+      var note = document.getElementById("f-note").value;
+      var amount = parseFloat(amountRaw);
+      if (!date){ alert("Merci de renseigner une date."); return; }
+      if (!fsub){ alert("Merci de choisir une sous-catégorie (ajoute-en une dans Configuration si besoin)."); return; }
+      if (isNaN(amount) || amount <= 0){ alert("Merci de saisir un montant valide (> 0)."); return; }
+      addTransaction(year, month, { date: date, category: fcat, group: fgroup, subcategory: fsub, account: faccount, txType: fsavtype, amount: amount, note: note });
+      render();
+    } else if (action === "add-epargne-tx"){
+      var eDate = document.getElementById("e-date").value;
+      var eSub = document.getElementById("e-sub").value;
+      var eSavtype = document.getElementById("e-savtype").value;
+      var eAccount = document.getElementById("e-account").value;
+      var eAmountRaw = document.getElementById("e-amount").value;
+      var eNote = document.getElementById("e-note").value;
+      var eAmount = parseFloat(eAmountRaw);
+      if (!eDate){ alert("Merci de renseigner une date."); return; }
+      if (!eSub){ alert("Merci de choisir une sous-catégorie (ajoute-en une dans Configuration si besoin)."); return; }
+      if (isNaN(eAmount) || eAmount <= 0){ alert("Merci de saisir un montant valide (> 0)."); return; }
+      addTransactionForDate(eDate, { date: eDate, category: "Economies", group: "", subcategory: eSub, account: eAccount, txType: eSavtype, amount: eAmount, note: eNote });
+      render();
+    } else if (action === "delete-tx"){
+      var y2 = parseInt(el.getAttribute("data-year"), 10);
+      var m2 = parseInt(el.getAttribute("data-month"), 10);
+      deleteTransaction(y2, m2, el.getAttribute("data-id"));
+    } else if (action === "add-transfer"){
+      var trYear = parseInt(el.getAttribute("data-year"), 10);
+      var trMonth = parseInt(el.getAttribute("data-month"), 10);
+      var vDate = document.getElementById("v-date").value;
+      var vFrom = document.getElementById("v-from").value;
+      var vTo = document.getElementById("v-to").value;
+      var vAmountRaw = document.getElementById("v-amount").value;
+      var vNote = document.getElementById("v-note").value;
+      var vAmount = parseFloat(vAmountRaw);
+      if (!vDate){ alert("Merci de renseigner une date."); return; }
+      if (!vFrom || !vTo){ alert("Merci de choisir un compte source et un compte destination."); return; }
+      if (vFrom === vTo){ alert("Le compte source et le compte destination doivent être différents."); return; }
+      if (isNaN(vAmount) || vAmount <= 0){ alert("Merci de saisir un montant valide (> 0)."); return; }
+      addTransfer(trYear, trMonth, { date: vDate, fromAccount: vFrom, toAccount: vTo, amount: vAmount, note: vNote });
+      render();
+    } else if (action === "delete-transfer"){
+      var trY2 = parseInt(el.getAttribute("data-year"), 10);
+      var trM2 = parseInt(el.getAttribute("data-month"), 10);
+      deleteTransfer(trY2, trM2, el.getAttribute("data-id"));
+    } else if (action === "switch-tab"){
+      state.currentTab = el.getAttribute("data-tab");
+      saveState();
+      render();
+    } else if (action === "prev-year"){
+      state.currentYear -= 1;
+      ensureYearTx(state.currentYear);
+      saveState();
+      render();
+    } else if (action === "next-year"){
+      state.currentYear += 1;
+      ensureYearTx(state.currentYear);
+      saveState();
+      render();
+    } else if (action === "export"){
+      doExport();
+    } else if (action === "import"){
+      document.getElementById("file-input").click();
+    }
+  }
+
+  function onAppChange(e){
+    var el = e.target;
+    if (el.id === "f-cat"){
+      var cat = el.value;
+      var groupSelect = document.getElementById("f-group");
+      var firstGroup = firstGroupName(cat);
+      if (groupSelect) groupSelect.innerHTML = groupOptionsHtml(cat, firstGroup);
+      var subSelect = document.getElementById("f-sub");
+      if (subSelect) subSelect.innerHTML = subOptionsHtml(cat, firstGroup, null);
+      var savtypeWrap = document.getElementById("f-savtype-wrap");
+      if (savtypeWrap) savtypeWrap.style.display = (cat === "Economies") ? "" : "none";
+      return;
+    }
+    if (el.id === "f-group"){
+      var cat2 = document.getElementById("f-cat").value;
+      var subSelect2 = document.getElementById("f-sub");
+      if (subSelect2) subSelect2.innerHTML = subOptionsHtml(cat2, el.value, null);
+      return;
+    }
+    if (el.id === "f-savtype" || el.id === "e-savtype"){
+      var labelEl = document.getElementById(el.id === "f-savtype" ? "f-account-label" : "e-account-label");
+      if (labelEl) labelEl.textContent = (el.value === "retrait") ? "Compte crédité" : "Compte";
+      return;
+    }
+    var action = el.getAttribute && el.getAttribute("data-action");
+    if (action === "edit-budget"){
+      var year = parseInt(el.getAttribute("data-year"), 10);
+      var month = parseInt(el.getAttribute("data-month"), 10);
+      var accountKey3 = el.getAttribute("data-account") || "";
+      var cat3 = el.getAttribute("data-cat");
+      var group3 = el.getAttribute("data-group");
+      var sub3 = el.getAttribute("data-sub");
+      var val = parseFloat(el.value);
+      if (isNaN(val) || val < 0) val = 0;
+      setBudget(year, month, accountKey3, cat3, group3, sub3, val);
+      render();
+    } else if (action === "set-economy-term"){
+      var subT = el.getAttribute("data-sub");
+      var meta = getEconomyMeta(subT);
+      setEconomyMeta(subT, el.value, meta.liquid);
+    } else if (action === "set-economy-liquid"){
+      var subL = el.getAttribute("data-sub");
+      var meta2 = getEconomyMeta(subL);
+      setEconomyMeta(subL, meta2.term, el.checked);
+    } else if (action === "filter-epargne-term"){
+      state.currentEpargneTermFilter = el.value;
+      saveState();
+      render();
+    } else if (action === "filter-epargne-liquid"){
+      state.currentEpargneLiquidFilter = el.value;
+      saveState();
+      render();
+    }
+  }
+
+  function pad2(n){ return n < 10 ? "0" + n : "" + n; }
+
+  function exportFileName(){
+    var d = new Date();
+    var datePart = d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate());
+    return datePart + "_Suivi Budget - " + APP_VERSION + ".json";
+  }
+
+  function doExport(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = exportFileName();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function doImport(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var data = JSON.parse(reader.result);
+        if (!data.categories || !data.years || !data.budgets){
+          alert("Fichier invalide : structure inattendue.");
+          return;
+        }
+        if (!confirm("Importer ce fichier remplacera toutes les données actuelles. Continuer ?")) return;
+        state = data;
+        state.currentTab = state.currentTab || "config";
+        state.currentYear = state.currentYear || (new Date()).getFullYear();
+        ensureYearTx(state.currentYear);
+        saveState();
+        render();
+      } catch(err){
+        alert("Impossible de lire ce fichier JSON.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // polyfill closest (very old browsers)
+  if (!Element.prototype.closest){
+    Element.prototype.closest = function(selector){
+      var el = this;
+      while (el){
+        if (el.matches && el.matches(selector)) return el;
+        el = el.parentElement;
+      }
+      return null;
+    };
+  }
+
+  // ---------- Init ----------
+
+  document.addEventListener("DOMContentLoaded", function(){
+    loadState();
+    document.getElementById("app").addEventListener("click", onAppClick);
+    document.getElementById("app").addEventListener("change", onAppChange);
+    document.getElementById("tabs").addEventListener("click", onAppClick);
+    document.querySelector('header').addEventListener("click", onAppClick);
+    document.getElementById("file-input").addEventListener("change", function(e){
+      if (e.target.files && e.target.files[0]) doImport(e.target.files[0]);
+      e.target.value = "";
+    });
+    render();
+  });
+
+})();
+</script>
+</body>
+</html>
