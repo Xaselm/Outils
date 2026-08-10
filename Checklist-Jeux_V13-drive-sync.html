@@ -1,0 +1,2747 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma Ludothèque — Checklist de jeux</title>
+<meta name="description" content="Suivi de votre backlog de jeux vidéo par console.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
+<style>
+  :root {
+    /* Palette principale (fixe, contexte carte/modale) */
+    --bg: #14211C;
+    --card: #F2EAD3;
+    --ink: #241C14;
+    --moss: #5B7A4A;
+    --ochre: #B8842E;
+    --brick: #9C3B2E;
+    --indigo: #3F5D7A;
+    --gold: #C9A227;
+    --teal: #3F7A6B;
+
+    /* Tons dérivés */
+    --bg-raised: #1C2C25;
+    --card-dim: #C9BB98;
+    --text-strong: #F2EAD3;
+    --ink-soft: #5B5041;
+    --moss-ink: #3A4E2F;
+    --ochre-ink: #7A551C;
+    --brick-ink: #6E2A20;
+    --indigo-ink: #25384A;
+    --gold-ink: #8C6D14;
+    --teal-ink: #2A5147;
+    --line: rgba(36,28,20,0.16);
+    --line-dark: rgba(242,234,211,0.14);
+    --input-bg: #FBF5E4;
+    --chip-bg: rgba(242,234,211,0.12);
+    --ghost-hover-bg: rgba(242,234,211,0.06);
+    --stat-moss-color: #8FB379;
+    --stat-ochre-color: #D9A857;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+    --radius-s: 4px; --radius-m: 8px; --radius-l: 14px;
+
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+
+    --shadow-card: 0 1px 2px rgba(10,16,13,.4), 0 8px 20px -10px rgba(10,16,13,.55);
+    --shadow-modal: 0 24px 64px -20px rgba(0,0,0,.65);
+  }
+
+  [data-theme="light"] {
+    --bg: #E3D9BE;
+    --card: #FFFCF2;
+    --bg-raised: #EEE5CC;
+    --card-dim: #6B5D45;
+    --text-strong: #241C14;
+    --line-dark: rgba(36,28,20,0.14);
+    --chip-bg: rgba(36,28,20,0.08);
+    --ghost-hover-bg: rgba(36,28,20,0.05);
+    --stat-moss-color: #3F5D33;
+    --stat-ochre-color: #8C5F1E;
+    --shadow-card: 0 1px 2px rgba(60,48,24,.10), 0 8px 20px -10px rgba(60,48,24,.22);
+    --shadow-modal: 0 24px 64px -20px rgba(40,30,15,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text-strong);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    color-scheme: dark;
+    transition: background-color .2s ease, color .2s ease;
+  }
+  [data-theme="light"] body { color-scheme: light; }
+
+  .hidden { display: none !important; }
+  button { font: inherit; }
+
+  .app { max-width: 1240px; margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-8); }
+
+  /* ---------- Header ---------- */
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-5);
+  }
+  .header-title { display: flex; align-items: center; gap: var(--space-3); }
+  .logo { width: 38px; height: 38px; color: var(--ochre); flex-shrink: 0; }
+  .header-title h1 {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: clamp(26px, 3.6vw, 36px); color: var(--text-strong); margin: 0; letter-spacing: -0.01em;
+  }
+  .tagline {
+    margin: 3px 0 0; color: var(--card-dim); font-size: 13px;
+    font-family: var(--font-mono); letter-spacing: 0.01em;
+  }
+  .header-actions { display: flex; gap: var(--space-2); align-items: center; }
+
+  /* ---------- Boutons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--font-body); font-weight: 600; font-size: 13.5px;
+    padding: 9px 14px; border-radius: var(--radius-m); border: 1px solid transparent;
+    cursor: pointer; transition: transform .12s ease, background .15s ease, border-color .15s ease;
+    white-space: nowrap;
+  }
+  .btn svg { width: 15px; height: 15px; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--ochre); color: #1B1206; }
+  .btn-primary:hover { background: #C6934A; }
+  .btn-ghost { background: transparent; border-color: var(--line-dark); color: var(--text-strong); }
+  .btn-ghost:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
+  .btn-danger { background: var(--brick); color: var(--card); }
+  .btn-danger:hover { background: #B34838; }
+
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: var(--radius-s); border: none;
+    background: transparent; color: inherit; cursor: pointer; transition: background .15s ease;
+  }
+  .icon-btn svg { width: 15px; height: 15px; }
+  .icon-btn:hover { background: rgba(36,28,20,0.08); }
+  .icon-btn-danger:hover { background: rgba(156,59,46,0.15); color: var(--brick); }
+  .icon-btn:disabled { opacity: .3; cursor: default; pointer-events: none; }
+
+  .drive-btn { position: relative; }
+  .drive-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: var(--card-dim); transition: background .2s ease;
+  }
+  .drive-dot.is-connected { background: var(--moss); }
+  .drive-dot.is-syncing { background: var(--ochre); animation: drive-pulse 1s ease-in-out infinite; }
+  .drive-dot.is-error { background: var(--brick); }
+  @keyframes drive-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+  .theme-toggle {
+    width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: transparent;
+    color: var(--text-strong); cursor: pointer; flex-shrink: 0;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
+  .theme-toggle svg { width: 18px; height: 18px; }
+
+  button:focus-visible, input:focus-visible, select:focus-visible, .tab:focus-visible, .view-tab:focus-visible {
+    outline: 2px solid var(--ochre); outline-offset: 2px;
+  }
+
+  /* ---------- Vues (Backlog / À venir) ---------- */
+  .view-tabs { display: flex; gap: 10px; margin-bottom: var(--space-5); }
+  .view-tab {
+    display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body);
+    font-weight: 700; font-size: 13.5px; padding: 9px 18px; border-radius: 999px;
+    border: 1.5px solid var(--line-dark); background: transparent; color: var(--card-dim);
+    cursor: pointer; transition: all .15s ease;
+  }
+  .view-tab svg { width: 15px; height: 15px; }
+  .view-tab:hover { color: var(--text-strong); border-color: var(--card-dim); }
+  .view-tab.active { background: var(--ochre); border-color: var(--ochre); color: #1B1206; }
+  .view-tab-count {
+    font-family: var(--font-mono); font-size: 10.5px; padding: 1px 7px; border-radius: 999px;
+    background: var(--chip-bg);
+  }
+  .view-tab.active .view-tab-count { background: rgba(27,18,6,.18); }
+
+  /* ---------- Stats ---------- */
+  .stats {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .stat {
+    background: var(--bg-raised); border: 1px solid var(--line-dark); border-radius: var(--radius-m);
+    padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: 2px;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  .stat-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--text-strong); }
+  .stat-label { font-size: 11.5px; color: var(--card-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-moss .stat-value { color: var(--stat-moss-color); }
+  .stat-ochre .stat-value { color: var(--stat-ochre-color); }
+
+  .upcoming-summary-bar {
+    font-family: var(--font-mono); font-size: 13px; color: var(--card-dim); margin: -6px 0 var(--space-4);
+  }
+
+  /* ---------- Légende ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: -6px 0 var(--space-4); font-family: var(--font-mono); font-size: 11px; color: var(--card-dim); align-items: center; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-4); }
+  .search-box {
+    display: flex; align-items: center; gap: 8px; background: var(--bg-raised);
+    border: 1px solid var(--line-dark); border-radius: var(--radius-m); padding: 8px 12px;
+    flex: 1 1 220px; min-width: 180px; transition: background-color .2s ease, border-color .2s ease;
+  }
+  .search-box svg { width: 15px; height: 15px; color: var(--card-dim); flex-shrink: 0; }
+  .search-box input {
+    background: transparent; border: none; outline: none; color: var(--text-strong);
+    font-family: var(--font-body); font-size: 14px; width: 100%;
+  }
+  .search-box input::placeholder { color: var(--card-dim); }
+  .filter-group { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  select {
+    background: var(--bg-raised); border: 1px solid var(--line-dark); color: var(--text-strong);
+    border-radius: var(--radius-m); padding: 8px 10px; font-family: var(--font-body);
+    font-size: 13px; cursor: pointer; transition: background-color .2s ease, border-color .2s ease;
+  }
+  .toolbar-actions { display: flex; gap: var(--space-2); margin-left: auto; }
+
+  /* ---------- Console tabs ---------- */
+  .console-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space-4); }
+  .tab {
+    display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; padding: 6px 13px 6px 6px;
+    border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: transparent;
+    color: var(--card-dim); cursor: pointer; transition: all .15s ease;
+  }
+  .tab:hover { border-color: var(--card-dim); color: var(--text-strong); }
+  .tab.active { background: var(--card); color: var(--ink); border-color: var(--card); box-shadow: 0 2px 6px rgba(20,33,28,.15); }
+  .tab-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .tab-icon-wrap {
+    width: 24px; height: 24px; border-radius: var(--radius-s); overflow: hidden; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tab-icon-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tab-count { background: var(--chip-bg); padding: 1px 6px; border-radius: 999px; font-size: 10.5px; }
+  .tab.active .tab-count { background: rgba(36,28,20,0.12); }
+
+  /* ---------- Board ---------- */
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); align-items: start; }
+  .column-head {
+    display: flex; align-items: baseline; gap: 8px; padding: 0 4px var(--space-3);
+    border-bottom: 1px solid var(--line-dark); margin-bottom: var(--space-4);
+  }
+  .column-head h2 {
+    font-family: var(--font-body); font-weight: 700; font-size: 12.5px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-strong); margin: 0;
+  }
+  .column-head .count { font-family: var(--font-mono); font-size: 12px; color: var(--card-dim); }
+  .column-body {
+    display: flex; flex-direction: column; gap: 9px; min-height: 60px;
+    max-height: 64vh; overflow-y: auto; padding-right: 4px; margin-right: -4px;
+    scrollbar-width: thin; scrollbar-color: var(--card-dim) transparent;
+  }
+  .column-body::-webkit-scrollbar { width: 6px; }
+  .column-body::-webkit-scrollbar-track { background: transparent; }
+  .column-body::-webkit-scrollbar-thumb { background: var(--card-dim); border-radius: 999px; }
+  .empty-col {
+    border: 1px dashed var(--line-dark); border-radius: var(--radius-m); padding: var(--space-5) var(--space-4);
+    text-align: center; color: var(--card-dim); font-size: 13px; flex-shrink: 0;
+  }
+
+  /* ---------- Fiche jeu (carte) ---------- */
+  .card {
+    background: var(--card); color: var(--ink); border-radius: var(--radius-m);
+    box-shadow: var(--shadow-card); cursor: pointer; border-left: 4px solid var(--console-color, var(--ochre));
+    animation: card-in .25s ease both; transition: transform .15s ease, box-shadow .15s ease, background-color .2s ease;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(20,33,28,.35), 0 14px 24px -12px rgba(20,33,28,.5); }
+  .card.card-complete {
+    background-color: var(--card);
+    background-image: linear-gradient(180deg, rgba(201,162,39,0.14), rgba(201,162,39,0) 50%);
+    box-shadow: 0 0 0 2px var(--gold), var(--shadow-card);
+  }
+  .card.card-complete:hover {
+    box-shadow: 0 0 0 2px var(--gold), 0 4px 8px rgba(20,33,28,.35), 0 14px 24px -12px rgba(20,33,28,.5);
+  }
+  @keyframes card-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card-body { padding: 12px 13px; }
+
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: 6px; }
+  .card-header-text { flex: 1; min-width: 0; }
+  .card-thumb {
+    width: 50px; height: 50px; border-radius: var(--radius-s); object-fit: cover; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(20,33,28,.25);
+  }
+
+  .card-tab { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .card-tab .mono { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+  .card-title { font-family: var(--font-body); font-weight: 700; font-size: 15px; line-height: 1.3; margin: 0; color: var(--ink); }
+
+  .card-tab-badges { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+  .stamp {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 3px 8px; border-radius: 3px; border: 1.5px solid currentColor; transform: rotate(-2deg);
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .stamp svg { width: 10px; height: 10px; }
+  .stamp-moss { color: var(--moss-ink); background: rgba(91,122,74,0.14); }
+  .stamp-ochre { color: var(--ochre-ink); background: rgba(184,132,46,0.16); }
+  .stamp-gold { color: var(--gold-ink); background: rgba(201,162,39,0.22); }
+
+  .run-badge {
+    display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 10px;
+    font-weight: 600; padding: 3px 7px; border-radius: 999px; background: rgba(36,28,20,0.08); color: var(--ink-soft);
+  }
+  .run-badge svg { width: 10px; height: 10px; }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10.5px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 8px;
+    border-radius: var(--radius-s); margin-bottom: var(--space-2);
+  }
+  .tag svg { width: 11px; height: 11px; }
+  .tag-brick { color: var(--brick-ink); background: rgba(156,59,46,0.14); }
+  .tag-indigo { color: var(--indigo-ink); background: rgba(63,93,122,0.16); }
+  .tag-teal { color: var(--teal-ink); background: rgba(63,122,107,0.16); }
+
+  .card-divider { border-top: 1px dashed var(--line); margin: 9px 0; }
+
+  .card-dates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: var(--space-2); }
+  .mini-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); margin-bottom: 2px; }
+  .mono { font-family: var(--font-mono); }
+  .card-dates .mono { font-size: 12px; color: var(--ink); }
+
+  .card-durations { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: 11.5px; color: var(--ink-soft); margin-bottom: var(--space-2); }
+
+  .card-footer {
+    display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-3);
+    padding-top: var(--space-3); border-top: 1px solid var(--line);
+  }
+  .status-quick { display: flex; gap: 2px; }
+  .qbtn {
+    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-s); border: none; background: transparent; color: var(--ink-soft); cursor: pointer;
+  }
+  .qbtn svg { width: 16px; height: 16px; }
+  .qbtn:hover { background: rgba(36,28,20,0.08); color: var(--ink); }
+  .qbtn.qactive { color: var(--ochre-ink); background: rgba(184,132,46,0.16); }
+  .card-actions { display: flex; gap: 2px; }
+  .card .icon-btn { color: var(--ink-soft); }
+  .card .icon-btn:hover { background: rgba(36,28,20,0.08); color: var(--ink); }
+  .card .icon-btn-danger:hover { color: var(--brick-ink); background: rgba(156,59,46,0.14); }
+
+  /* ---------- Jeux à venir ---------- */
+  .upcoming-list { display: flex; flex-direction: column; gap: var(--space-3); }
+  .upcoming-card {
+    display: flex; gap: var(--space-4); align-items: center; background: var(--card); color: var(--ink);
+    border-radius: var(--radius-m); padding: var(--space-3) var(--space-4); box-shadow: var(--shadow-card);
+    border-left: 4px solid var(--console-color, var(--ochre)); transition: transform .15s ease, box-shadow .15s ease, background-color .2s ease;
+    cursor: pointer;
+  }
+  .upcoming-card:hover { transform: translateY(-2px); }
+  .upcoming-thumb { width: 60px; height: 60px; border-radius: var(--radius-s); object-fit: contain; flex-shrink: 0; background: var(--input-bg); }
+  .upcoming-thumb-empty { display: flex; align-items: center; justify-content: center; color: var(--ink-soft); }
+  .upcoming-thumb-empty svg { width: 24px; height: 24px; }
+  .upcoming-info { flex: 1; min-width: 0; }
+  .upcoming-info .card-tab { margin-bottom: 4px; }
+  .upcoming-info .card-title { margin-bottom: 2px; font-size: 15px; }
+  .upcoming-date { font-size: 12px; color: var(--ink-soft); }
+  .upcoming-countdown { font-family: var(--font-mono); font-size: 13px; font-weight: 700; white-space: nowrap; color: var(--ochre-ink); flex-shrink: 0; }
+  .upcoming-countdown.countdown-due { color: var(--moss-ink); }
+  .upcoming-card .card-actions { flex-shrink: 0; }
+
+  @media (max-width: 480px) {
+    .upcoming-card { flex-wrap: wrap; }
+    .upcoming-countdown { order: 3; width: 100%; }
+  }
+
+  /* ---------- Modales ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(10,16,13,0.65); backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; padding: var(--space-4);
+    z-index: 100; animation: overlay-in .15s ease both;
+  }
+  @keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--card); color: var(--ink); border-radius: var(--radius-l); padding: var(--space-5);
+    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-modal);
+    animation: modal-in .2s ease both; color-scheme: light;
+  }
+  @keyframes modal-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .modal-small { max-width: 380px; }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+  .modal-head h2 { font-family: var(--font-display); font-size: 21px; font-weight: 600; margin: 0; }
+  #confirm-message { font-size: 14.5px; line-height: 1.5; margin: 0 0 var(--space-2); }
+
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1; margin-bottom: var(--space-3); }
+  .field label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-soft); }
+  .field input, .field select {
+    font-family: var(--font-body); font-size: 14.5px; padding: 9px 11px; border-radius: var(--radius-s);
+    border: 1.5px solid var(--line); background: var(--input-bg); color: var(--ink); width: 100%;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--ochre); }
+  .field-row { display: flex; gap: var(--space-3); }
+  .hint { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); margin: -6px 0 var(--space-3); min-height: 15px; }
+
+  .toggle-group { display: flex; border: 1.5px solid var(--line); border-radius: var(--radius-s); overflow: hidden; }
+  .toggle-btn {
+    flex: 1; padding: 8px 6px; border: none; background: transparent; font-family: var(--font-body);
+    font-size: 12px; font-weight: 600; color: var(--ink-soft); cursor: pointer; border-right: 1.5px solid var(--line);
+  }
+  .toggle-btn:last-child { border-right: none; }
+  .toggle-btn.active { background: var(--ink); color: var(--card); }
+
+  .checkbox-label {
+    display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 600;
+    color: var(--ink); cursor: pointer; padding: 9px 11px; border: 1.5px solid var(--line);
+    border-radius: var(--radius-s); background: var(--input-bg);
+  }
+  .checkbox-label input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--ochre); cursor: pointer; flex-shrink: 0; }
+
+  .coop-details {
+    margin-top: 8px; padding: 11px 12px; border: 1.5px dashed var(--line); border-radius: var(--radius-s);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .coop-type-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .checkbox-label-sm {
+    display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500;
+    color: var(--ink); cursor: pointer;
+  }
+  .checkbox-label-sm input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--ochre); cursor: pointer; flex-shrink: 0; }
+  .coop-players-row { display: flex; align-items: center; gap: 10px; }
+  .coop-players-row label { font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+  .coop-players-row input {
+    width: 70px; font-family: var(--font-body); font-size: 13.5px; padding: 7px 9px; border-radius: var(--radius-s);
+    border: 1.5px solid var(--line); background: var(--input-bg); color: var(--ink);
+  }
+  .coop-players-row input:focus { outline: none; border-color: var(--ochre); }
+
+  .star-slot { position: relative; display: inline-block; flex-shrink: 0; }
+  .star-slot .star-bg-icon, .star-slot .star-fg-icon { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .star-slot .star-bg-icon svg, .star-slot .star-fg-icon svg { width: 100%; height: 100%; display: block; }
+  .star-slot .star-bg-icon { color: var(--line); }
+  .star-slot .star-fg-icon { color: var(--ochre); }
+
+  .star-rating { display: inline-flex; gap: 1px; margin-bottom: var(--space-2); }
+  .star-rating .star-slot { width: 13px; height: 13px; }
+
+  .star-picker-row { display: flex; align-items: center; gap: 10px; }
+  .star-picker { display: inline-flex; gap: 3px; }
+  .star-picker .star-slot { width: 27px; height: 27px; cursor: pointer; }
+  .star-picker-value { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); min-width: 92px; }
+
+  .modal-actions { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); }
+  .spacer { flex: 1; }
+
+  /* ---------- Image du jeu (formulaire) ---------- */
+  .image-field { display: flex; gap: var(--space-3); align-items: flex-start; margin-bottom: var(--space-3); }
+  .image-preview {
+    width: 84px; height: 84px; border-radius: var(--radius-s); object-fit: cover; flex-shrink: 0;
+    background: var(--input-bg); border: 1.5px solid var(--line); display: flex; align-items: center;
+    justify-content: center; color: var(--ink-soft); overflow: hidden;
+  }
+  .image-preview img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .image-preview svg { width: 28px; height: 28px; }
+  .image-field-controls { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .image-field-controls .btn { align-self: flex-start; }
+  .image-field-controls input {
+    font-family: var(--font-body); font-size: 13px; padding: 8px 10px; border-radius: var(--radius-s);
+    border: 1.5px solid var(--line); background: var(--input-bg); color: var(--ink); width: 100%;
+  }
+  .image-field-controls input:focus { outline: none; border-color: var(--ochre); }
+  .image-hint { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); margin: 0; }
+
+  /* ---------- Historique des runs ---------- */
+  .run-history { margin: -4px 0 var(--space-3); }
+  .run-history-summary { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); margin: 0 0 6px; }
+  .run-history-list {
+    display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: 11px;
+    color: var(--ink-soft); padding: 8px 10px; background: var(--input-bg); border-radius: var(--radius-s);
+    border: 1px solid var(--line);
+  }
+
+  /* ---------- Consoles / setups (modale) ---------- */
+  .console-add-row { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .console-add-row input {
+    flex: 1; font-family: var(--font-body); padding: 9px 11px; border-radius: var(--radius-s);
+    border: 1.5px solid var(--line); background: var(--input-bg); color: var(--ink);
+  }
+  .console-add-row input:focus { outline: none; border-color: var(--ochre); }
+  .console-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+  .console-list li { display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius-s); }
+  .console-row-top { display: flex; align-items: center; gap: 10px; }
+  .console-thumb-wrap { position: relative; flex-shrink: 0; }
+  .console-thumb-btn {
+    width: 32px; height: 32px; border-radius: var(--radius-s); border: none; padding: 0; cursor: pointer;
+    overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: box-shadow .15s ease;
+  }
+  .console-thumb-btn:hover { box-shadow: 0 0 0 2px var(--ochre); }
+  .console-thumb-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .console-thumb-remove {
+    position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--brick); color: var(--card); border: none; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; padding: 0;
+  }
+  .console-thumb-remove svg { width: 9px; height: 9px; }
+  .console-row-top span.cname { flex: 1; font-weight: 600; font-size: 14px; }
+  .console-count { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
+  .console-empty { color: var(--ink-soft); font-size: 13.5px; text-align: center; padding: var(--space-4) 0; }
+  .console-row-meta { display: flex; gap: 8px; padding-left: 17px; }
+  .console-desc-input {
+    flex: 1; font-family: var(--font-body); font-size: 12.5px; padding: 6px 9px; border-radius: var(--radius-s);
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--ink); min-width: 0;
+  }
+  .console-desc-input:focus { outline: none; border-color: var(--ochre); }
+  .console-setup-select {
+    font-family: var(--font-body); font-size: 12px; padding: 6px 8px; border-radius: var(--radius-s);
+    border: 1px solid var(--line); background: var(--input-bg); color: var(--ink); cursor: pointer; flex-shrink: 0; max-width: 40%;
+  }
+
+  .setups-section { margin-bottom: var(--space-5); padding-bottom: var(--space-4); border-bottom: 1px dashed var(--line); }
+  .setups-section h3 {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft);
+    margin: 0 0 var(--space-3); font-weight: 700;
+  }
+  .setup-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .setup-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 5px 5px 12px; border: 1px solid var(--line);
+    border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--input-bg);
+  }
+  .setup-chip button {
+    width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(156,59,46,.12);
+    color: var(--brick-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .setup-chip button svg { width: 10px; height: 10px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; bottom: var(--space-5); left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--card); padding: 12px 20px; border-radius: var(--radius-m);
+    font-size: 13.5px; font-weight: 500; opacity: 0; pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease; z-index: 200; box-shadow: var(--shadow-modal);
+    max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast-error { background: var(--brick); }
+
+  /* ---------- Loading ---------- */
+  .loading-overlay {
+    position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: var(--space-3); z-index: 300;
+    color: var(--card-dim); font-family: var(--font-mono); font-size: 13px; transition: opacity .2s ease;
+  }
+  .loading-spinner {
+    width: 28px; height: 28px; border: 2.5px solid var(--line-dark); border-top-color: var(--ochre);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .board { grid-template-columns: 1fr; }
+    .toolbar-actions { margin-left: 0; width: 100%; }
+    .header { flex-direction: column; }
+  }
+  @media (max-width: 480px) {
+    .app { padding: var(--space-4) var(--space-3) var(--space-7); }
+    .field-row { flex-direction: column; }
+    .console-setup-select { max-width: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>Chargement de votre ludothèque…</p>
+  </div>
+
+  <div class="app" id="app">
+    <header class="header">
+      <div class="header-title">
+        <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2.2"></rect>
+          <line x1="9" y1="6" x2="9" y2="18" stroke-dasharray="2 2.4"></line>
+          <circle cx="9" cy="7.2" r="0.9" fill="currentColor" stroke="none"></circle>
+          <circle cx="9" cy="16.8" r="0.9" fill="currentColor" stroke="none"></circle>
+        </svg>
+        <div>
+          <h1>Ma Ludothèque</h1>
+          <p class="tagline">Le suivi de votre backlog, jeu par jeu</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-download-file" class="btn btn-primary" title="Télécharger le fichier complet avec vos données" aria-label="Télécharger le fichier avec vos données">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Télécharger le fichier
+        </button>
+        <button id="btn-export" class="btn btn-ghost" title="Exporter uniquement les données (JSON)" aria-label="Exporter mes données en JSON">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><line x1="8" y1="8" x2="16" y2="8"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="8" y1="16" x2="12" y2="16"></line></svg>
+          JSON
+        </button>
+        <label class="btn btn-ghost" title="Importer des données (JSON)" for="input-import">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Importer
+          <input type="file" id="input-import" accept="application/json" hidden="">
+        </label>
+        <button id="btn-drive-connect" class="btn btn-ghost drive-btn" title="Connecter Google Drive pour synchroniser vos données" aria-label="Connecter Google Drive">
+          <span id="drive-dot" class="drive-dot"></span>
+          <span id="drive-status-label">Drive : non connecté</span>
+        </button>
+        <button id="btn-drive-force" class="btn btn-ghost" title="Forcer l'envoi des données vers Drive maintenant" aria-label="Forcer la synchronisation">
+          Forcer synchro
+        </button>
+        <button id="btn-theme-toggle" class="theme-toggle" title="Passer en mode clair" aria-label="Passer en mode clair"></button>
+      </div>
+    </header>
+
+    <nav class="view-tabs" aria-label="Changer de vue">
+      <button class="view-tab active" id="view-backlog" data-view="backlog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+        Backlog
+      </button>
+      <button class="view-tab" id="view-upcoming" data-view="upcoming">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        À venir <span class="view-tab-count" id="upcoming-count-badge">0</span>
+      </button>
+    </nav>
+
+    <section class="stats" id="stats" aria-label="Statistiques"></section>
+    <p class="upcoming-summary-bar hidden" id="upcoming-summary-bar"><span id="upcoming-summary"></span></p>
+
+    <div class="legend" id="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--ochre)"></span>En cours</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--moss)"></span>Fait</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--brick)"></span>À acheter</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--indigo)"></span>Sur abonnement</span>
+    </div>
+
+    <section class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="search" id="input-search" placeholder="Rechercher un jeu…" aria-label="Rechercher un jeu">
+      </div>
+      <div class="filter-group">
+        <select id="filter-purchase" aria-label="Filtrer par statut d'achat">
+          <option value="all">Achat : tous</option>
+          <option value="achete">Achetés</option>
+          <option value="a_acheter">À acheter</option>
+          <option value="abonnement">Sur abonnement</option>
+        </select>
+        <select id="filter-length" aria-label="Filtrer par durée">
+          <option value="all">Durée : toutes</option>
+          <option value="long">Longs (+30h)</option>
+          <option value="court">Courts (–30h)</option>
+        </select>
+        <select id="sort-select" aria-label="Trier les jeux">
+          <option value="default">Trier : par défaut</option>
+          <option value="name_asc">Nom (A→Z)</option>
+          <option value="name_desc">Nom (Z→A)</option>
+          <option value="duration_asc">Durée estimée (courte→longue)</option>
+          <option value="duration_desc">Durée estimée (longue→courte)</option>
+          <option value="purchase">Statut d'achat</option>
+          <option value="added_desc">Ajout récent d'abord</option>
+          <option value="added_asc">Ajout ancien d'abord</option>
+          <option value="rating_desc">Note (meilleure d'abord)</option>
+          <option value="rating_asc">Note (moins bonne d'abord)</option>
+        </select>
+      </div>
+      <div class="toolbar-actions">
+        <button id="btn-manage-consoles" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          Consoles
+        </button>
+        <button id="btn-add-game" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span id="btn-add-game-label">Ajouter un jeu</span>
+        </button>
+      </div>
+    </section>
+
+    <nav class="console-tabs" id="console-tabs" aria-label="Filtrer par console"></nav>
+
+    <main class="board" id="board">
+      <div class="column" data-status="a_faire">
+        <div class="column-head"><h2>À faire</h2><span class="count" id="count-a_faire">0</span></div>
+        <div class="column-body" id="col-a_faire"></div>
+      </div>
+      <div class="column" data-status="en_cours">
+        <div class="column-head"><h2>En cours</h2><span class="count" id="count-en_cours">0</span></div>
+        <div class="column-body" id="col-en_cours"></div>
+      </div>
+      <div class="column" data-status="fait">
+        <div class="column-head"><h2>Fait</h2><span class="count" id="count-fait">0</span></div>
+        <div class="column-body" id="col-fait"></div>
+      </div>
+    </main>
+
+    <div class="upcoming-list hidden" id="upcoming-list"></div>
+  </div>
+
+  <!-- Modale : ajouter / modifier un jeu -->
+  <div class="modal-overlay hidden" id="modal-game-overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-game-title">
+      <div class="modal-head">
+        <h2 id="modal-game-title">Ajouter un jeu</h2>
+        <button class="icon-btn" id="btn-close-game-modal" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <form id="form-game" novalidate="">
+        <div class="field">
+          <label for="f-name">Nom du jeu</label>
+          <input type="text" id="f-name" required="" placeholder="ex. Hollow Knight: Silksong">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="f-console">Console</label>
+            <select id="f-console"></select>
+          </div>
+        </div>
+        <div class="field" id="new-console-field" hidden="">
+          <label for="f-console-new">Nom de la nouvelle console</label>
+          <input type="text" id="f-console-new" placeholder="ex. Nintendo Switch 2">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Disponibilité</label>
+            <div class="toggle-group" id="toggle-upcoming" role="group" aria-label="Le jeu est-il déjà sorti ?">
+              <button type="button" class="toggle-btn" data-value="false">Sorti</button>
+              <button type="button" class="toggle-btn" data-value="true">À venir</button>
+            </div>
+          </div>
+        </div>
+        <div class="field" id="field-release-date" hidden="">
+          <label for="f-release-date">Date de sortie prévue</label>
+          <input type="date" id="f-release-date">
+        </div>
+
+        <div class="field">
+          <label>Image du jeu (optionnel)</label>
+          <div class="image-field">
+            <div class="image-preview" id="image-preview-box"></div>
+            <div class="image-field-controls">
+              <label class="btn btn-ghost" for="f-image-file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Choisir une image
+                <input type="file" id="f-image-file" accept="image/*" hidden="">
+              </label>
+              <input type="text" id="f-image-url" placeholder="…ou coller une URL d'image">
+              <button type="button" class="btn btn-ghost" id="btn-remove-image" hidden="">Retirer l'image</button>
+              <p class="image-hint">Redimensionnée automatiquement pour rester légère.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" id="field-rating">
+          <label>Note</label>
+          <div class="star-picker-row">
+            <div class="star-picker" id="star-picker"></div>
+            <span class="star-picker-value" id="star-picker-value">Pas encore noté</span>
+            <button type="button" class="icon-btn" id="btn-clear-rating" title="Effacer la note" aria-label="Effacer la note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="field" id="field-coop">
+          <label class="checkbox-label" for="f-coop">
+            <input type="checkbox" id="f-coop">
+            Jouable en coopération
+          </label>
+          <div class="coop-details hidden" id="coop-details">
+            <div class="coop-type-row">
+              <label class="checkbox-label-sm"><input type="checkbox" id="f-coop-online"> En ligne</label>
+              <label class="checkbox-label-sm"><input type="checkbox" id="f-coop-local"> Écran partagé</label>
+            </div>
+            <div class="coop-players-row">
+              <label for="f-coop-max-players">Jusqu'à combien de joueurs ?</label>
+              <input type="number" id="f-coop-max-players" min="2" step="1" placeholder="ex. 4">
+            </div>
+          </div>
+        </div>
+
+        <div id="group-status-fields">
+          <div class="field-row">
+            <div class="field">
+              <label>Achat</label>
+              <div class="toggle-group" id="toggle-purchase" role="group" aria-label="Statut d'achat">
+                <button type="button" class="toggle-btn" data-value="achete">Acheté</button>
+                <button type="button" class="toggle-btn" data-value="a_acheter">À acheter</button>
+                <button type="button" class="toggle-btn" data-value="abonnement">Abonnement</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Statut</label>
+              <div class="toggle-group" id="toggle-status" role="group" aria-label="Statut d'avancement">
+                <button type="button" class="toggle-btn" data-value="a_faire">À faire</button>
+                <button type="button" class="toggle-btn" data-value="en_cours">En cours</button>
+                <button type="button" class="toggle-btn" data-value="fait">Fait</button>
+              </div>
+            </div>
+          </div>
+          <div class="field" id="field-completed-100" hidden="">
+            <label class="checkbox-label" for="f-completed-100">
+              <input type="checkbox" id="f-completed-100">
+              Terminé à 100%
+            </label>
+          </div>
+          <div class="field" id="field-subscription-service" hidden="">
+            <label for="f-subscription-service">Service d'abonnement (optionnel)</label>
+            <input type="text" id="f-subscription-service" placeholder="ex. PS Plus, Xbox Game Pass…">
+          </div>
+        </div>
+
+        <div id="group-dates">
+          <div class="field-row">
+            <div class="field">
+              <label for="f-start">Date de début</label>
+              <input type="date" id="f-start">
+            </div>
+            <div class="field">
+              <label for="f-end">Date de fin</label>
+              <input type="date" id="f-end">
+            </div>
+          </div>
+          <p class="hint" id="hint-duration"></p>
+        </div>
+
+        <div id="group-durations">
+          <div class="field-row">
+            <div class="field">
+              <label for="f-estimated">Durée estimée (heures)</label>
+              <input type="number" id="f-estimated" min="0" step="0.5" placeholder="ex. 45">
+            </div>
+            <div class="field">
+              <label for="f-actual">Durée réelle (heures)</label>
+              <input type="number" id="f-actual" min="0" step="0.5" placeholder="ex. 52">
+            </div>
+          </div>
+          <p class="hint" id="hint-category"></p>
+        </div>
+
+        <div class="run-history hidden" id="run-history-block">
+          <p class="run-history-summary" id="run-history-summary"></p>
+          <div class="run-history-list" id="run-history-list"></div>
+        </div>
+        <button type="button" class="btn btn-ghost hidden" id="btn-replay" style="margin-bottom:var(--space-3);"></button>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="btn-delete-game" hidden="">Supprimer</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn btn-ghost" id="btn-cancel-game">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale : gérer les consoles et les setups -->
+  <div class="modal-overlay hidden" id="modal-consoles-overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-consoles-title">
+      <div class="modal-head">
+        <h2 id="modal-consoles-title">Gérer les consoles</h2>
+        <button class="icon-btn" id="btn-close-consoles-modal" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="setups-section">
+        <h3>Setups (ex. TV Salon, Bureau…)</h3>
+        <div class="console-add-row">
+          <input type="text" id="input-new-setup" placeholder="Nom du setup…" aria-label="Nom du nouveau setup">
+          <button id="btn-add-setup" class="btn btn-primary">Ajouter</button>
+        </div>
+        <div class="setup-list" id="setup-list"></div>
+      </div>
+
+      <div class="console-add-row">
+        <input type="text" id="input-new-console" placeholder="Nouvelle console…" aria-label="Nom de la nouvelle console">
+        <button id="btn-add-console" class="btn btn-primary">Ajouter</button>
+      </div>
+      <ul class="console-list" id="console-list"></ul>
+      <input type="file" id="console-photo-file" accept="image/*" hidden="">
+    </div>
+  </div>
+
+  <!-- Modale : confirmation -->
+  <div class="modal-overlay hidden" id="modal-confirm-overlay">
+    <div class="modal modal-small" role="alertdialog" aria-modal="true" aria-labelledby="confirm-message">
+      <p id="confirm-message"></p>
+      <div class="modal-actions">
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-ghost" id="btn-confirm-cancel">Annuler</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-ok">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-data">{"games":[]}</script>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — remplace window.storage
+   Réutilisable tel quel dans d'autres outils : il suffit de changer
+   APP_NS ci-dessous pour isoler les données de chaque outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'ludotheque';
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var ALL_KEYS = ['games', 'consoles', 'setups', 'theme'];
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  /* ---------- Cache local (IndexedDB — pas de limite de ~5 Mo comme localStorage,
+     nécessaire ici car les données embarquent des images en base64) ---------- */
+  var DB_NAME = 'gdsync_' + APP_NS;
+  var DB_STORE = 'kv';
+  var dbPromise = null;
+
+  function openDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE, { keyPath: 'key' });
+      };
+      req.onsuccess = function (e) { resolve(e.target.result); };
+      req.onerror = function (e) { reject(e.target.error); };
+    });
+    return dbPromise;
+  }
+
+  function idbGet(key) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).get(key);
+        req.onsuccess = function () {
+          resolve(req.result ? { value: req.result.value, modified: req.result.modified } : null);
+        };
+        req.onerror = function () { reject(req.error); };
+      });
+    }).catch(function () { return null; });
+  }
+
+  function idbSet(key, value, modifiedOverride) {
+    return idbGet(key).then(function (existing) {
+      var modified = modifiedOverride;
+      if (!modified) {
+        /* Si la donnée n'a pas réellement changé (ex: réenregistrement au chargement
+           de la page), on garde l'ancien horodatage pour ne pas fausser la synchro. */
+        modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      }
+      return openDb().then(function (db) {
+        return new Promise(function (resolve) {
+          var tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).put({ key: key, value: value, modified: modified });
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = function () { resolve(false); };
+        });
+      });
+    }).catch(function () { return false; });
+  }
+
+  function idbDelete(key) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve) {
+        var tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).delete(key);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(false); };
+      });
+    }).catch(function () { return false; });
+  }
+
+  /* ---------- Statut visuel ---------- */
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = {
+      idle: 'Drive : non connecté',
+      connected: 'Drive : connecté',
+      ok: 'Drive : synchronisé',
+      sync: 'Drive : synchro…',
+      error: 'Drive : erreur de synchro'
+    };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  /* ---------- Appels API Drive ---------- */
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) throw new Error('Drive API ' + res.status);
+      return res;
+    });
+  }
+
+  function driveFileName(key) { return 'storage__' + APP_NS + '__' + key + '.json'; }
+
+  function driveFindFile(key) {
+    var q = encodeURIComponent("name='" + driveFileName(key) + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      return (data.files && data.files[0]) || null;
+    });
+  }
+
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+
+  function driveCreateFile(key, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(key), parents: ['appDataFolder'] };
+    var body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' +
+      '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    });
+  }
+
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  }
+
+  function drivePushRecord(key, record) {
+    return driveFindFile(key).then(function (existing) {
+      return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(key, record);
+    });
+  }
+
+  /* ---------- Synchro bidirectionnelle (dernier modifié gagne) ---------- */
+  async function syncOneKey(key, firstConnect) {
+    var local = await idbGet(key);
+    var existing = await driveFindFile(key);
+    if (!existing) {
+      if (local) await drivePushRecord(key, local);
+      return false;
+    }
+    var remote = await driveGetRecord(existing.id);
+    if (!remote) return false;
+
+    if (firstConnect || !local || remote.modified > local.modified) {
+      /* Première connexion sur ce navigateur (le cloud fait toujours foi), ou
+         donnée distante plus récente : on adopte la version Drive. */
+      var changed = !(local && local.value === remote.value);
+      await idbSet(key, remote.value, remote.modified);
+      return changed;
+    } else if (local.modified > remote.modified) {
+      await driveUpdateFile(existing.id, local);
+    }
+    return false;
+  }
+
+  async function syncAllFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var anyChange = false;
+      for (var i = 0; i < ALL_KEYS.length; i++) {
+        var changed = await syncOneKey(ALL_KEYS[i], firstConnect);
+        if (changed) anyChange = true;
+      }
+      setSyncStatus('ok');
+      if (anyChange) {
+        setSyncStatus('sync');
+        if (typeof showToast === 'function') showToast('Données à jour reçues de Drive, actualisation…');
+        setTimeout(function () { location.reload(); }, 900);
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync] Échec de la synchronisation :', e);
+    }
+  }
+
+  /* ---------- Auth Google ---------- */
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncAllFromDrive(isFirstConnect);
+  }
+
+  function describeError(e) {
+    if (e && e.message) return e.message;
+    try { return JSON.stringify(e); } catch (e2) { return String(e); }
+  }
+
+  async function forceSyncPush() {
+    if (!hasValidToken()) {
+      alert('Pas encore connecté à Drive (ou session expirée). Clique d\'abord sur "Drive : non connecté", puis réessaie "Forcer synchro".');
+      return;
+    }
+    setSyncStatus('sync');
+    var report = [];
+    for (var i = 0; i < ALL_KEYS.length; i++) {
+      var key = ALL_KEYS[i];
+      var local = await idbGet(key);
+      if (!local) { report.push(key + ' : rien en local'); continue; }
+      try {
+        await drivePushRecord(key, local);
+        report.push(key + ' : OK (' + Math.round(local.value.length / 1024) + ' Ko)');
+      } catch (e) {
+        report.push(key + ' : ERREUR - ' + describeError(e));
+      }
+    }
+    var hasError = report.some(function (line) { return line.indexOf('ERREUR') !== -1; });
+    setSyncStatus(hasError ? 'error' : 'ok');
+    alert('Résultat de la synchro forcée :\n\n' + report.join('\n'));
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setTimeout(initGis, 300);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: onTokenReceived
+    });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', forceSyncPush);
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+    setInterval(function () {
+      if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  /* ---------- API window.storage (même contrat que l'API Artifacts) ---------- */
+  window.storage = {
+    get: async function (key) {
+      var rec = await idbGet(key);
+      return rec ? { key: key, value: rec.value, shared: false } : null;
+    },
+    set: async function (key, value) {
+      var ok = await idbSet(key, value);
+      if (!ok) return null;
+      if (hasValidToken()) {
+        setSyncStatus('sync');
+        idbGet(key).then(function (rec) { return drivePushRecord(key, rec); }).then(function () {
+          setSyncStatus('ok');
+        }).catch(function (e) {
+          setSyncStatus('error');
+          console.error('[DriveSync] Échec de la sauvegarde vers Drive pour "' + key + '" :', e);
+        });
+      }
+      return { key: key, value: value, shared: false };
+    },
+    delete: async function (key) {
+      var ok = await idbDelete(key);
+      return ok ? { key: key, deleted: true, shared: false } : null;
+    },
+    list: async function () {
+      return { keys: ALL_KEYS.slice(), shared: false };
+    }
+  };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+
+  /* Capture du HTML "propre" tel que chargé, avant tout rendu dynamique.
+     Sert de gabarit pour générer le fichier téléchargeable avec les données à jour. */
+  var PRISTINE_HTML = document.documentElement.outerHTML;
+
+  /* ================= Constantes ================= */
+  var STORAGE_KEY_GAMES = 'games';
+  var STORAGE_KEY_CONSOLES = 'consoles';
+  var STORAGE_KEY_SETUPS = 'setups';
+  var STORAGE_KEY_THEME = 'theme';
+  var APP_VERSION = 11;
+  var DEFAULT_CONSOLE_NAMES = ['Nintendo Switch', 'Nintendo Switch 2', 'PlayStation 5', 'PlayStation 4', 'Xbox Series X|S', 'PC'];
+  var CONSOLE_HUES = ['#B8672E', '#3F7268', '#4A6FA5', '#A5456B', '#6B7A3A', '#7A5FA5', '#C2884A', '#4F8C7A'];
+
+  var ICONS = {
+    cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>',
+    circle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polygon points="10 8 16 12 10 16" fill="currentColor" stroke="none"></polygon></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="8 12 11 15 16 9"></polyline></svg>',
+    subscription: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>',
+    replay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>',
+    moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+    starOutline: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+    up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+    coop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>'
+  };
+
+  var STATUS_LABELS = { a_faire: 'À faire', en_cours: 'En cours', fait: 'Fait' };
+
+  /* ================= État ================= */
+  var state = {
+    games: [],
+    consoles: [],
+    setups: [],
+    theme: 'dark',
+    view: 'backlog',
+    sort: 'default',
+    filter: { console: 'all', search: '', purchase: 'all', length: 'all' },
+    editingId: null
+  };
+  var confirmCallback = null;
+  var toastTimer = null;
+  var pendingImageData = null;
+  var pendingRating = 0;
+  var consolePhotoTargetId = null;
+
+  /* ================= Utilitaires ================= */
+  function esc(str) {
+    return String(str === null || str === undefined ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function uid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+  }
+
+  function normalize(str) {
+    return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function parseDateStr(str) {
+    if (!str) return null;
+    var d = new Date(str + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function daysBetween(d1, d2) {
+    return Math.round((d2 - d1) / 86400000);
+  }
+
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  function buildDownloadFilename() {
+    var d = new Date();
+    var yy = pad2(d.getFullYear() % 100);
+    var mm = pad2(d.getMonth() + 1);
+    var dd = pad2(d.getDate());
+    var hh = pad2(d.getHours());
+    var mi = pad2(d.getMinutes());
+    return yy + mm + dd + hh + mi + '_Checklist-Jeux_V' + APP_VERSION;
+  }
+
+  function formatDateFR(str) {
+    var d = parseDateStr(str);
+    if (!d) return null;
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  function computeTempsPasse(game) {
+    var start = parseDateStr(game.startDate);
+    var end = parseDateStr(game.endDate);
+    if (start && end) {
+      var n = daysBetween(start, end);
+      if (n < 0) return null;
+      return { days: n, ongoing: false };
+    }
+    if (start && !end && game.status === 'en_cours') {
+      var today = new Date(); today.setHours(0, 0, 0, 0);
+      var n2 = Math.max(daysBetween(start, today), 0);
+      return { days: n2, ongoing: true };
+    }
+    return null;
+  }
+
+  function computeCategory(game) {
+    var v = game.estimatedDuration;
+    if (v === null || v === undefined || v === '') return null;
+    var n = Number(v);
+    if (isNaN(n)) return null;
+    return n > 30 ? 'long' : 'court';
+  }
+
+  function computeCountdown(releaseDateStr) {
+    var d = parseDateStr(releaseDateStr);
+    if (!d) return null;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    return daysBetween(today, d);
+  }
+
+  function numOr(v, fallback) {
+    if (v === null || v === undefined || v === '') return fallback;
+    var n = Number(v);
+    return isNaN(n) ? fallback : n;
+  }
+
+  function ordinalRun(n) {
+    n = n || 1;
+    return n === 1 ? '1\u02B3\u1D49 run' : n + '\u1D49 run';
+  }
+
+  function totalHoursForGame(g) {
+    var total = Number(g.actualDuration) || 0;
+    if (Array.isArray(g.runs)) {
+      g.runs.forEach(function (r) { total += Number(r.actualDuration) || 0; });
+    }
+    return total;
+  }
+
+  function starSlotHTML(fillFraction, starIndex) {
+    var pct = Math.round((1 - Math.max(0, Math.min(1, fillFraction))) * 100);
+    var idxAttr = (starIndex !== undefined) ? ' data-star-index="' + starIndex + '"' : '';
+    return '<span class="star-slot"' + idxAttr + '>' +
+      '<span class="star-bg-icon">' + ICONS.starOutline + '</span>' +
+      '<span class="star-fg-icon" style="clip-path:inset(0 ' + pct + '% 0 0)">' + ICONS.star + '</span>' +
+      '</span>';
+  }
+
+  function starsDisplayHTML(rating) {
+    var r = Number(rating) || 0;
+    if (r <= 0) return '';
+    var out = '';
+    for (var i = 0; i < 5; i++) out += starSlotHTML(r - i);
+    return '<div class="star-rating">' + out + '</div>';
+  }
+
+  function renderStarPicker(rating) {
+    var wrap = document.getElementById('star-picker');
+    var out = '';
+    for (var i = 0; i < 5; i++) out += starSlotHTML(rating - i, i);
+    wrap.innerHTML = out;
+    document.getElementById('star-picker-value').textContent =
+      rating > 0 ? (String(rating).replace('.', ',') + ' / 5') : 'Pas encore noté';
+  }
+
+  function computeRatingFromStarEvent(e) {
+    var starEl = e.target.closest('.star-slot[data-star-index]');
+    if (!starEl) return null;
+    var idx = Number(starEl.dataset.starIndex);
+    var rect = starEl.getBoundingClientRect();
+    var isRightHalf = (e.clientX - rect.left) > rect.width / 2;
+    return idx + (isRightHalf ? 1 : 0.5);
+  }
+
+  function consoleColor(id) {
+    var hash = 0;
+    var s = id || '';
+    for (var i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+    return CONSOLE_HUES[hash % CONSOLE_HUES.length];
+  }
+
+  function getConsoleById(id) {
+    var c = state.consoles.find(function (x) { return x.id === id; });
+    return c || { id: null, name: '\u2014', description: '', setupId: null };
+  }
+
+  function getSetupById(id) {
+    if (!id) return null;
+    return state.setups.find(function (x) { return x.id === id; }) || null;
+  }
+
+  function consoleLabelWithSetup(c) {
+    var setup = getSetupById(c.setupId);
+    return esc(c.name) + (setup ? ' \u00B7 ' + esc(setup.name) : '');
+  }
+
+  /* ================= Stockage brut ================= */
+  function readEmbeddedData() {
+    try {
+      var el = document.getElementById('app-data');
+      if (!el) return null;
+      var parsed = JSON.parse(el.textContent);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (e) { return null; }
+  }
+
+  async function loadGames() {
+    if (!window.storage) return null;
+    try {
+      var res = await window.storage.get(STORAGE_KEY_GAMES, false);
+      return res ? JSON.parse(res.value) : null;
+    } catch (e) { return null; }
+  }
+  async function loadConsoles() {
+    if (!window.storage) return null;
+    try {
+      var res = await window.storage.get(STORAGE_KEY_CONSOLES, false);
+      return res ? JSON.parse(res.value) : null;
+    } catch (e) { return null; }
+  }
+  async function loadSetups() {
+    if (!window.storage) return null;
+    try {
+      var res = await window.storage.get(STORAGE_KEY_SETUPS, false);
+      return res ? JSON.parse(res.value) : null;
+    } catch (e) { return null; }
+  }
+  async function loadTheme() {
+    if (!window.storage) return null;
+    try {
+      var res = await window.storage.get(STORAGE_KEY_THEME, false);
+      return res ? res.value : null;
+    } catch (e) { return null; }
+  }
+
+  async function persistGames() {
+    if (!window.storage) return;
+    try {
+      var res = await window.storage.set(STORAGE_KEY_GAMES, JSON.stringify(state.games), false);
+      if (!res) showToast("Erreur lors de l'enregistrement.", 'error');
+    } catch (e) { showToast("Erreur lors de l'enregistrement.", 'error'); }
+  }
+  async function persistConsoles() {
+    if (!window.storage) return;
+    try {
+      var res = await window.storage.set(STORAGE_KEY_CONSOLES, JSON.stringify(state.consoles), false);
+      if (!res) showToast('Erreur lors de la sauvegarde des consoles.', 'error');
+    } catch (e) { showToast('Erreur lors de la sauvegarde des consoles.', 'error'); }
+  }
+  async function persistSetups() {
+    if (!window.storage) return;
+    try {
+      var res = await window.storage.set(STORAGE_KEY_SETUPS, JSON.stringify(state.setups), false);
+      if (!res) showToast('Erreur lors de la sauvegarde des setups.', 'error');
+    } catch (e) { showToast('Erreur lors de la sauvegarde des setups.', 'error'); }
+  }
+  async function persistTheme() {
+    if (!window.storage) return;
+    try { await window.storage.set(STORAGE_KEY_THEME, state.theme, false); } catch (e) { /* silencieux */ }
+  }
+
+  /* ================= Migration / valeurs par défaut ================= */
+  function buildDefaultConsoles() {
+    return DEFAULT_CONSOLE_NAMES.map(function (name) {
+      return { id: uid(), name: name, description: '', setupId: null, image: null };
+    });
+  }
+
+  function migrateConsoles(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map(function (c) {
+      if (typeof c === 'string') return { id: uid(), name: c, description: '', setupId: null, image: null };
+      return {
+        id: c.id || uid(),
+        name: c.name || '',
+        description: c.description || '',
+        setupId: c.setupId || null,
+        image: c.image || null
+      };
+    });
+  }
+
+  function migrateSetups(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map(function (s) {
+      if (typeof s === 'string') return { id: uid(), name: s };
+      return { id: s.id || uid(), name: s.name || '' };
+    });
+  }
+
+  function migrateGames(raw, consoles) {
+    if (!Array.isArray(raw)) return [];
+    var byName = {};
+    consoles.forEach(function (c) { byName[normalize(c.name)] = c.id; });
+    var seq = 0;
+    return raw.map(function (g) {
+      seq++;
+      var consoleId = g.consoleId || null;
+      if (!consoleId && g.console) {
+        consoleId = byName[normalize(g.console)] || null;
+        if (!consoleId) {
+          var newC = { id: uid(), name: g.console, description: '', setupId: null, image: null };
+          consoles.push(newC);
+          byName[normalize(newC.name)] = newC.id;
+          consoleId = newC.id;
+        }
+      }
+      return {
+        id: g.id || uid(),
+        name: g.name || '',
+        consoleId: consoleId,
+        purchaseStatus: g.purchaseStatus || 'achete',
+        subscriptionService: g.subscriptionService || '',
+        status: g.status || 'a_faire',
+        startDate: g.startDate || null,
+        endDate: g.endDate || null,
+        estimatedDuration: (g.estimatedDuration === undefined) ? null : g.estimatedDuration,
+        actualDuration: (g.actualDuration === undefined) ? null : g.actualDuration,
+        runNumber: g.runNumber || 1,
+        runs: Array.isArray(g.runs) ? g.runs : [],
+        image: g.image || null,
+        upcoming: !!g.upcoming,
+        releaseDate: g.releaseDate || null,
+        completed100: !!g.completed100,
+        rating: (typeof g.rating === 'number' && g.rating >= 0 && g.rating <= 5) ? g.rating : 0,
+        priority: (typeof g.priority === 'number') ? g.priority : (g.createdAt || (Date.now() - (1000000 - seq))),
+        coop: !!g.coop,
+        coopOnline: !!g.coopOnline,
+        coopLocal: !!g.coopLocal,
+        coopMaxPlayers: (typeof g.coopMaxPlayers === 'number' && g.coopMaxPlayers > 0) ? g.coopMaxPlayers : null,
+        createdAt: g.createdAt || (Date.now() - (1000000 - seq))
+      };
+    });
+  }
+
+  /* ================= Thème ================= */
+  function applyTheme(theme, persist) {
+    state.theme = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', state.theme);
+    var btn = document.getElementById('btn-theme-toggle');
+    if (btn) {
+      btn.innerHTML = state.theme === 'dark' ? ICONS.sun : ICONS.moon;
+      var label = state.theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre';
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+    }
+    if (persist) persistTheme();
+  }
+
+  /* ================= Rendu général ================= */
+  function renderAll() {
+    renderStats();
+    renderConsoleTabs();
+    renderConsoleSelect();
+    if (state.view === 'upcoming') renderUpcoming();
+    else renderBoard();
+  }
+
+  function renderStats() {
+    var cs = state.filter.console;
+    var games = state.games.filter(function (g) { return !g.upcoming; });
+    if (cs !== 'all') games = games.filter(function (g) { return g.consoleId === cs; });
+    var total = games.length;
+    var fait = games.filter(function (g) { return g.status === 'fait'; }).length;
+    var enCours = games.filter(function (g) { return g.status === 'en_cours'; }).length;
+    var aFaire = games.filter(function (g) { return g.status === 'a_faire'; }).length;
+    var complete100 = games.filter(function (g) { return g.completed100; }).length;
+    var heures = games.reduce(function (sum, g) { return sum + totalHoursForGame(g); }, 0);
+    var el = document.getElementById('stats');
+    el.innerHTML =
+      '<div class="stat"><span class="stat-value">' + total + '</span><span class="stat-label">jeu' + (total > 1 ? 'x' : '') + ' au total</span></div>' +
+      '<div class="stat stat-moss"><span class="stat-value">' + fait + '</span><span class="stat-label">fait' + (fait > 1 ? 's' : '') + '</span></div>' +
+      '<div class="stat"><span class="stat-value">' + complete100 + '</span><span class="stat-label">100% terminés</span></div>' +
+      '<div class="stat stat-ochre"><span class="stat-value">' + enCours + '</span><span class="stat-label">en cours</span></div>' +
+      '<div class="stat"><span class="stat-value">' + aFaire + '</span><span class="stat-label">à faire</span></div>' +
+      '<div class="stat"><span class="stat-value">' + heures.toLocaleString('fr-FR') + 'h</span><span class="stat-label">jouées</span></div>';
+  }
+
+  function renderConsoleTabs() {
+    var wrap = document.getElementById('console-tabs');
+    var pool = state.view === 'upcoming'
+      ? state.games.filter(function (g) { return g.upcoming; })
+      : state.games.filter(function (g) { return !g.upcoming; });
+    var counts = {};
+    state.consoles.forEach(function (c) { counts[c.id] = 0; });
+    pool.forEach(function (g) { if (g.consoleId && counts[g.consoleId] !== undefined) counts[g.consoleId]++; });
+
+    var html = '<button class="tab ' + (state.filter.console === 'all' ? 'active' : '') + '" data-console="all">' +
+      '<span class="tab-icon-wrap" style="background:var(--ochre)"></span>Toutes <span class="tab-count">' + pool.length + '</span></button>';
+    html += state.consoles.map(function (c) {
+      var color = consoleColor(c.id);
+      var active = state.filter.console === c.id;
+      var titleAttr = c.description ? ' title="' + esc(c.description) + '"' : '';
+      var iconInner = c.image ? '<img src="' + esc(c.image) + '" alt="">' : '';
+      var iconStyle = c.image ? '' : ' style="background:' + color + '"';
+      return '<button class="tab ' + (active ? 'active' : '') + '" data-console="' + esc(c.id) + '"' + titleAttr + '>' +
+        '<span class="tab-icon-wrap"' + iconStyle + '>' + iconInner + '</span>' + consoleLabelWithSetup(c) +
+        ' <span class="tab-count">' + (counts[c.id] || 0) + '</span></button>';
+    }).join('');
+    wrap.innerHTML = html;
+  }
+
+  function renderConsoleSelect() {
+    var sel = document.getElementById('f-console');
+    var current = sel.value;
+    sel.innerHTML = state.consoles.map(function (c) {
+      var label = c.name + (c.description ? ' \u2014 ' + c.description : '');
+      return '<option value="' + esc(c.id) + '">' + esc(label) + '</option>';
+    }).join('') + '<option value="__new__">+ Nouvelle console\u2026</option>';
+    var match = Array.prototype.some.call(sel.options, function (o) { return o.value === current; });
+    if (current && match) sel.value = current;
+  }
+
+  function getComparator(sortKey, status) {
+    switch (sortKey) {
+      case 'name_asc': return function (a, b) { return a.name.localeCompare(b.name, 'fr'); };
+      case 'name_desc': return function (a, b) { return b.name.localeCompare(a.name, 'fr'); };
+      case 'duration_asc': return function (a, b) { return numOr(a.estimatedDuration, Infinity) - numOr(b.estimatedDuration, Infinity); };
+      case 'duration_desc': return function (a, b) { return numOr(b.estimatedDuration, -1) - numOr(a.estimatedDuration, -1); };
+      case 'purchase': return function (a, b) {
+        var order = { achete: 0, abonnement: 1, a_acheter: 2 };
+        var oa = order[a.purchaseStatus] !== undefined ? order[a.purchaseStatus] : 3;
+        var ob = order[b.purchaseStatus] !== undefined ? order[b.purchaseStatus] : 3;
+        return oa - ob || a.name.localeCompare(b.name, 'fr');
+      };
+      case 'added_desc': return function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); };
+      case 'added_asc': return function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); };
+      case 'rating_desc': return function (a, b) { return (Number(b.rating) || 0) - (Number(a.rating) || 0) || a.name.localeCompare(b.name, 'fr'); };
+      case 'rating_asc': return function (a, b) { return (Number(a.rating) || 0) - (Number(b.rating) || 0) || a.name.localeCompare(b.name, 'fr'); };
+      default:
+        if (status === 'a_faire') return function (a, b) { return numOr(a.priority, 0) - numOr(b.priority, 0) || a.name.localeCompare(b.name, 'fr'); };
+        if (status === 'en_cours') return function (a, b) { return (b.startDate || '').localeCompare(a.startDate || '') || a.name.localeCompare(b.name, 'fr'); };
+        return function (a, b) { return (b.endDate || '').localeCompare(a.endDate || '') || a.name.localeCompare(b.name, 'fr'); };
+    }
+  }
+
+  function getBacklogGames() {
+    var f = state.filter;
+    var term = normalize(f.search);
+    return state.games.filter(function (g) {
+      if (g.upcoming) return false;
+      if (f.console !== 'all' && g.consoleId !== f.console) return false;
+      if (f.purchase !== 'all' && g.purchaseStatus !== f.purchase) return false;
+      if (f.length !== 'all' && computeCategory(g) !== f.length) return false;
+      if (term && normalize(g.name).indexOf(term) === -1) return false;
+      return true;
+    });
+  }
+
+  function getUpcomingGames() {
+    var f = state.filter;
+    var term = normalize(f.search);
+    return state.games.filter(function (g) {
+      if (!g.upcoming) return false;
+      if (f.console !== 'all' && g.consoleId !== f.console) return false;
+      if (term && normalize(g.name).indexOf(term) === -1) return false;
+      return true;
+    }).sort(function (a, b) {
+      var da = a.releaseDate || '9999-99-99';
+      var db = b.releaseDate || '9999-99-99';
+      return da.localeCompare(db) || a.name.localeCompare(b.name, 'fr');
+    });
+  }
+
+  function emptyMessage(status) {
+    var msgs = {
+      a_faire: 'Rien en attente ici. Ajoute un jeu à découvrir.',
+      en_cours: 'Aucune partie en cours pour le moment.',
+      fait: 'Pas encore de jeu terminé dans cette vue.'
+    };
+    return msgs[status] || 'Aucun jeu.';
+  }
+
+  function renderBoard() {
+    var filtered = getBacklogGames();
+    var groups = { a_faire: [], en_cours: [], fait: [] };
+    filtered.forEach(function (g) { if (groups[g.status]) groups[g.status].push(g); });
+
+    ['a_faire', 'en_cours', 'fait'].forEach(function (status) {
+      groups[status].sort(getComparator(state.sort, status));
+    });
+
+    ['a_faire', 'en_cours', 'fait'].forEach(function (status) {
+      var list = groups[status];
+      document.getElementById('count-' + status).textContent = list.length;
+      var colEl = document.getElementById('col-' + status);
+      colEl.innerHTML = list.length === 0
+        ? '<div class="empty-col">' + esc(emptyMessage(status)) + '</div>'
+        : list.map(function (g, idx) { return gameCardHTML(g, idx, list.length); }).join('');
+    });
+  }
+
+  function gameCardHTML(g, idx, total) {
+    var c = getConsoleById(g.consoleId);
+    var color = consoleColor(g.consoleId);
+    var temps = computeTempsPasse(g);
+    var cat = computeCategory(g);
+    var startFR = formatDateFR(g.startDate);
+    var endFR = formatDateFR(g.endDate);
+
+    var stamp = '';
+    if (g.status === 'fait') stamp = '<span class="stamp stamp-moss">Fait</span>';
+    else if (g.status === 'en_cours') stamp = '<span class="stamp stamp-ochre">En cours</span>';
+
+    var runBadge = (g.runNumber && g.runNumber > 1)
+      ? '<span class="run-badge">' + ICONS.replay + esc(ordinalRun(g.runNumber)) + '</span>' : '';
+    var completeBadge = g.completed100 ? '<span class="stamp stamp-gold">' + ICONS.star + ' 100%</span>' : '';
+    var badges = (stamp || runBadge || completeBadge) ? '<span class="card-tab-badges">' + stamp + runBadge + completeBadge + '</span>' : '';
+
+    var purchaseTag = '';
+    if (g.purchaseStatus === 'a_acheter') {
+      purchaseTag = '<span class="tag tag-brick">' + ICONS.cart + ' À acheter</span>';
+    } else if (g.purchaseStatus === 'abonnement') {
+      var svc = g.subscriptionService ? ' \u00B7 ' + esc(g.subscriptionService) : '';
+      purchaseTag = '<span class="tag tag-indigo">' + ICONS.subscription + ' Abonnement' + svc + '</span>';
+    }
+
+    var coopTag = '';
+    if (g.coop) {
+      var coopTypeParts = [];
+      if (g.coopOnline) coopTypeParts.push('en ligne');
+      if (g.coopLocal) coopTypeParts.push('local');
+      var coopTypeLabel = coopTypeParts.length ? ' ' + coopTypeParts.join(' + ') : '';
+      var coopPlayersLabel = g.coopMaxPlayers ? (' \u00B7 ' + g.coopMaxPlayers + 'j max') : '';
+      coopTag = '<span class="tag tag-teal">' + ICONS.coop + ' Coop' + coopTypeLabel + coopPlayersLabel + '</span>';
+    }
+
+    var datesRow = '';
+    if (g.startDate || g.endDate) {
+      var tempsLabel = temps ? (temps.ongoing ? 'En cours depuis' : 'Temps passé') : 'Temps passé';
+      var tempsValue = temps ? (temps.days + ' j') : '\u2014';
+      datesRow = '<div class="card-dates">' +
+        '<div><span class="mini-label">Début</span><span class="mono">' + (startFR || '\u2014') + '</span></div>' +
+        '<div><span class="mini-label">Fin</span><span class="mono">' + (endFR || '\u2014') + '</span></div>' +
+        '<div><span class="mini-label">' + tempsLabel + '</span><span class="mono">' + tempsValue + '</span></div>' +
+        '</div>';
+    }
+
+    var durationRow = '';
+    if (g.estimatedDuration !== null && g.estimatedDuration !== undefined || g.actualDuration !== null && g.actualDuration !== undefined) {
+      var est = (g.estimatedDuration !== null && g.estimatedDuration !== undefined)
+        ? '<span class="mono">Est. ' + g.estimatedDuration + 'h' + (cat ? ' \u00B7 ' + (cat === 'long' ? 'Long' : 'Court') : '') + '</span>' : '';
+      var act = (g.actualDuration !== null && g.actualDuration !== undefined)
+        ? '<span class="mono">Réel ' + g.actualDuration + 'h</span>' : '';
+      durationRow = '<div class="card-durations">' + est + act + '</div>';
+    }
+
+    var imageHTML = g.image ? '<img class="card-thumb" src="' + esc(g.image) + '" alt="">' : '';
+
+    return '<article class="card' + (g.completed100 ? ' card-complete' : '') + '" data-id="' + esc(g.id) + '" style="--console-color:' + color + '">' +
+      '<div class="card-body">' +
+      '<div class="card-header">' +
+      '<div class="card-header-text">' +
+      '<div class="card-tab"><span class="tab-dot" style="background:' + color + '"></span>' +
+      '<span class="mono">' + consoleLabelWithSetup(c) + '</span>' + badges + '</div>' +
+      '<h3 class="card-title">' + esc(g.name) + '</h3>' +
+      starsDisplayHTML(g.rating) +
+      '</div>' +
+      imageHTML +
+      '</div>' +
+      purchaseTag +
+      coopTag +
+      '<div class="card-divider"></div>' +
+      datesRow + durationRow +
+      '<div class="card-footer">' +
+      '<div class="status-quick" role="group" aria-label="Changer le statut">' +
+      '<button class="qbtn ' + (g.status === 'a_faire' ? 'qactive' : '') + '" data-action="status" data-value="a_faire" title="À faire" aria-label="Marquer à faire">' + ICONS.circle + '</button>' +
+      '<button class="qbtn ' + (g.status === 'en_cours' ? 'qactive' : '') + '" data-action="status" data-value="en_cours" title="En cours" aria-label="Marquer en cours">' + ICONS.play + '</button>' +
+      '<button class="qbtn ' + (g.status === 'fait' ? 'qactive' : '') + '" data-action="status" data-value="fait" title="Fait" aria-label="Marquer fait">' + ICONS.check + '</button>' +
+      '</div>' +
+      '<div class="card-actions">' +
+      (g.status === 'a_faire' && state.sort === 'default'
+        ? '<button class="icon-btn" data-action="move-up"' + (idx === 0 ? ' disabled' : '') + ' title="Monter dans la liste" aria-label="Monter dans la liste">' + ICONS.up + '</button>' +
+          '<button class="icon-btn" data-action="move-down"' + (idx === total - 1 ? ' disabled' : '') + ' title="Descendre dans la liste" aria-label="Descendre dans la liste">' + ICONS.down + '</button>'
+        : '') +
+      '<button class="icon-btn" data-action="edit" title="Modifier" aria-label="Modifier ce jeu">' + ICONS.edit + '</button>' +
+      '<button class="icon-btn icon-btn-danger" data-action="delete" title="Supprimer" aria-label="Supprimer ce jeu">' + ICONS.trash + '</button>' +
+      '</div></div></div></article>';
+  }
+
+  /* ================= Rendu : jeux à venir ================= */
+  function renderUpcoming() {
+    var list = getUpcomingGames();
+    var container = document.getElementById('upcoming-list');
+    container.innerHTML = list.length === 0
+      ? '<div class="empty-col">Aucun jeu à venir pour le moment. Ajoute une sortie à surveiller !</div>'
+      : list.map(upcomingCardHTML).join('');
+    document.getElementById('upcoming-count-badge').textContent = list.length;
+
+    var summaryEl = document.getElementById('upcoming-summary');
+    if (list.length === 0) {
+      summaryEl.textContent = '';
+    } else {
+      var next = list[0];
+      var cd = computeCountdown(next.releaseDate);
+      if (cd !== null && cd >= 0) {
+        summaryEl.textContent = 'Prochaine sortie : ' + next.name + ' \u2014 ' + (cd === 0 ? "aujourd'hui" : cd === 1 ? 'demain' : 'dans ' + cd + ' jours');
+      } else {
+        summaryEl.textContent = list.length + ' jeu' + (list.length > 1 ? 'x' : '') + ' à venir.';
+      }
+    }
+  }
+
+  function upcomingCardHTML(g) {
+    var c = getConsoleById(g.consoleId);
+    var color = consoleColor(g.consoleId);
+    var releaseFR = formatDateFR(g.releaseDate);
+    var countdown = computeCountdown(g.releaseDate);
+    var countdownLabel, isDue = false;
+    if (countdown === null) { countdownLabel = 'Date inconnue'; }
+    else if (countdown > 1) { countdownLabel = 'Dans ' + countdown + ' jours'; }
+    else if (countdown === 1) { countdownLabel = 'Demain'; }
+    else if (countdown === 0) { countdownLabel = "Aujourd'hui !"; isDue = true; }
+    else { countdownLabel = 'Sorti'; isDue = true; }
+
+    var thumb = g.image
+      ? '<img class="upcoming-thumb" src="' + esc(g.image) + '" alt="">'
+      : '<div class="upcoming-thumb upcoming-thumb-empty">' + ICONS.image + '</div>';
+
+    return '<article class="upcoming-card" data-id="' + esc(g.id) + '" style="--console-color:' + color + '">' +
+      thumb +
+      '<div class="upcoming-info">' +
+      '<div class="card-tab"><span class="tab-dot" style="background:' + color + '"></span><span class="mono">' + consoleLabelWithSetup(c) + '</span></div>' +
+      '<h3 class="card-title">' + esc(g.name) + '</h3>' +
+      '<span class="mono upcoming-date">' + esc(releaseFR || 'Date de sortie non précisée') + '</span>' +
+      '</div>' +
+      '<div class="upcoming-countdown' + (isDue ? ' countdown-due' : '') + '">' + esc(countdownLabel) + '</div>' +
+      '<div class="card-actions">' +
+      '<button class="icon-btn" data-action="release" title="Marquer comme sorti" aria-label="Marquer comme sorti">' + ICONS.check + '</button>' +
+      '<button class="icon-btn" data-action="edit" title="Modifier" aria-label="Modifier ce jeu">' + ICONS.edit + '</button>' +
+      '<button class="icon-btn icon-btn-danger" data-action="delete" title="Supprimer" aria-label="Supprimer ce jeu">' + ICONS.trash + '</button>' +
+      '</div></article>';
+  }
+
+  function switchView(view) {
+    state.view = view;
+    document.getElementById('view-backlog').classList.toggle('active', view === 'backlog');
+    document.getElementById('view-upcoming').classList.toggle('active', view === 'upcoming');
+    document.getElementById('board').classList.toggle('hidden', view !== 'backlog');
+    document.getElementById('upcoming-list').classList.toggle('hidden', view !== 'upcoming');
+    document.getElementById('stats').classList.toggle('hidden', view !== 'backlog');
+    document.getElementById('upcoming-summary-bar').classList.toggle('hidden', view !== 'upcoming');
+    document.getElementById('legend').classList.toggle('hidden', view !== 'backlog');
+    document.getElementById('filter-purchase').classList.toggle('hidden', view !== 'backlog');
+    document.getElementById('filter-length').classList.toggle('hidden', view !== 'backlog');
+    document.getElementById('sort-select').classList.toggle('hidden', view !== 'backlog');
+    document.getElementById('btn-add-game-label').textContent = view === 'upcoming' ? 'Ajouter un jeu à venir' : 'Ajouter un jeu';
+    renderAll();
+  }
+
+  /* ================= Modale jeu ================= */
+  function setToggleValue(group, value) {
+    Array.prototype.forEach.call(group.querySelectorAll('.toggle-btn'), function (btn) {
+      var active = btn.dataset.value === value;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    group.dataset.value = value;
+  }
+
+  function autoFillDatesForStatus(value) {
+    var startEl = document.getElementById('f-start');
+    var endEl = document.getElementById('f-end');
+    if (value === 'en_cours' && !startEl.value) startEl.value = todayStr();
+    if (value === 'fait' && !endEl.value) endEl.value = todayStr();
+  }
+
+  function updateFormHints() {
+    var start = document.getElementById('f-start').value;
+    var end = document.getElementById('f-end').value;
+    var est = document.getElementById('f-estimated').value;
+    var status = document.getElementById('toggle-status').dataset.value;
+
+    var tempsEl = document.getElementById('hint-duration');
+    var temps = computeTempsPasse({ startDate: start, endDate: end, status: status });
+    if (temps) {
+      tempsEl.textContent = (temps.ongoing ? '\u23F1 En cours depuis ' : '\u23F1 Temps passé : ') + temps.days + ' jour' + (temps.days > 1 ? 's' : '');
+    } else if (start && end) {
+      tempsEl.textContent = 'La date de fin doit être après la date de début.';
+    } else {
+      tempsEl.textContent = '';
+    }
+
+    var catEl = document.getElementById('hint-category');
+    var cat = computeCategory({ estimatedDuration: est });
+    catEl.textContent = cat ? ('Catégorie automatique : ' + (cat === 'long' ? 'Long (plus de 30h)' : 'Court (moins de 30h)')) : '';
+  }
+
+  function updateUpcomingFieldsVisibility() {
+    var isUpcoming = document.getElementById('toggle-upcoming').dataset.value === 'true';
+    document.getElementById('field-release-date').hidden = !isUpcoming;
+    document.getElementById('field-rating').hidden = isUpcoming;
+    document.getElementById('group-status-fields').hidden = isUpcoming;
+    document.getElementById('group-dates').hidden = isUpcoming;
+    document.getElementById('group-durations').hidden = isUpcoming;
+    if (isUpcoming) {
+      document.getElementById('run-history-block').classList.add('hidden');
+      document.getElementById('btn-replay').classList.add('hidden');
+    }
+  }
+
+  function updateCompleted100Visibility() {
+    var status = document.getElementById('toggle-status').dataset.value;
+    document.getElementById('field-completed-100').hidden = status !== 'fait';
+  }
+
+  function renderRunHistory(g) {
+    var block = document.getElementById('run-history-block');
+    var listEl = document.getElementById('run-history-list');
+    var summaryEl = document.getElementById('run-history-summary');
+    var replayBtn = document.getElementById('btn-replay');
+
+    if (!g || g.upcoming) { block.classList.add('hidden'); replayBtn.classList.add('hidden'); return; }
+
+    var runNumber = g.runNumber || 1;
+    var pastRuns = g.runs || [];
+    if (runNumber > 1 || pastRuns.length > 0) {
+      summaryEl.textContent = ordinalRun(runNumber) + (g.status === 'fait' ? ' \u00B7 terminé' : ' \u00B7 en cours');
+      listEl.innerHTML = pastRuns.map(function (r) {
+        var s = formatDateFR(r.startDate) || '\u2014';
+        var e = formatDateFR(r.endDate) || '\u2014';
+        var dur = (r.actualDuration !== null && r.actualDuration !== undefined && r.actualDuration !== '') ? ' \u00B7 ' + r.actualDuration + 'h' : '';
+        return '<div>' + esc(ordinalRun(r.n)) + ' \u2014 ' + esc(s) + ' \u2192 ' + esc(e) + esc(dur) + '</div>';
+      }).join('');
+      block.classList.remove('hidden');
+    } else {
+      block.classList.add('hidden');
+    }
+
+    if (g.status === 'fait') replayBtn.classList.remove('hidden');
+    else replayBtn.classList.add('hidden');
+    replayBtn.textContent = '\u21BB Rejouer (nouveau run)';
+  }
+
+  function updateImagePreview(value) {
+    var box = document.getElementById('image-preview-box');
+    var urlInput = document.getElementById('f-image-url');
+    if (value) {
+      box.innerHTML = '<img src="' + esc(value) + '" alt="" />';
+      if (document.activeElement !== urlInput) urlInput.value = value.indexOf('data:') === 0 ? '' : value;
+    } else {
+      box.innerHTML = ICONS.image;
+      urlInput.value = '';
+    }
+    document.getElementById('btn-remove-image').hidden = !value;
+  }
+
+  function resizeImageFile(file, maxSide, quality, onDone, onError) {
+    if (!file || file.type.indexOf('image/') !== 0) { onError('type'); return; }
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var img = new Image();
+      img.onload = function () {
+        var w = img.width, h = img.height;
+        var scale = Math.min(1, maxSide / w, maxSide / h);
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(w * scale));
+        canvas.height = Math.max(1, Math.round(h * scale));
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        onDone(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = function () { onError('image'); };
+      img.src = ev.target.result;
+    };
+    reader.onerror = function () { onError('file'); };
+    reader.readAsDataURL(file);
+  }
+
+  function handleImageFileSelect(file) {
+    resizeImageFile(file, 480, 0.72, function (dataUrl) {
+      pendingImageData = dataUrl;
+      updateImagePreview(dataUrl);
+    }, function (kind) {
+      if (kind === 'type') showToast('Choisis un fichier image valide.', 'error');
+      else if (kind === 'image') showToast('Impossible de lire cette image.', 'error');
+      else showToast('Impossible de lire ce fichier.', 'error');
+    });
+  }
+
+  function handleConsolePhotoSelect(consoleId, file) {
+    resizeImageFile(file, 200, 0.75, async function (dataUrl) {
+      var c = state.consoles.find(function (x) { return x.id === consoleId; });
+      if (!c) return;
+      c.image = dataUrl;
+      await persistConsoles();
+      renderConsolesList();
+      renderAll();
+    }, function (kind) {
+      if (kind === 'type') showToast('Choisis un fichier image valide.', 'error');
+      else showToast('Impossible de lire cette image.', 'error');
+    });
+  }
+
+  function openGameModal(id, defaultUpcoming) {
+    state.editingId = id || null;
+    var form = document.getElementById('form-game');
+    form.reset();
+    document.getElementById('new-console-field').hidden = true;
+    renderConsoleSelect();
+
+    var purchaseGroup = document.getElementById('toggle-purchase');
+    var statusGroup = document.getElementById('toggle-status');
+    var upcomingGroup = document.getElementById('toggle-upcoming');
+    var g = null;
+
+    if (id) {
+      g = state.games.find(function (x) { return x.id === id; });
+      if (!g) return;
+      document.getElementById('modal-game-title').textContent = 'Modifier le jeu';
+      document.getElementById('f-name').value = g.name;
+      document.getElementById('f-console').value = g.consoleId;
+      document.getElementById('f-start').value = g.startDate || '';
+      document.getElementById('f-end').value = g.endDate || '';
+      document.getElementById('f-estimated').value = (g.estimatedDuration === null || g.estimatedDuration === undefined) ? '' : g.estimatedDuration;
+      document.getElementById('f-actual').value = (g.actualDuration === null || g.actualDuration === undefined) ? '' : g.actualDuration;
+      document.getElementById('f-release-date').value = g.releaseDate || '';
+      document.getElementById('f-subscription-service').value = g.subscriptionService || '';
+      setToggleValue(purchaseGroup, g.purchaseStatus);
+      setToggleValue(statusGroup, g.status);
+      setToggleValue(upcomingGroup, g.upcoming ? 'true' : 'false');
+      document.getElementById('field-subscription-service').hidden = g.purchaseStatus !== 'abonnement';
+      document.getElementById('f-completed-100').checked = !!g.completed100;
+      pendingImageData = g.image || null;
+      pendingRating = Number(g.rating) || 0;
+      document.getElementById('f-coop').checked = !!g.coop;
+      document.getElementById('f-coop-online').checked = !!g.coopOnline;
+      document.getElementById('f-coop-local').checked = !!g.coopLocal;
+      document.getElementById('f-coop-max-players').value = g.coopMaxPlayers || '';
+      document.getElementById('coop-details').classList.toggle('hidden', !g.coop);
+      document.getElementById('btn-delete-game').hidden = false;
+    } else {
+      document.getElementById('modal-game-title').textContent = 'Ajouter un jeu';
+      setToggleValue(purchaseGroup, 'achete');
+      setToggleValue(statusGroup, 'a_faire');
+      setToggleValue(upcomingGroup, defaultUpcoming ? 'true' : 'false');
+      document.getElementById('field-subscription-service').hidden = true;
+      document.getElementById('f-release-date').value = '';
+      document.getElementById('f-completed-100').checked = false;
+      pendingImageData = null;
+      pendingRating = 0;
+      document.getElementById('f-coop').checked = false;
+      document.getElementById('f-coop-online').checked = false;
+      document.getElementById('f-coop-local').checked = false;
+      document.getElementById('f-coop-max-players').value = '';
+      document.getElementById('coop-details').classList.add('hidden');
+      document.getElementById('btn-delete-game').hidden = true;
+    }
+    renderStarPicker(pendingRating);
+    updateImagePreview(pendingImageData);
+    updateUpcomingFieldsVisibility();
+    updateCompleted100Visibility();
+    renderRunHistory(g);
+    updateFormHints();
+    document.getElementById('modal-game-overlay').classList.remove('hidden');
+    document.getElementById('f-name').focus();
+  }
+
+  function closeGameModal() {
+    document.getElementById('modal-game-overlay').classList.add('hidden');
+    state.editingId = null;
+    pendingImageData = null;
+  }
+
+  async function handleGameFormSubmit(e) {
+    e.preventDefault();
+    var name = document.getElementById('f-name').value.trim();
+    if (!name) {
+      showToast('Indique un nom de jeu pour continuer.', 'error');
+      document.getElementById('f-name').focus();
+      return;
+    }
+
+    var consoleVal = document.getElementById('f-console').value;
+    if (consoleVal === '__new__') {
+      var newName = document.getElementById('f-console-new').value.trim();
+      if (!newName) { showToast('Indique le nom de la nouvelle console.', 'error'); return; }
+      var existing = state.consoles.find(function (c) { return normalize(c.name) === normalize(newName); });
+      if (existing) {
+        consoleVal = existing.id;
+      } else {
+        var newConsole = { id: uid(), name: newName, description: '', setupId: null, image: null };
+        state.consoles.push(newConsole);
+        await persistConsoles();
+        consoleVal = newConsole.id;
+      }
+    }
+
+    var isUpcoming = document.getElementById('toggle-upcoming').dataset.value === 'true';
+    var start = document.getElementById('f-start').value || null;
+    var end = document.getElementById('f-end').value || null;
+    if (!isUpcoming && start && end && end < start) {
+      showToast('La date de fin doit être après la date de début.', 'error');
+      return;
+    }
+
+    var estVal = document.getElementById('f-estimated').value;
+    var actVal = document.getElementById('f-actual').value;
+    var purchaseVal = document.getElementById('toggle-purchase').dataset.value;
+    var statusVal = document.getElementById('toggle-status').dataset.value;
+    var subServiceVal = document.getElementById('f-subscription-service').value.trim();
+    var releaseDateVal = document.getElementById('f-release-date').value || null;
+    var completed100Val = statusVal === 'fait' ? document.getElementById('f-completed-100').checked : false;
+    var coopVal = document.getElementById('f-coop').checked;
+    var coopMaxPlayersRaw = document.getElementById('f-coop-max-players').value;
+
+    var gameData = {
+      name: name,
+      consoleId: consoleVal,
+      purchaseStatus: purchaseVal,
+      subscriptionService: purchaseVal === 'abonnement' ? subServiceVal : '',
+      status: statusVal,
+      startDate: isUpcoming ? null : start,
+      endDate: isUpcoming ? null : end,
+      estimatedDuration: isUpcoming ? null : (estVal === '' ? null : Number(estVal)),
+      actualDuration: isUpcoming ? null : (actVal === '' ? null : Number(actVal)),
+      upcoming: isUpcoming,
+      releaseDate: isUpcoming ? releaseDateVal : null,
+      completed100: completed100Val,
+      rating: isUpcoming ? 0 : pendingRating,
+      coop: coopVal,
+      coopOnline: coopVal ? document.getElementById('f-coop-online').checked : false,
+      coopLocal: coopVal ? document.getElementById('f-coop-local').checked : false,
+      coopMaxPlayers: (coopVal && coopMaxPlayersRaw !== '') ? Number(coopMaxPlayersRaw) : null,
+      image: pendingImageData || null
+    };
+
+    if (state.editingId) {
+      var idx = state.games.findIndex(function (x) { return x.id === state.editingId; });
+      if (idx !== -1) state.games[idx] = Object.assign({}, state.games[idx], gameData);
+    } else {
+      gameData.id = uid();
+      gameData.runNumber = 1;
+      gameData.runs = [];
+      gameData.createdAt = Date.now();
+      gameData.priority = Date.now();
+      state.games.push(gameData);
+    }
+
+    var wasEditing = !!state.editingId;
+    await persistGames();
+    closeGameModal();
+    renderAll();
+    showToast(wasEditing ? 'Jeu mis à jour.' : 'Jeu ajouté à la liste.');
+  }
+
+  async function quickSetStatus(id, value) {
+    var g = state.games.find(function (x) { return x.id === id; });
+    if (!g) return;
+    g.status = value;
+    if (value === 'en_cours' && !g.startDate) g.startDate = todayStr();
+    if (value === 'fait') {
+      if (!g.startDate) g.startDate = todayStr();
+      if (!g.endDate) g.endDate = todayStr();
+    }
+    await persistGames();
+    renderAll();
+  }
+
+  async function moveGamePriority(id, direction) {
+    var list = getBacklogGames().filter(function (g) { return g.status === 'a_faire'; });
+    list.sort(getComparator('default', 'a_faire'));
+    var idx = list.findIndex(function (g) { return g.id === id; });
+    if (idx === -1) return;
+    var swapIdx = idx + direction;
+    if (swapIdx < 0 || swapIdx >= list.length) return;
+    var tmp = list[idx].priority;
+    list[idx].priority = list[swapIdx].priority;
+    list[swapIdx].priority = tmp;
+    await persistGames();
+    renderBoard();
+  }
+
+  async function markAsReleased(id) {
+    var g = state.games.find(function (x) { return x.id === id; });
+    if (!g) return;
+    g.upcoming = false;
+    if (!g.status) g.status = 'a_faire';
+    await persistGames();
+    renderAll();
+    showToast('« ' + g.name + ' » déplacé dans le backlog.');
+  }
+
+  function autoReleaseUpcomingGames() {
+    var today = todayStr();
+    var count = 0;
+    state.games.forEach(function (g) {
+      if (g.upcoming && g.releaseDate && g.releaseDate <= today) {
+        g.upcoming = false;
+        if (!g.status) g.status = 'a_faire';
+        count++;
+      }
+    });
+    return count;
+  }
+
+  function requestDeleteGame(id) {
+    var g = state.games.find(function (x) { return x.id === id; });
+    if (!g) return;
+    openConfirm('Supprimer « ' + g.name + ' » ? Cette action est définitive.', async function () {
+      state.games = state.games.filter(function (x) { return x.id !== id; });
+      await persistGames();
+      if (state.editingId === id) closeGameModal();
+      renderAll();
+      showToast('Jeu supprimé.');
+    });
+  }
+
+  /* ================= Modale consoles / setups ================= */
+  function openConsolesModal() {
+    renderSetupsList();
+    renderConsolesList();
+    document.getElementById('modal-consoles-overlay').classList.remove('hidden');
+  }
+  function closeConsolesModal() {
+    document.getElementById('modal-consoles-overlay').classList.add('hidden');
+  }
+
+  function renderConsolesList() {
+    var list = document.getElementById('console-list');
+    var counts = {};
+    state.games.forEach(function (g) { if (g.consoleId) counts[g.consoleId] = (counts[g.consoleId] || 0) + 1; });
+    if (state.consoles.length === 0) {
+      list.innerHTML = '<li class="console-empty">Aucune console pour le moment.</li>';
+      return;
+    }
+    list.innerHTML = state.consoles.map(function (c) {
+      var n = counts[c.id] || 0;
+      var optsForThis = '<option value="">Aucun setup</option>' + state.setups.map(function (s) {
+        return '<option value="' + esc(s.id) + '"' + (c.setupId === s.id ? ' selected' : '') + '>' + esc(s.name) + '</option>';
+      }).join('');
+      var thumbInner = c.image ? '<img src="' + esc(c.image) + '" alt="">' : '';
+      var thumbStyle = c.image ? '' : ' style="background:' + consoleColor(c.id) + '"';
+      var removePhotoBtn = c.image
+        ? '<button type="button" class="console-thumb-remove" data-remove-console-photo="' + esc(c.id) + '" title="Retirer la photo" aria-label="Retirer la photo">' + ICONS.close + '</button>'
+        : '';
+      return '<li>' +
+        '<div class="console-row-top">' +
+        '<div class="console-thumb-wrap">' +
+        '<button type="button" class="console-thumb-btn" data-console-photo="' + esc(c.id) + '"' + thumbStyle + ' title="Changer la photo" aria-label="Changer la photo de la console">' + thumbInner + '</button>' +
+        removePhotoBtn +
+        '</div>' +
+        '<span class="cname">' + esc(c.name) + '</span>' +
+        '<span class="console-count">' + n + ' jeu' + (n > 1 ? 'x' : '') + '</span>' +
+        '<button class="icon-btn icon-btn-danger" data-remove-console="' + esc(c.id) + '" title="Retirer" aria-label="Retirer cette console">' + ICONS.trash + '</button>' +
+        '</div>' +
+        '<div class="console-row-meta">' +
+        '<input type="text" class="console-desc-input" data-console-id="' + esc(c.id) + '" placeholder="Description (ex. RTX 4070, 32 Go)" value="' + esc(c.description || '') + '" />' +
+        '<select class="console-setup-select" data-console-id="' + esc(c.id) + '">' + optsForThis + '</select>' +
+        '</div></li>';
+    }).join('');
+  }
+
+  function renderSetupsList() {
+    var wrap = document.getElementById('setup-list');
+    if (!state.setups.length) {
+      wrap.innerHTML = '<p class="console-empty" style="padding:4px 0;">Aucun setup pour le moment.</p>';
+      return;
+    }
+    wrap.innerHTML = state.setups.map(function (s) {
+      return '<span class="setup-chip">' + esc(s.name) +
+        '<button data-remove-setup="' + esc(s.id) + '" title="Retirer" aria-label="Retirer ce setup">' + ICONS.close + '</button></span>';
+    }).join('');
+  }
+
+  async function addConsoleFromModal() {
+    var input = document.getElementById('input-new-console');
+    var name = input.value.trim();
+    if (!name) return;
+    if (state.consoles.some(function (c) { return normalize(c.name) === normalize(name); })) {
+      showToast('Cette console existe déjà.', 'error');
+      return;
+    }
+    state.consoles.push({ id: uid(), name: name, description: '', setupId: null, image: null });
+    await persistConsoles();
+    input.value = '';
+    renderConsolesList();
+    renderAll();
+    showToast('Console ajoutée.');
+  }
+
+  function removeConsole(id) {
+    var c = state.consoles.find(function (x) { return x.id === id; });
+    if (!c) return;
+    var inUse = state.games.some(function (g) { return g.consoleId === id; });
+    if (inUse) {
+      showToast('Impossible de retirer « ' + c.name + ' » : des jeux y sont encore associés.', 'error');
+      return;
+    }
+    openConfirm('Retirer « ' + c.name + ' » de la liste des consoles ?', async function () {
+      state.consoles = state.consoles.filter(function (x) { return x.id !== id; });
+      await persistConsoles();
+      renderConsolesList();
+      renderAll();
+      showToast('Console retirée.');
+    });
+  }
+
+  async function addSetupFromModal() {
+    var input = document.getElementById('input-new-setup');
+    var name = input.value.trim();
+    if (!name) return;
+    if (state.setups.some(function (s) { return normalize(s.name) === normalize(name); })) {
+      showToast('Ce setup existe déjà.', 'error');
+      return;
+    }
+    state.setups.push({ id: uid(), name: name });
+    await persistSetups();
+    input.value = '';
+    renderSetupsList();
+    renderConsolesList();
+    showToast('Setup ajouté.');
+  }
+
+  function removeSetup(id) {
+    var s = state.setups.find(function (x) { return x.id === id; });
+    if (!s) return;
+    var inUse = state.consoles.some(function (c) { return c.setupId === id; });
+    if (inUse) {
+      showToast('Impossible de retirer « ' + s.name + ' » : encore utilisé par une console.', 'error');
+      return;
+    }
+    openConfirm('Retirer le setup « ' + s.name + ' » ?', async function () {
+      state.setups = state.setups.filter(function (x) { return x.id !== id; });
+      await persistSetups();
+      renderSetupsList();
+      renderConsolesList();
+      showToast('Setup retiré.');
+    });
+  }
+
+  /* ================= Confirmation ================= */
+  function openConfirm(message, onConfirm) {
+    document.getElementById('confirm-message').textContent = message;
+    confirmCallback = onConfirm;
+    document.getElementById('modal-confirm-overlay').classList.remove('hidden');
+  }
+  function closeConfirm() {
+    document.getElementById('modal-confirm-overlay').classList.add('hidden');
+    confirmCallback = null;
+  }
+
+  /* ================= Toast ================= */
+  function showToast(message, type) {
+    var el = document.getElementById('toast');
+    el.textContent = message;
+    el.className = 'toast' + (type === 'error' ? ' toast-error' : '');
+    requestAnimationFrame(function () { el.classList.add('show'); });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 3200);
+  }
+
+  /* ================= Fichier autonome ================= */
+  function downloadFileWithData() {
+    try {
+      var payload = JSON.stringify({ games: state.games, consoles: state.consoles, setups: state.setups, theme: state.theme });
+      // Échappe les "<" pour ne jamais risquer de casser la balise qui contient ces données
+      // (sans danger : dans du JSON valide, un "<" n'apparaît que dans une chaîne, où \u003c est un
+      // échappement standard correctement relu par JSON.parse).
+      var safePayload = payload.replace(/</g, '\\u003c');
+      var newBlock = '<script type="application/json" id="app-data">' + safePayload + '<' + '/script>';
+      var html = PRISTINE_HTML.replace(
+        /<script type="application\/json" id="app-data">[\s\S]*?<\/script>/,
+        newBlock
+      );
+      if (html === PRISTINE_HTML) throw new Error('bloc de données introuvable');
+
+      var blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = buildDownloadFilename() + '.html';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('Fichier téléchargé. Remplacez-le sur votre Drive pour le retrouver à jour partout.');
+    } catch (e) {
+      showToast('Erreur lors de la génération du fichier.', 'error');
+    }
+  }
+
+  /* ================= Export / Import ================= */
+  function exportData() {
+    var data = { games: state.games, consoles: state.consoles, setups: state.setups, theme: state.theme, exportedAt: new Date().toISOString() };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'ludotheque-backup-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Export téléchargé.');
+  }
+
+  function importDataFromFile(file) {
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        if (!Array.isArray(data.games)) throw new Error('format invalide');
+        openConfirm('Importer ' + data.games.length + ' jeu(x) ? Cela remplacera vos données actuelles.', async function () {
+          var newConsoles = migrateConsoles(Array.isArray(data.consoles) ? data.consoles : []);
+          if (!newConsoles.length) newConsoles = buildDefaultConsoles();
+          state.consoles = newConsoles;
+          state.setups = migrateSetups(Array.isArray(data.setups) ? data.setups : []);
+          state.games = migrateGames(data.games, state.consoles);
+          if (data.theme) applyTheme(data.theme, true);
+          await persistGames();
+          await persistConsoles();
+          await persistSetups();
+          renderAll();
+          showToast('Import réussi.');
+        });
+      } catch (err) {
+        showToast('Ce fichier ne semble pas valide.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ================= Événements ================= */
+  function bindEvents() {
+    document.getElementById('input-search').addEventListener('input', function (e) {
+      state.filter.search = e.target.value;
+      if (state.view === 'upcoming') renderUpcoming(); else renderBoard();
+    });
+    document.getElementById('filter-purchase').addEventListener('change', function (e) {
+      state.filter.purchase = e.target.value;
+      renderBoard();
+    });
+    document.getElementById('filter-length').addEventListener('change', function (e) {
+      state.filter.length = e.target.value;
+      renderBoard();
+    });
+    document.getElementById('sort-select').addEventListener('change', function (e) {
+      state.sort = e.target.value;
+      renderBoard();
+    });
+
+    document.getElementById('view-backlog').addEventListener('click', function () { switchView('backlog'); });
+    document.getElementById('view-upcoming').addEventListener('click', function () { switchView('upcoming'); });
+
+    document.getElementById('btn-theme-toggle').addEventListener('click', function () {
+      applyTheme(state.theme === 'dark' ? 'light' : 'dark', true);
+    });
+
+    document.getElementById('console-tabs').addEventListener('click', function (e) {
+      var btn = e.target.closest('.tab');
+      if (!btn) return;
+      state.filter.console = btn.dataset.console;
+      renderConsoleTabs();
+      renderStats();
+      if (state.view === 'upcoming') renderUpcoming(); else renderBoard();
+    });
+
+    document.getElementById('board').addEventListener('click', function (e) {
+      var card = e.target.closest('.card');
+      if (!card) return;
+      var id = card.dataset.id;
+      var actionBtn = e.target.closest('[data-action]');
+      if (actionBtn) {
+        var action = actionBtn.dataset.action;
+        if (action === 'status') { quickSetStatus(id, actionBtn.dataset.value); return; }
+        if (action === 'move-up') { moveGamePriority(id, -1); return; }
+        if (action === 'move-down') { moveGamePriority(id, 1); return; }
+        if (action === 'edit') { openGameModal(id); return; }
+        if (action === 'delete') { requestDeleteGame(id); return; }
+      } else {
+        openGameModal(id);
+      }
+    });
+
+    document.getElementById('upcoming-list').addEventListener('click', function (e) {
+      var card = e.target.closest('.upcoming-card');
+      if (!card) return;
+      var id = card.dataset.id;
+      var actionBtn = e.target.closest('[data-action]');
+      if (actionBtn) {
+        var action = actionBtn.dataset.action;
+        if (action === 'release') { markAsReleased(id); return; }
+        if (action === 'edit') { openGameModal(id); return; }
+        if (action === 'delete') { requestDeleteGame(id); return; }
+      } else {
+        openGameModal(id);
+      }
+    });
+
+    document.getElementById('btn-add-game').addEventListener('click', function () { openGameModal(null, state.view === 'upcoming'); });
+    document.getElementById('btn-close-game-modal').addEventListener('click', closeGameModal);
+    document.getElementById('btn-cancel-game').addEventListener('click', closeGameModal);
+    document.getElementById('modal-game-overlay').addEventListener('click', function (e) {
+      if (e.target.id === 'modal-game-overlay') closeGameModal();
+    });
+    document.getElementById('form-game').addEventListener('submit', handleGameFormSubmit);
+    document.getElementById('btn-delete-game').addEventListener('click', function () {
+      if (state.editingId) requestDeleteGame(state.editingId);
+    });
+
+    document.getElementById('f-console').addEventListener('change', function (e) {
+      var newField = document.getElementById('new-console-field');
+      newField.hidden = e.target.value !== '__new__';
+      if (!newField.hidden) document.getElementById('f-console-new').focus();
+    });
+
+    document.getElementById('toggle-upcoming').addEventListener('click', function (e) {
+      var btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      setToggleValue(this, btn.dataset.value);
+      updateUpcomingFieldsVisibility();
+    });
+
+    document.getElementById('toggle-purchase').addEventListener('click', function (e) {
+      var btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      setToggleValue(this, btn.dataset.value);
+      document.getElementById('field-subscription-service').hidden = btn.dataset.value !== 'abonnement';
+    });
+    document.getElementById('toggle-status').addEventListener('click', function (e) {
+      var btn = e.target.closest('.toggle-btn');
+      if (!btn) return;
+      setToggleValue(this, btn.dataset.value);
+      autoFillDatesForStatus(btn.dataset.value);
+      updateFormHints();
+      updateCompleted100Visibility();
+    });
+
+    ['f-start', 'f-end', 'f-estimated'].forEach(function (id) {
+      document.getElementById(id).addEventListener('input', updateFormHints);
+    });
+
+    document.getElementById('f-image-file').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (file) handleImageFileSelect(file);
+      e.target.value = '';
+    });
+    document.getElementById('f-image-url').addEventListener('input', function (e) {
+      pendingImageData = e.target.value.trim() || null;
+      var box = document.getElementById('image-preview-box');
+      box.innerHTML = pendingImageData ? '<img src="' + esc(pendingImageData) + '" alt="" />' : ICONS.image;
+      document.getElementById('btn-remove-image').hidden = !pendingImageData;
+    });
+    document.getElementById('btn-remove-image').addEventListener('click', function () {
+      pendingImageData = null;
+      updateImagePreview(null);
+    });
+
+    document.getElementById('star-picker').addEventListener('click', function (e) {
+      var r = computeRatingFromStarEvent(e);
+      if (r === null) return;
+      pendingRating = r;
+      renderStarPicker(pendingRating);
+    });
+    document.getElementById('star-picker').addEventListener('mousemove', function (e) {
+      var r = computeRatingFromStarEvent(e);
+      if (r === null) return;
+      renderStarPicker(r);
+    });
+    document.getElementById('star-picker').addEventListener('mouseleave', function () {
+      renderStarPicker(pendingRating);
+    });
+    document.getElementById('btn-clear-rating').addEventListener('click', function () {
+      pendingRating = 0;
+      renderStarPicker(0);
+    });
+
+    document.getElementById('f-coop').addEventListener('change', function (e) {
+      document.getElementById('coop-details').classList.toggle('hidden', !e.target.checked);
+    });
+
+    document.getElementById('btn-replay').addEventListener('click', function () {
+      if (!state.editingId) return;
+      var g = state.games.find(function (x) { return x.id === state.editingId; });
+      if (!g) return;
+      openConfirm('Démarrer un nouveau run de « ' + g.name + ' » ? Le run précédent sera archivé dans l\'historique.', async function () {
+        g.runs = g.runs || [];
+        g.runs.push({ n: g.runNumber || 1, startDate: g.startDate, endDate: g.endDate, actualDuration: g.actualDuration });
+        g.runNumber = (g.runNumber || 1) + 1;
+        g.startDate = null;
+        g.endDate = null;
+        g.actualDuration = null;
+        g.status = 'en_cours';
+        await persistGames();
+        closeGameModal();
+        renderAll();
+        showToast('Nouveau run démarré !');
+      });
+    });
+
+    document.getElementById('btn-manage-consoles').addEventListener('click', openConsolesModal);
+    document.getElementById('btn-close-consoles-modal').addEventListener('click', closeConsolesModal);
+    document.getElementById('modal-consoles-overlay').addEventListener('click', function (e) {
+      if (e.target.id === 'modal-consoles-overlay') closeConsolesModal();
+    });
+    document.getElementById('btn-add-console').addEventListener('click', addConsoleFromModal);
+    document.getElementById('input-new-console').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); addConsoleFromModal(); }
+    });
+    document.getElementById('console-list').addEventListener('click', function (e) {
+      var photoBtn = e.target.closest('button[data-console-photo]');
+      if (photoBtn) {
+        consolePhotoTargetId = photoBtn.dataset.consolePhoto;
+        document.getElementById('console-photo-file').click();
+        return;
+      }
+      var removePhotoBtn = e.target.closest('button[data-remove-console-photo]');
+      if (removePhotoBtn) {
+        var cPhoto = state.consoles.find(function (x) { return x.id === removePhotoBtn.dataset.removeConsolePhoto; });
+        if (cPhoto) {
+          cPhoto.image = null;
+          persistConsoles().then(function () { renderConsolesList(); renderAll(); });
+        }
+        return;
+      }
+      var btn = e.target.closest('button[data-remove-console]');
+      if (!btn) return;
+      removeConsole(btn.dataset.removeConsole);
+    });
+    document.getElementById('console-photo-file').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (file && consolePhotoTargetId) handleConsolePhotoSelect(consolePhotoTargetId, file);
+      e.target.value = '';
+      consolePhotoTargetId = null;
+    });
+    document.getElementById('console-list').addEventListener('change', async function (e) {
+      var descInput = e.target.closest('.console-desc-input');
+      if (descInput) {
+        var c = state.consoles.find(function (x) { return x.id === descInput.dataset.consoleId; });
+        if (c) { c.description = descInput.value.trim(); await persistConsoles(); renderAll(); }
+        return;
+      }
+      var setupSelect = e.target.closest('.console-setup-select');
+      if (setupSelect) {
+        var c2 = state.consoles.find(function (x) { return x.id === setupSelect.dataset.consoleId; });
+        if (c2) { c2.setupId = setupSelect.value || null; await persistConsoles(); renderAll(); }
+      }
+    });
+
+    document.getElementById('btn-add-setup').addEventListener('click', addSetupFromModal);
+    document.getElementById('input-new-setup').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); addSetupFromModal(); }
+    });
+    document.getElementById('setup-list').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-remove-setup]');
+      if (!btn) return;
+      removeSetup(btn.dataset.removeSetup);
+    });
+
+    document.getElementById('btn-confirm-ok').addEventListener('click', async function () {
+      var cb = confirmCallback;
+      closeConfirm();
+      if (cb) await cb();
+    });
+    document.getElementById('btn-confirm-cancel').addEventListener('click', closeConfirm);
+    document.getElementById('modal-confirm-overlay').addEventListener('click', function (e) {
+      if (e.target.id === 'modal-confirm-overlay') closeConfirm();
+    });
+
+    document.getElementById('btn-download-file').addEventListener('click', downloadFileWithData);
+    document.getElementById('btn-export').addEventListener('click', exportData);
+    document.getElementById('input-import').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (file) importDataFromFile(file);
+      e.target.value = '';
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (!document.getElementById('modal-confirm-overlay').classList.contains('hidden')) { closeConfirm(); return; }
+      if (!document.getElementById('modal-consoles-overlay').classList.contains('hidden')) { closeConsolesModal(); return; }
+      if (!document.getElementById('modal-game-overlay').classList.contains('hidden')) { closeGameModal(); return; }
+    });
+  }
+
+  /* ================= Initialisation ================= */
+  async function init() {
+    var embedded = readEmbeddedData();
+    var storageGames = await loadGames();
+    var storageConsoles = await loadConsoles();
+    var storageSetups = await loadSetups();
+    var storageTheme = await loadTheme();
+
+    var rawConsoles = (storageConsoles && storageConsoles.length) ? storageConsoles
+      : (embedded && Array.isArray(embedded.consoles) && embedded.consoles.length) ? embedded.consoles
+      : null;
+    var needsConsolesPersist = false;
+    var consoles;
+    if (rawConsoles) {
+      consoles = migrateConsoles(rawConsoles);
+    } else {
+      consoles = buildDefaultConsoles();
+      needsConsolesPersist = true;
+    }
+    state.consoles = consoles;
+
+    var rawSetups = (storageSetups && storageSetups.length) ? storageSetups
+      : (embedded && Array.isArray(embedded.setups) && embedded.setups.length) ? embedded.setups
+      : [];
+    state.setups = migrateSetups(rawSetups);
+
+    var theme = storageTheme || (embedded && embedded.theme) || 'dark';
+    applyTheme(theme, false);
+
+    var rawGames = (storageGames && storageGames.length) ? storageGames
+      : (embedded && Array.isArray(embedded.games) && embedded.games.length) ? embedded.games
+      : [];
+    var consolesLenBefore = state.consoles.length;
+    state.games = migrateGames(rawGames, state.consoles);
+    if (state.consoles.length !== consolesLenBefore) needsConsolesPersist = true;
+    var releasedCount = autoReleaseUpcomingGames();
+
+    if (needsConsolesPersist) await persistConsoles();
+    await persistGames();
+
+    document.getElementById('loading-overlay').classList.add('hidden');
+    renderAll();
+
+    var noticeParts = [];
+    if (releasedCount > 0) {
+      noticeParts.push(releasedCount + ' jeu' + (releasedCount > 1 ? 'x' : '') + ' passé' + (releasedCount > 1 ? 's' : '') + ' en "à faire" (date de sortie atteinte).');
+    }
+    if (!window.storage) {
+      noticeParts.push('Mode fichier local : pensez à cliquer sur « Télécharger le fichier » pour conserver vos modifications.');
+    }
+    if (noticeParts.length) showToast(noticeParts.join(' '));
+  }
+
+  bindEvents();
+  init();
+})();
+</script></body></html>
