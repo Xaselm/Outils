@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes Outils</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg: #1b1d1f;
+    --bg-raised: #232629;
+    --bg-card: #26292c;
+    --line: #383c40;
+    --text: #e9e5df;
+    --text-dim: #9a9d9f;
+    --accent: #e0a52c;
+    --accent-dim: #7a5e22;
+    --danger: #c1543f;
+    --ok: #5c8a5c;
+    --mono: "SF Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh;}
+  .app{max-width:1180px;margin:0 auto;padding:32px 24px 80px;}
+
+  .head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--line);
+    padding-bottom:20px; margin-bottom:20px;
+  }
+  .head h1{font-size:26px; margin:0 0 4px; letter-spacing:0.3px; font-weight:700;}
+  .head .sub{color:var(--text-dim); font-size:13px; font-family:var(--mono);}
+  .head-actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+
+  button{
+    font-family:var(--sans); font-size:13px; cursor:pointer;
+    border-radius:6px; border:1px solid var(--line);
+    background:var(--bg-raised); color:var(--text);
+    padding:9px 14px; transition:border-color .15s, background .15s;
+  }
+  button:hover{border-color:var(--accent);}
+  button:active{transform:translateY(1px);}
+  button.primary{background:var(--accent); color:#1b1d1f; border-color:var(--accent); font-weight:700;}
+  button.primary:hover{filter:brightness(1.08);}
+  button.ghost{background:transparent;}
+  button.small{padding:5px 9px; font-size:12px;}
+  button.icon{padding:5px 8px; font-size:13px; line-height:1;}
+
+  .drive-dot{width:8px; height:8px; border-radius:50%; display:inline-block; background:var(--line); margin-right:6px; vertical-align:middle;}
+  .drive-dot.is-connected{background:var(--ok);}
+  .drive-dot.is-syncing{background:var(--accent); animation:pulse 1s ease-in-out infinite;}
+  .drive-dot.is-error{background:var(--danger);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:22px;}
+  .toolbar input[type=text]{
+    flex:1; min-width:180px; background:var(--bg-raised); border:1px solid var(--line);
+    color:var(--text); border-radius:6px; padding:9px 12px; font-size:13px; font-family:var(--sans);
+  }
+  .toolbar input[type=text]:focus{outline:none; border-color:var(--accent);}
+
+  .empty{border:1px dashed var(--line); border-radius:10px; padding:60px 24px; text-align:center; color:var(--text-dim);}
+  .empty .icon{font-size:34px; margin-bottom:12px; opacity:.6;}
+  .empty h2{color:var(--text); font-size:17px; margin:0 0 8px;}
+  .empty p{max-width:440px; margin:0 auto 20px; font-size:13.5px; line-height:1.6;}
+
+  .group-section{margin-bottom:26px;}
+  .group-head{display:flex; align-items:center; gap:10px; margin-bottom:12px; padding-bottom:6px; border-bottom:1px solid var(--line);}
+  .group-head .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .group-head h3{font-size:14px; margin:0; letter-spacing:.3px; font-weight:700; text-transform:uppercase; color:var(--text-dim);}
+  .group-head .count{font-size:11px; color:var(--text-dim); font-family:var(--mono); margin-left:2px;}
+  .group-toggle{margin-left:auto; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:12px; padding:2px 6px;}
+  .group-section.collapsed .grid{display:none;}
+  .group-toggle .arrow{display:inline-block; transition:transform .15s;}
+  .group-section.collapsed .group-toggle .arrow{transform:rotate(-90deg);}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:14px;}
+  .card{
+    --card-accent: var(--accent);
+    background:var(--bg-card); border:1px solid var(--line); border-radius:8px;
+    padding:16px 16px 12px; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; gap:8px; transition:border-color .15s; text-align:left;
+  }
+  .card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--card-accent); z-index:2;}
+  .card:hover{border-color:#4a4e52;}
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:6px;}
+  .card-title{font-size:16px; font-weight:700;}
+  .card-desc{font-size:12.5px; color:var(--text-dim); line-height:1.5; min-height:18px;}
+  .gear-btn{background:none; border:none; padding:2px 4px; font-size:14px; color:var(--text-dim); cursor:pointer; flex-shrink:0;}
+  .card-actions{display:flex; gap:6px; margin-top:auto; padding-top:8px;}
+  .card-actions button{flex:1;}
+
+  .card-preview{
+    position:relative; height:108px; margin:-16px -16px 6px;
+    background:linear-gradient(135deg, var(--card-accent) 0%, var(--bg-card) 145%);
+    overflow:hidden; border-bottom:1px solid var(--line);
+  }
+  .card-preview iframe{
+    position:absolute; top:0; left:0; width:400%; height:400%;
+    transform:scale(.25); transform-origin:0 0; border:0; pointer-events:none; background:#fff;
+  }
+  .card-preview img{width:100%; height:100%; object-fit:cover; display:block;}
+  .card-preview .ph{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:34px; font-weight:800; color:rgba(0,0,0,.28); font-family:var(--sans);
+  }
+
+  .toolbar select{
+    background:var(--bg-raised); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:9px 10px; font-size:13px; font-family:var(--sans); cursor:pointer;
+  }
+  .toolbar select:focus{outline:none; border-color:var(--accent);}
+
+  .modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .modal-overlay.hidden{display:none;}
+  .modal{background:var(--bg-raised); border:1px solid var(--line); border-radius:10px; width:100%; max-width:420px; padding:20px;}
+  .modal h2{margin:0 0 16px; font-size:16px;}
+  .modal label{font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; display:block; margin:12px 0 5px;}
+  .modal input[type=text], .modal textarea{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:9px 10px; font-size:13px; font-family:var(--sans);
+  }
+  .modal textarea{resize:vertical; min-height:50px;}
+  .swatches{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;}
+  .swatch{width:22px; height:22px; border-radius:50%; border:2px solid transparent; cursor:pointer;}
+  .swatch.selected{border-color:var(--text);}
+  .modal-foot{display:flex; justify-content:space-between; gap:8px; margin-top:20px;}
+  .modal-foot .right{display:flex; gap:8px;}
+  .modal select{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:9px 10px; font-size:13px; font-family:var(--sans);
+  }
+  .radio-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:2px;}
+  .radio-row label{
+    display:flex; align-items:center; gap:5px; font-size:12.5px; color:var(--text);
+    text-transform:none; letter-spacing:0; margin:0; cursor:pointer;
+  }
+  .radio-row input{cursor:pointer;}
+
+  .modal.modal-wide{max-width:480px;}
+  .group-row{
+    display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--line);
+  }
+  .group-row:last-of-type{border-bottom:none;}
+  .group-row .grp-swatch{width:16px; height:16px; border-radius:50%; flex-shrink:0; cursor:pointer; border:2px solid transparent;}
+  .group-row .grp-swatch.selected{border-color:var(--text);}
+  .group-row input[type=text]{
+    flex:1; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:7px 9px; font-size:13px; font-family:var(--sans);
+  }
+  .group-swatch-picker{display:flex; gap:4px;}
+  .group-add-row{display:flex; gap:8px; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line);}
+  .group-add-row input[type=text]{
+    flex:1; background:var(--bg); border:1px solid var(--line); color:var(--text);
+    border-radius:6px; padding:8px 10px; font-size:13px; font-family:var(--sans);
+  }
+
+  .hidden{display:none !important;}
+  footer{margin-top:40px; color:var(--text-dim); font-size:11.5px; font-family:var(--mono); text-align:center;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="head">
+    <div>
+      <h1>Mes Outils</h1>
+      <div class="sub">Accès rapide à tous tes outils, depuis n'importe où</div>
+    </div>
+    <div class="head-actions">
+      <button id="btnDriveConnect" title="Connecter Google Drive">
+        <span id="driveDot" class="drive-dot"></span><span id="driveLabel">Drive : non connecté</span>
+      </button>
+      <button id="btnForceSync" class="small">Forcer synchro</button>
+      <button id="btnManageGroups" class="small">Groupes</button>
+      <button id="btnExport" class="small">Exporter JSON</button>
+      <button id="btnImport" class="small">Importer JSON</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden">
+      <button id="btnAdd" class="primary">+ Ajouter un outil</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Rechercher un outil...">
+    <select id="groupFilter"><option value="">Tous les groupes</option></select>
+  </div>
+
+  <div id="emptyState" class="empty hidden">
+    <div class="icon">&#128203;</div>
+    <h2>Aucun outil pour l'instant</h2>
+    <p>Ajoute tes outils hébergés (Ludothèque, Semainier, Budget...) pour y accéder en un clic depuis ce Hub, sur n'importe quel appareil.</p>
+    <button class="primary" id="btnAddEmpty">+ Ajouter un outil</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>Hub · synchronisé via Google Drive</footer>
+</div>
+
+<!-- Modale ajout / édition -->
+<div class="modal-overlay hidden" id="toolModal">
+  <div class="modal">
+    <h2 id="modalTitle">Ajouter un outil</h2>
+    <label>Nom</label>
+    <input type="text" id="fName" placeholder="Ma Ludothèque">
+    <label>URL</label>
+    <input type="text" id="fUrl" placeholder="https://xaselm.github.io/Outils/Checklist-Jeux.html">
+    <label>Description (optionnel)</label>
+    <textarea id="fDesc" placeholder="Suivi de mon backlog jeux vidéo"></textarea>
+    <label>Groupe</label>
+    <select id="fGroup"></select>
+    <label>Couleur</label>
+    <div class="swatches" id="swatches"></div>
+    <label>Aperçu sur la tuile</label>
+    <div class="radio-row">
+      <label><input type="radio" name="previewMode" value="live" checked> En direct (iframe)</label>
+      <label><input type="radio" name="previewMode" value="image"> Image (URL)</label>
+      <label><input type="radio" name="previewMode" value="none"> Aucun</label>
+    </div>
+    <input type="text" id="fPreviewImg" placeholder="https://.../capture.png" style="margin-top:8px; display:none;">
+    <div class="modal-foot">
+      <div>
+        <button class="ghost" id="btnDelete" style="color:var(--danger); display:none;">Supprimer</button>
+      </div>
+      <div class="right">
+        <button class="ghost" id="btnCancel">Annuler</button>
+        <button class="primary" id="btnSave">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale gestion des groupes -->
+<div class="modal-overlay hidden" id="groupsModal">
+  <div class="modal modal-wide">
+    <h2>Gérer les groupes</h2>
+    <div id="groupsList"></div>
+    <div class="group-add-row">
+      <input type="text" id="newGroupName" placeholder="Nom du nouveau groupe">
+      <button class="primary small" id="btnAddGroup">Ajouter</button>
+    </div>
+    <div class="modal-foot">
+      <div></div>
+      <div class="right">
+        <button class="primary" id="btnCloseGroups">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale confirmation import -->
+<div class="modal-overlay hidden" id="importModal">
+  <div class="modal">
+    <h2>Importer des outils</h2>
+    <p style="font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:0 0 4px;" id="importSummary"></p>
+    <label style="margin-top:16px;">Mode d'import</label>
+    <div class="radio-row" style="flex-direction:column; align-items:flex-start; gap:10px; margin-top:6px;">
+      <label><input type="radio" name="importMode" value="merge" checked> Fusionner (ajoute les nouveaux, garde les existants)</label>
+      <label><input type="radio" name="importMode" value="replace"> Remplacer tout (écrase la liste actuelle)</label>
+    </div>
+    <div class="modal-foot">
+      <div></div>
+      <div class="right">
+        <button class="ghost" id="btnCancelImport">Annuler</button>
+        <button class="primary" id="btnConfirmImport">Importer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — identique à celui utilisé
+   dans les autres outils. APP_NS isole les données de cet outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'hub';
+  var ALL_KEYS = ['tools', 'groups'];
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  var DB_NAME = 'gdsync_' + APP_NS;
+  var DB_STORE = 'kv';
+  var dbPromise = null;
+
+  function openDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE, { keyPath: 'key' });
+      };
+      req.onsuccess = function (e) { resolve(e.target.result); };
+      req.onerror = function (e) { reject(e.target.error); };
+    });
+    return dbPromise;
+  }
+
+  function idbGet(key) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).get(key);
+        req.onsuccess = function () {
+          resolve(req.result ? { value: req.result.value, modified: req.result.modified } : null);
+        };
+        req.onerror = function () { reject(req.error); };
+      });
+    }).catch(function () { return null; });
+  }
+
+  function idbSet(key, value, modifiedOverride) {
+    return idbGet(key).then(function (existing) {
+      var modified = modifiedOverride;
+      if (!modified) modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      return openDb().then(function (db) {
+        return new Promise(function (resolve) {
+          var tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).put({ key: key, value: value, modified: modified });
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = function () { resolve(false); };
+        });
+      });
+    }).catch(function () { return false; });
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('driveDot');
+    var label = document.getElementById('driveLabel');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connecté', connected: 'Drive : connecté', ok: 'Drive : synchronisé', sync: 'Drive : synchro…', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName(key) { return 'storage__' + APP_NS + '__' + key + '.json'; }
+  function driveFindFile(key) {
+    var q = encodeURIComponent("name='" + driveFileName(key) + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  function driveCreateFile(key, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(key), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(key, record) {
+    return driveFindFile(key).then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(key, record); });
+  }
+
+  async function syncOneKey(key, firstConnect) {
+    var local = await idbGet(key);
+    var existing = await driveFindFile(key);
+    if (!existing) { if (local) await drivePushRecord(key, local); return false; }
+    var remote = await driveGetRecord(existing.id);
+    if (!remote) return false;
+    if (firstConnect || !local || remote.modified > local.modified) {
+      var changed = !(local && local.value === remote.value);
+      await idbSet(key, remote.value, remote.modified);
+      return changed;
+    } else if (local.modified > remote.modified) {
+      await driveUpdateFile(existing.id, local);
+    }
+    return false;
+  }
+
+  async function syncAllFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var anyChange = false;
+      for (var i = 0; i < ALL_KEYS.length; i++) {
+        if (await syncOneKey(ALL_KEYS[i], firstConnect)) anyChange = true;
+      }
+      setSyncStatus('ok');
+      if (anyChange && typeof window.onHubDataChanged === 'function') window.onHubDataChanged();
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncAllFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btnDriveConnect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btnForceSync').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord à Drive.'); return; }
+      setSyncStatus('sync');
+      Promise.all(ALL_KEYS.map(function (key) {
+        return idbGet(key).then(function (local) { return local ? drivePushRecord(key, local) : null; });
+      })).then(function () {
+        setSyncStatus('ok'); alert('Synchro forcée : OK');
+      }).catch(function (e) { setSyncStatus('error'); alert('Erreur : ' + e.message); });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  window.storage = {
+    get: async function (key) { var rec = await idbGet(key); return rec ? { key: key, value: rec.value, shared: false } : null; },
+    set: async function (key, value) {
+      var ok = await idbSet(key, value);
+      if (!ok) return null;
+      if (hasValidToken()) {
+        setSyncStatus('sync');
+        idbGet(key).then(function (rec) { return drivePushRecord(key, rec); })
+          .then(function () { setSyncStatus('ok'); })
+          .catch(function (e) { setSyncStatus('error'); console.error('[DriveSync]', e); });
+      }
+      return { key: key, value: value, shared: false };
+    }
+  };
+})();
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var COLORS = ['#e0a52c', '#5c8a5c', '#4a90c2', '#c1543f', '#9a6fc2', '#5cb3a8'];
+  var UNGROUPED = '__none__';
+  var tools = [];
+  var groups = [];
+  var editingId = null;
+  var collapsedGroups = {}; // sessionOnly UI state, not persisted
+
+  var els = {
+    grid: document.getElementById('grid'),
+    empty: document.getElementById('emptyState'),
+    search: document.getElementById('search'),
+    groupFilter: document.getElementById('groupFilter'),
+    modal: document.getElementById('toolModal'),
+    modalTitle: document.getElementById('modalTitle'),
+    fName: document.getElementById('fName'),
+    fUrl: document.getElementById('fUrl'),
+    fDesc: document.getElementById('fDesc'),
+    fGroup: document.getElementById('fGroup'),
+    fPreviewImg: document.getElementById('fPreviewImg'),
+    swatches: document.getElementById('swatches'),
+    btnSave: document.getElementById('btnSave'),
+    btnCancel: document.getElementById('btnCancel'),
+    btnDelete: document.getElementById('btnDelete'),
+    groupsModal: document.getElementById('groupsModal'),
+    groupsList: document.getElementById('groupsList'),
+    newGroupName: document.getElementById('newGroupName'),
+    importFile: document.getElementById('importFile'),
+    importModal: document.getElementById('importModal'),
+    importSummary: document.getElementById('importSummary')
+  };
+  var selectedColor = COLORS[0];
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+  function uid(prefix) { return prefix + Date.now() + Math.random().toString(36).slice(2, 7); }
+
+  function groupById(id) {
+    return groups.find(function (g) { return g.id === id; }) || null;
+  }
+
+  function cardPreviewHtml(t) {
+    var initial = (t.name || '?').trim().charAt(0).toUpperCase() || '?';
+    var mode = t.previewMode || 'live';
+    if (mode === 'image' && t.previewImg) {
+      return '<img src="' + escapeAttr(t.previewImg) + '" alt="" ' +
+        'onerror="this.outerHTML=\'<div class=&quot;ph&quot;>' + initial + '</div>\'">';
+    }
+    if (mode === 'none') {
+      return '<div class="ph">' + initial + '</div>';
+    }
+    // live iframe preview (default) — best-effort visual mini-render
+    return '<div class="ph">' + initial + '</div>' +
+      '<iframe src="' + escapeAttr(t.url) + '" loading="lazy" tabindex="-1" ' +
+      'sandbox="allow-scripts allow-same-origin" referrerpolicy="no-referrer"></iframe>';
+  }
+
+  function render() {
+    var q = els.search.value.trim().toLowerCase();
+    var groupFilterVal = els.groupFilter.value;
+    var filtered = tools.filter(function (t) {
+      if (q && t.name.toLowerCase().indexOf(q) === -1 && (t.desc || '').toLowerCase().indexOf(q) === -1) return false;
+      if (groupFilterVal) {
+        var gid = t.groupId || UNGROUPED;
+        if (gid !== groupFilterVal) return false;
+      }
+      return true;
+    });
+
+    els.empty.classList.toggle('hidden', tools.length > 0);
+
+    // Build ordered section list: configured groups in their order, then "Sans groupe"
+    var sections = groups.map(function (g) { return { id: g.id, name: g.name, color: g.color }; });
+    sections.push({ id: UNGROUPED, name: 'Sans groupe', color: null });
+
+    var html = '';
+    sections.forEach(function (sec) {
+      var items = filtered.filter(function (t) { return (t.groupId || UNGROUPED) === sec.id; });
+      if (!items.length) return;
+      var isCollapsed = !!collapsedGroups[sec.id];
+      html += '<div class="group-section' + (isCollapsed ? ' collapsed' : '') + '" data-group-section="' + sec.id + '">' +
+        '<div class="group-head">' +
+        (sec.color ? '<span class="dot" style="background:' + sec.color + '"></span>' : '') +
+        '<h3>' + escapeHtml(sec.name) + '</h3><span class="count">(' + items.length + ')</span>' +
+        '<button class="group-toggle" data-toggle-group="' + sec.id + '"><span class="arrow">&#9662;</span></button>' +
+        '</div>' +
+        '<div class="grid">' +
+        items.map(function (t) {
+          return '<div class="card" style="--card-accent:' + t.color + '" data-id="' + t.id + '">' +
+            '<div class="card-preview">' + cardPreviewHtml(t) + '</div>' +
+            '<div class="card-top"><div class="card-title">' + escapeHtml(t.name) + '</div>' +
+            '<button class="gear-btn" data-edit="' + t.id + '">&#9881;</button></div>' +
+            '<div class="card-desc">' + escapeHtml(t.desc) + '</div>' +
+            '<div class="card-actions"><button class="primary" data-open="' + t.id + '">Ouvrir</button></div>' +
+            '</div>';
+        }).join('') +
+        '</div></div>';
+    });
+    els.grid.innerHTML = html;
+
+    els.grid.querySelectorAll('[data-open]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var t = tools.find(function (x) { return x.id === btn.getAttribute('data-open'); });
+        if (t) window.open(t.url, '_blank');
+      });
+    });
+    els.grid.querySelectorAll('[data-edit]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openModal(tools.find(function (x) { return x.id === btn.getAttribute('data-edit'); }));
+      });
+    });
+    els.grid.querySelectorAll('[data-toggle-group]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var gid = btn.getAttribute('data-toggle-group');
+        collapsedGroups[gid] = !collapsedGroups[gid];
+        render();
+      });
+    });
+  }
+
+  function renderGroupFilterOptions() {
+    var current = els.groupFilter.value;
+    var opts = '<option value="">Tous les groupes</option>' +
+      groups.map(function (g) { return '<option value="' + g.id + '">' + escapeHtml(g.name) + '</option>'; }).join('') +
+      '<option value="' + UNGROUPED + '">Sans groupe</option>';
+    els.groupFilter.innerHTML = opts;
+    if (Array.prototype.some.call(els.groupFilter.options, function (o) { return o.value === current; })) {
+      els.groupFilter.value = current;
+    }
+  }
+
+  function renderGroupSelectOptions(selectedId) {
+    els.fGroup.innerHTML = '<option value="">Sans groupe</option>' +
+      groups.map(function (g) { return '<option value="' + g.id + '">' + escapeHtml(g.name) + '</option>'; }).join('');
+    els.fGroup.value = selectedId || '';
+  }
+
+  function renderSwatches() {
+    els.swatches.innerHTML = COLORS.map(function (c) {
+      return '<div class="swatch' + (c === selectedColor ? ' selected' : '') + '" style="background:' + c + '" data-color="' + c + '"></div>';
+    }).join('');
+    els.swatches.querySelectorAll('.swatch').forEach(function (sw) {
+      sw.addEventListener('click', function () { selectedColor = sw.getAttribute('data-color'); renderSwatches(); });
+    });
+  }
+
+  function openModal(tool) {
+    editingId = tool ? tool.id : null;
+    els.modalTitle.textContent = tool ? 'Modifier l\'outil' : 'Ajouter un outil';
+    els.fName.value = tool ? tool.name : '';
+    els.fUrl.value = tool ? tool.url : '';
+    els.fDesc.value = tool ? tool.desc : '';
+    selectedColor = tool ? tool.color : COLORS[tools.length % COLORS.length];
+    els.btnDelete.style.display = tool ? 'inline-block' : 'none';
+    renderSwatches();
+    renderGroupSelectOptions(tool ? tool.groupId : '');
+
+    var mode = tool ? (tool.previewMode || 'live') : 'live';
+    document.querySelectorAll('input[name=previewMode]').forEach(function (r) { r.checked = (r.value === mode); });
+    els.fPreviewImg.value = tool ? (tool.previewImg || '') : '';
+    els.fPreviewImg.style.display = (mode === 'image') ? 'block' : 'none';
+
+    els.modal.classList.remove('hidden');
+    setTimeout(function () { els.fName.focus(); }, 50);
+  }
+  function closeModal() { els.modal.classList.add('hidden'); editingId = null; }
+
+  document.querySelectorAll('input[name=previewMode]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      els.fPreviewImg.style.display = (r.value === 'image' && r.checked) ? 'block' : 'none';
+    });
+  });
+
+  async function persistTools() {
+    await window.storage.set('tools', JSON.stringify(tools), false);
+  }
+  async function persistGroups() {
+    await window.storage.set('groups', JSON.stringify(groups), false);
+  }
+
+  async function loadFromStorage() {
+    try {
+      var res = await window.storage.get('tools', false);
+      tools = (res && res.value) ? JSON.parse(res.value) : [];
+    } catch (e) { tools = []; }
+    try {
+      var resG = await window.storage.get('groups', false);
+      groups = (resG && resG.value) ? JSON.parse(resG.value) : [];
+    } catch (e) { groups = []; }
+    renderGroupFilterOptions();
+    render();
+  }
+
+  els.btnSave.addEventListener('click', async function () {
+    var name = els.fName.value.trim();
+    var url = els.fUrl.value.trim();
+    if (!name || !url) { alert('Le nom et l\'URL sont obligatoires.'); return; }
+    if (!/^https?:\/\//i.test(url)) { alert('L\'URL doit commencer par http:// ou https://'); return; }
+    var previewModeEl = document.querySelector('input[name=previewMode]:checked');
+    var previewMode = previewModeEl ? previewModeEl.value : 'live';
+    var previewImg = els.fPreviewImg.value.trim();
+    var groupId = els.fGroup.value || '';
+
+    if (editingId) {
+      var t = tools.find(function (x) { return x.id === editingId; });
+      t.name = name; t.url = url; t.desc = els.fDesc.value.trim(); t.color = selectedColor;
+      t.groupId = groupId; t.previewMode = previewMode; t.previewImg = previewImg;
+    } else {
+      tools.push({
+        id: uid('t'), name: name, url: url, desc: els.fDesc.value.trim(), color: selectedColor,
+        groupId: groupId, previewMode: previewMode, previewImg: previewImg
+      });
+    }
+    await persistTools();
+    render();
+    closeModal();
+  });
+
+  els.btnDelete.addEventListener('click', async function () {
+    if (!editingId) return;
+    if (!confirm('Supprimer cet outil du Hub ?')) return;
+    tools = tools.filter(function (x) { return x.id !== editingId; });
+    await persistTools();
+    render();
+    closeModal();
+  });
+
+  els.btnCancel.addEventListener('click', closeModal);
+  document.getElementById('btnAdd').addEventListener('click', function () { openModal(null); });
+  document.getElementById('btnAddEmpty').addEventListener('click', function () { openModal(null); });
+  els.search.addEventListener('input', render);
+  els.groupFilter.addEventListener('change', render);
+
+  /* ---- Gestion des groupes ---- */
+  function renderGroupsModal() {
+    els.groupsList.innerHTML = groups.map(function (g) {
+      return '<div class="group-row" data-gid="' + g.id + '">' +
+        '<div class="group-swatch-picker">' +
+        COLORS.map(function (c) {
+          return '<div class="grp-swatch' + (c === g.color ? ' selected' : '') + '" style="background:' + c + '" data-set-color="' + c + '"></div>';
+        }).join('') +
+        '</div>' +
+        '<input type="text" value="' + escapeAttr(g.name) + '" data-rename>' +
+        '<button class="ghost small" data-move="-1" title="Monter">&#8593;</button>' +
+        '<button class="ghost small" data-move="1" title="Descendre">&#8595;</button>' +
+        '<button class="ghost small" style="color:var(--danger)" data-del-group title="Supprimer">&#10005;</button>' +
+        '</div>';
+    }).join('') || '<div style="color:var(--text-dim); font-size:12.5px; padding:8px 0;">Aucun groupe pour l\'instant.</div>';
+
+    els.groupsList.querySelectorAll('.group-row').forEach(function (row) {
+      var gid = row.getAttribute('data-gid');
+      row.querySelectorAll('[data-set-color]').forEach(function (sw) {
+        sw.addEventListener('click', async function () {
+          var g = groupById(gid);
+          if (g) { g.color = sw.getAttribute('data-set-color'); await persistGroups(); renderGroupsModal(); render(); renderGroupFilterOptions(); }
+        });
+      });
+      row.querySelector('[data-rename]').addEventListener('change', async function (e) {
+        var g = groupById(gid);
+        var val = e.target.value.trim();
+        if (g && val) { g.name = val; await persistGroups(); render(); renderGroupFilterOptions(); }
+      });
+      row.querySelectorAll('[data-move]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var dir = parseInt(btn.getAttribute('data-move'), 10);
+          var idx = groups.findIndex(function (g) { return g.id === gid; });
+          var newIdx = idx + dir;
+          if (newIdx < 0 || newIdx >= groups.length) return;
+          var tmp = groups[idx]; groups[idx] = groups[newIdx]; groups[newIdx] = tmp;
+          await persistGroups();
+          renderGroupsModal(); render(); renderGroupFilterOptions();
+        });
+      });
+      row.querySelector('[data-del-group]').addEventListener('click', async function () {
+        if (!confirm('Supprimer ce groupe ? Les outils associés passeront en "Sans groupe".')) return;
+        groups = groups.filter(function (g) { return g.id !== gid; });
+        tools.forEach(function (t) { if (t.groupId === gid) t.groupId = ''; });
+        await persistGroups(); await persistTools();
+        renderGroupsModal(); render(); renderGroupFilterOptions();
+      });
+    });
+  }
+
+  document.getElementById('btnManageGroups').addEventListener('click', function () {
+    renderGroupsModal();
+    els.groupsModal.classList.remove('hidden');
+  });
+  document.getElementById('btnCloseGroups').addEventListener('click', function () {
+    els.groupsModal.classList.add('hidden');
+  });
+  document.getElementById('btnAddGroup').addEventListener('click', async function () {
+    var name = els.newGroupName.value.trim();
+    if (!name) return;
+    groups.push({ id: uid('g'), name: name, color: COLORS[groups.length % COLORS.length] });
+    els.newGroupName.value = '';
+    await persistGroups();
+    renderGroupsModal(); render(); renderGroupFilterOptions();
+  });
+  els.newGroupName.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('btnAddGroup').click();
+  });
+
+  /* ---- Export / Import JSON ---- */
+  function buildExportPayload() {
+    return {
+      app: 'hub',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      tools: tools,
+      groups: groups
+    };
+  }
+
+  document.getElementById('btnExport').addEventListener('click', function () {
+    var payload = buildExportPayload();
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    a.href = url;
+    a.download = stamp + '_hub-outils_export.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+
+  var pendingImport = null;
+
+  document.getElementById('btnImport').addEventListener('click', function () {
+    els.importFile.value = '';
+    els.importFile.click();
+  });
+
+  els.importFile.addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (evt) {
+      var data;
+      try { data = JSON.parse(evt.target.result); } catch (err) { alert('Fichier JSON invalide.'); return; }
+      var impTools = Array.isArray(data.tools) ? data.tools : (Array.isArray(data) ? data : []);
+      var impGroups = Array.isArray(data.groups) ? data.groups : [];
+      if (!impTools.length && !impGroups.length) { alert('Aucun outil ou groupe trouvé dans ce fichier.'); return; }
+      pendingImport = { tools: impTools, groups: impGroups };
+      els.importSummary.textContent = impTools.length + ' outil(s) et ' + impGroups.length +
+        ' groupe(s) trouvés dans le fichier. Actuellement : ' + tools.length + ' outil(s), ' + groups.length + ' groupe(s).';
+      document.querySelectorAll('input[name=importMode]').forEach(function (r) { r.checked = (r.value === 'merge'); });
+      els.importModal.classList.remove('hidden');
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('btnCancelImport').addEventListener('click', function () {
+    pendingImport = null;
+    els.importModal.classList.add('hidden');
+  });
+
+  document.getElementById('btnConfirmImport').addEventListener('click', async function () {
+    if (!pendingImport) return;
+    var modeEl = document.querySelector('input[name=importMode]:checked');
+    var mode = modeEl ? modeEl.value : 'merge';
+
+    if (mode === 'replace') {
+      groups = pendingImport.groups.map(function (g) {
+        return { id: g.id || uid('g'), name: g.name || 'Groupe', color: g.color || COLORS[0] };
+      });
+      tools = pendingImport.tools.map(function (t) {
+        return {
+          id: t.id || uid('t'), name: t.name || 'Sans nom', url: t.url || '', desc: t.desc || '',
+          color: t.color || COLORS[0], groupId: t.groupId || '',
+          previewMode: t.previewMode || 'live', previewImg: t.previewImg || ''
+        };
+      });
+    } else {
+      // merge: groups matched by name (case-insensitive), tools matched by url
+      var groupIdMap = {};
+      pendingImport.groups.forEach(function (g) {
+        var existing = groups.find(function (eg) { return eg.name.toLowerCase() === (g.name || '').toLowerCase(); });
+        if (existing) {
+          groupIdMap[g.id] = existing.id;
+        } else {
+          var newId = uid('g');
+          groups.push({ id: newId, name: g.name || 'Groupe', color: g.color || COLORS[groups.length % COLORS.length] });
+          groupIdMap[g.id] = newId;
+        }
+      });
+      var existingUrls = tools.map(function (t) { return t.url; });
+      pendingImport.tools.forEach(function (t) {
+        if (!t.url || existingUrls.indexOf(t.url) !== -1) return; // skip duplicates by URL
+        var mappedGroupId = (t.groupId && groupIdMap[t.groupId]) ? groupIdMap[t.groupId] : '';
+        tools.push({
+          id: uid('t'), name: t.name || 'Sans nom', url: t.url, desc: t.desc || '',
+          color: t.color || COLORS[tools.length % COLORS.length], groupId: mappedGroupId,
+          previewMode: t.previewMode || 'live', previewImg: t.previewImg || ''
+        });
+        existingUrls.push(t.url);
+      });
+    }
+
+    await persistGroups();
+    await persistTools();
+    pendingImport = null;
+    els.importModal.classList.add('hidden');
+    renderGroupFilterOptions();
+    render();
+    alert('Import terminé.');
+  });
+
+  window.onHubDataChanged = function () { loadFromStorage(); };
+
+  loadFromStorage();
+})();
+</script>
+</body>
+</html>
