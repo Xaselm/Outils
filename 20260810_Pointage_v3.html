@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pointage — Suivi du temps de travail</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --brand-bg:#1c2333;
+    --paper:#f4f5f9;
+    --card:#ffffff;
+    --border:#e3e5ee;
+    --ink:#1c2333;
+    --ink-soft:#2c3550;
+    --muted:#8b90a4;
+
+    --travail:#0f766e;
+    --travail-bg:#e3f3f1;
+    --teletravail:#7c3aed;
+    --teletravail-bg:#efe7fd;
+    --deplacement:#db2777;
+    --deplacement-bg:#fbe3ee;
+    --absence-default:#c9a227;
+    --absence-bg:#faf4e0;
+
+    --success:#15803d;
+    --success-bg:#e7f5ea;
+    --danger:#dc2626;
+    --danger-bg:#fdecec;
+    --neutral-bg:#eef0f6;
+
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Consolas", "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  :root[data-theme="dark"]{
+    --paper:#11141d;
+    --card:#1a1f2d;
+    --border:#2b3247;
+    --ink:#e9ebf5;
+    --ink-soft:#c7cbe0;
+    --muted:#8890ab;
+
+    --travail:#5eead4;
+    --travail-bg:rgba(94,234,212,.14);
+    --teletravail:#c4b5fd;
+    --teletravail-bg:rgba(196,181,253,.16);
+    --deplacement:#f5a7ce;
+    --deplacement-bg:rgba(245,167,206,.16);
+    --absence-default:#e8c766;
+    --absence-bg:rgba(232,199,102,.14);
+
+    --success:#4ade80;
+    --success-bg:rgba(74,222,128,.14);
+    --danger:#f87171;
+    --danger-bg:rgba(248,113,113,.14);
+    --neutral-bg:rgba(255,255,255,.06);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    font-family:var(--sans);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    transition:background .15s ease, color .15s ease;
+  }
+  .app{max-width:1100px;margin:0 auto;padding:24px 20px 60px;}
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    background:var(--brand-bg);
+    color:#fff;
+    border-radius:16px;
+    padding:20px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:42px;height:42px;border-radius:12px;
+    background:linear-gradient(135deg, var(--travail), var(--teletravail));
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;
+  }
+  .brand h1{font-size:18px;margin:0;letter-spacing:.2px;}
+  .brand-sub{margin:2px 0 0;font-size:12px;color:#b9bfd6;}
+  .month-nav{display:flex;align-items:center;gap:8px;}
+  .month-nav button{
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.18);
+    color:#fff;width:32px;height:32px;border-radius:8px;
+    cursor:pointer;font-size:15px;
+  }
+  .month-nav button:hover{background:rgba(255,255,255,.2);}
+  #monthLabel{
+    font-family:var(--mono);
+    font-size:14px;
+    min-width:150px;
+    text-align:center;
+    text-transform:capitalize;
+  }
+  #todayBtn{
+    width:auto !important;padding:0 12px;font-family:var(--sans);font-size:12px;
+  }
+  .actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .actions button{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);
+    color:#fff;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .actions button:hover{background:rgba(255,255,255,.18);}
+  #themeToggleBtn{width:36px;padding:8px 0;text-align:center;font-size:14px;}
+
+  .sync-btn{font-family:var(--mono);}
+  .sync-btn.sync-off{color:#b9bfd6;}
+  .sync-btn.sync-ok{color:#8df5c9;}
+  .sync-btn.sync-pending{color:#ffe08a;animation:syncPulse 1.1s ease-in-out infinite;}
+  .sync-btn.sync-error{color:#ffb4b4;}
+  @keyframes syncPulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+
+  .sync-status-line{
+    font-size:12.5px;color:var(--muted);background:var(--paper);
+    border:1px solid var(--border);border-radius:9px;padding:9px 11px;margin-bottom:14px;
+  }
+  .sync-row{display:flex;align-items:center;gap:8px;}
+  .sync-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--muted);}
+  .sync-dot.sync-ok{background:var(--success);}
+  .sync-dot.sync-pending{background:#d9a441;animation:syncPulse 1.1s ease-in-out infinite;}
+  .sync-dot.sync-error{background:var(--danger);}
+
+  /* ---------- Summary cards ---------- */
+  .summary-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .summary-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px 16px 22px;
+    position:relative;
+    box-shadow:0 1px 2px rgba(28,35,51,.03);
+  }
+  .summary-card::after{
+    content:"";
+    position:absolute;left:8px;right:8px;bottom:0;height:12px;
+    background-image:radial-gradient(circle at 8px 0, var(--paper) 6px, transparent 6.5px);
+    background-size:16px 12px;
+    background-repeat:repeat-x;
+  }
+  .sc-label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--muted);font-weight:600;margin-bottom:8px;
+  }
+  .sc-real{
+    font-family:var(--mono);font-size:26px;font-weight:600;color:var(--ink);
+    line-height:1;
+  }
+  .sc-theo{font-size:12px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
+  .sc-ecart{
+    display:inline-block;margin-top:10px;font-family:var(--mono);
+    font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;
+  }
+  .ecart-pos{background:var(--success-bg);color:var(--success);}
+  .ecart-neg{background:var(--danger-bg);color:var(--danger);}
+  .ecart-zero{background:var(--neutral-bg);color:var(--muted);}
+
+  /* ---------- Counters ---------- */
+  .counters-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .counter-pill{
+    display:flex;align-items:center;gap:8px;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:999px;padding:7px 14px;font-size:12.5px;color:var(--ink);
+  }
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;}
+  .counter-pill b{font-family:var(--mono);}
+
+  .breakdown-row{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
+  .breakdown-row.hidden{display:none;}
+  .breakdown-pill{
+    display:flex;align-items:center;gap:6px;
+    background:var(--paper);border:1px solid var(--border);
+    border-radius:999px;padding:5px 11px;font-size:11.5px;color:var(--muted);
+  }
+  .breakdown-pill b{font-family:var(--mono);color:var(--ink-soft);}
+
+  /* ---------- Calendar ---------- */
+  .calendar-wrap{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:16px;padding:16px;
+  }
+  .cal-weekdays{
+    display:grid;grid-template-columns:repeat(7,1fr);
+    font-size:11px;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.06em;font-weight:600;padding:0 2px 10px;
+  }
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .day-cell{
+    border:1px solid var(--border);
+    border-radius:10px;
+    min-height:84px;
+    padding:8px;
+    cursor:pointer;
+    position:relative;
+    background:var(--card);
+    transition:box-shadow .12s ease, transform .12s ease;
+  }
+  .day-cell:hover{box-shadow:0 3px 10px rgba(28,35,51,.12);transform:translateY(-1px);}
+  .day-cell.other-month{opacity:.35;}
+  .day-cell.today{border:1.5px solid var(--ink);}
+  .day-cell.cell-off{
+    background:repeating-linear-gradient(135deg, var(--card), var(--card) 7px, var(--paper) 7px, var(--paper) 14px);
+  }
+  .day-cell.cell-off .day-num{color:var(--muted);}
+  .day-cell.cell-holiday{
+    background:repeating-linear-gradient(135deg, var(--card), var(--card) 7px, var(--absence-bg) 7px, var(--absence-bg) 14px);
+  }
+  .day-num{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  .day-tag{
+    margin-top:8px;font-size:10.5px;font-weight:700;
+    padding:2px 6px;border-radius:5px;display:inline-block;
+  }
+  .day-off-label{
+    margin-top:8px;font-size:10px;font-weight:600;color:var(--muted);display:block;
+  }
+  .day-hours{
+    position:absolute;bottom:8px;right:9px;
+    font-family:var(--mono);font-size:11px;color:var(--muted);
+  }
+  .tag-travail{background:var(--travail-bg);color:var(--travail);}
+  .tag-teletravail{background:var(--teletravail-bg);color:var(--teletravail);}
+  .tag-deplacement{background:var(--deplacement-bg);color:var(--deplacement);}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(10,12,20,.5);
+    display:none;align-items:center;justify-content:center;z-index:50;
+    padding:16px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--card);color:var(--ink);border-radius:16px;padding:22px;
+    width:100%;max-width:420px;max-height:88vh;overflow-y:auto;
+    box-shadow:0 20px 50px rgba(10,12,20,.35);
+  }
+  .modal h2{margin:0 0 4px;font-size:17px;}
+  .modal .modal-date{font-size:12.5px;color:var(--muted);margin-bottom:16px;text-transform:capitalize;}
+  .seg{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;flex-wrap:wrap;}
+  .seg button{
+    flex:1 1 25%;padding:9px 4px;border:none;background:var(--card);cursor:pointer;
+    font-size:11.5px;font-weight:600;color:var(--muted);border-right:1px solid var(--border);
+  }
+  .seg button:last-child{border-right:none;}
+  .seg button.active[data-type="travail"]{background:var(--travail-bg);color:var(--travail);}
+  .seg button.active[data-type="teletravail"]{background:var(--teletravail-bg);color:var(--teletravail);}
+  .seg button.active[data-type="deplacement"]{background:var(--deplacement-bg);color:var(--deplacement);}
+  .seg button.active[data-type="absence"]{background:var(--absence-bg);color:var(--absence-default);}
+
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+  .field input,.field select{
+    width:100%;padding:8px 9px;border:1px solid var(--border);border-radius:8px;
+    font-family:var(--mono);font-size:13.5px;color:var(--ink);background:var(--card);
+  }
+  .field select{font-family:var(--sans);}
+  .modal-actions{display:flex;gap:8px;margin-top:18px;}
+  .btn{
+    padding:9px 14px;border-radius:9px;border:1px solid var(--border);
+    background:var(--card);font-size:13px;font-weight:600;cursor:pointer;color:var(--ink);
+  }
+  .btn-primary{background:var(--brand-bg);color:#fff;border-color:var(--brand-bg);flex:1;}
+  .btn-danger{color:var(--danger);border-color:var(--danger-bg);}
+  .btn-ghost{color:var(--muted);}
+
+  .params-section{margin-bottom:20px;}
+  .params-section h3{font-size:13px;margin:0 0 10px;color:var(--ink-soft);}
+  .weekday-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .weekday-row{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    border:1px solid var(--border);border-radius:8px;padding:6px 8px;}
+  .weekday-row label{font-size:12px;color:var(--ink-soft);}
+  .weekday-row input{width:64px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12.5px;background:var(--card);color:var(--ink);}
+  .absence-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .absence-row input[type="text"]{flex:1;padding:7px 8px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--card);color:var(--ink);}
+  .absence-row input[type="color"]{width:32px;height:32px;border:none;border-radius:7px;padding:0;background:none;flex:none;}
+  .absence-row button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;flex:none;}
+  .add-type-btn{font-size:12.5px;color:var(--travail);background:none;border:1px dashed var(--travail);
+    border-radius:7px;padding:6px 10px;cursor:pointer;width:100%;margin-top:4px;}
+
+  .holiday-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .holiday-row input[type="date"]{padding:6px 7px;border:1px solid var(--border);border-radius:7px;font-family:var(--mono);font-size:12px;background:var(--card);color:var(--ink);}
+  .holiday-row input[type="text"]{flex:1;padding:7px 8px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--card);color:var(--ink);}
+  .holiday-row button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;flex:none;}
+  .quick-holiday-btn{font-size:12.5px;color:var(--absence-default);background:none;border:1px dashed var(--absence-default);
+    border-radius:7px;padding:6px 10px;cursor:pointer;width:100%;margin-top:6px;}
+
+  .hint{font-size:11px;color:var(--muted);margin-top:2px;}
+  footer{text-align:center;font-size:11px;color:var(--muted);margin-top:26px;}
+
+  @media (max-width:720px){
+    .summary-row{grid-template-columns:repeat(2,1fr);}
+    .field-row{grid-template-columns:1fr;}
+    .weekday-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">⏱</div>
+      <div>
+        <h1>Pointage</h1>
+        <p class="brand-sub">Suivi du temps de travail</p>
+      </div>
+    </div>
+    <div class="month-nav">
+      <button id="prevMonth">‹</button>
+      <div id="monthLabel">—</div>
+      <button id="nextMonth">›</button>
+      <button id="todayBtn">Aujourd'hui</button>
+    </div>
+    <div class="actions">
+      <button id="syncStatusBtn" class="sync-btn sync-off" title="Synchronisation Google Drive">● Drive</button>
+      <button id="themeToggleBtn" title="Changer de thème">🌙</button>
+      <button id="paramsBtn">⚙ Paramètres</button>
+      <button id="exportJsonBtn">⬇ Export JSON</button>
+      <button id="importJsonBtn">⬆ Import JSON</button>
+      <button id="snapshotBtn">💾 Version HTML</button>
+      <input type="file" id="importFile" hidden accept="application/json">
+    </div>
+  </header>
+
+  <section class="summary-row" id="summaryRow"></section>
+  <section class="counters-row" id="countersRow"></section>
+  <section class="breakdown-row hidden" id="breakdownRow"></section>
+
+  <section class="calendar-wrap">
+    <div class="cal-weekdays">
+      <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </section>
+
+  <footer>Données sauvegardées automatiquement dans ce navigateur — utilisez « Version HTML » pour emporter le fichier avec vos données.</footer>
+</div>
+
+<!-- ===== Modal jour ===== -->
+<div class="modal-overlay" id="dayModalOverlay">
+  <div class="modal">
+    <h2>Journée</h2>
+    <div class="modal-date" id="modalDateLabel"></div>
+
+    <div class="seg" id="typeSeg">
+      <button data-type="travail" type="button">Présentiel</button>
+      <button data-type="teletravail" type="button">Télétravail</button>
+      <button data-type="deplacement" type="button">Déplacement</button>
+      <button data-type="absence" type="button">Absence</button>
+    </div>
+
+    <div id="workFields">
+      <div class="field-row">
+        <div class="field">
+          <label>Arrivée</label>
+          <input type="time" id="fArrivee">
+        </div>
+        <div class="field">
+          <label>Sortie</label>
+          <input type="time" id="fSortie">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Début pause</label>
+          <input type="time" id="fPauseDebut">
+        </div>
+        <div class="field">
+          <label>Fin pause</label>
+          <input type="time" id="fPauseFin">
+        </div>
+      </div>
+      <p class="hint">La pause est facultative — laissez vide si absente.</p>
+    </div>
+
+    <div id="absenceFields" style="display:none;">
+      <div class="field">
+        <label>Type d'absence</label>
+        <select id="fAbsenceType"></select>
+      </div>
+      <p class="hint">Ce jour ne comptera ni pour les heures réelles, ni pour les heures théoriques de la semaine.</p>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="dayCancelBtn">Annuler</button>
+      <button class="btn btn-danger" id="dayDeleteBtn">Supprimer</button>
+      <button class="btn btn-primary" id="daySaveBtn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal paramètres ===== -->
+<div class="modal-overlay" id="paramsModalOverlay">
+  <div class="modal">
+    <h2>Paramètres</h2>
+    <div class="params-section">
+      <h3>Heures théoriques par jour</h3>
+      <div class="weekday-grid" id="weekdayGrid"></div>
+      <p class="hint">En heures décimales (ex : 7.5 = 7 h 30). Mettre 0 pour un jour non travaillé — ces jours seront grisés dans le calendrier.</p>
+    </div>
+    <div class="params-section">
+      <h3>Types d'absence</h3>
+      <div id="absenceTypesList"></div>
+      <button class="add-type-btn" id="addAbsenceTypeBtn">+ Ajouter un type d'absence</button>
+    </div>
+    <div class="params-section">
+      <h3>Jours fériés</h3>
+      <div id="holidaysList"></div>
+      <button class="add-type-btn" id="addHolidayBtn">+ Ajouter un jour férié</button>
+      <button class="quick-holiday-btn" id="quickHolidayBtn">🇫🇷 Ajouter les jours fériés France de l'année affichée</button>
+      <p class="hint">Un jour férié est automatiquement grisé et ne compte pas dans les heures théoriques.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="paramsCancelBtn">Annuler</button>
+      <button class="btn btn-primary" id="paramsSaveBtn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal synchronisation Drive ===== -->
+<div class="modal-overlay" id="syncModalOverlay">
+  <div class="modal">
+    <h2>Synchronisation Google Drive</h2>
+
+    <div id="syncClientIdSection">
+      <div class="field">
+        <label>ID client OAuth Google</label>
+        <input type="text" id="fDriveClientId" placeholder="xxxxxxxxxxxx.apps.googleusercontent.com">
+      </div>
+      <p class="hint">
+        À créer une fois dans Google Cloud Console : activer l'API Google Drive, créer un identifiant OAuth
+        « Application Web », et ajouter l'adresse à laquelle ce fichier est hébergé (ex : votre page GitHub Pages)
+        dans « Origines JavaScript autorisées ». Ne fonctionne pas en ouvrant le fichier en local (file://) —
+        il doit être servi en http/https. L'ID client est enregistré avec vos données, pas besoin de le ressaisir
+        à chaque export.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="saveDriveClientIdBtn">Enregistrer l'ID client</button>
+      </div>
+    </div>
+
+    <div id="syncActionsSection" style="display:none;">
+      <div class="sync-status-line">
+        <div class="sync-row"><span class="sync-dot" id="syncDetailDot"></span><span id="syncDetailText">Non connecté.</span></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="driveConnectBtn">Se connecter à Drive</button>
+      </div>
+      <div class="modal-actions" id="syncManualActions" style="display:none;">
+        <button class="btn" id="driveForcePushBtn">⬆ Forcer l'envoi</button>
+        <button class="btn" id="driveForcePullBtn">⬇ Forcer le téléchargement</button>
+      </div>
+      <div class="modal-actions" id="syncDisconnectRow" style="display:none;">
+        <button class="btn btn-ghost" id="driveDisconnectBtn">Déconnecter</button>
+        <button class="btn btn-ghost" id="editClientIdBtn">Modifier l'ID client</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="syncCloseBtn">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script id="app-data" type="application/json">
+{
+  "params": {
+    "theoriqueSemaine": { "lundi": 7.5, "mardi": 7.5, "mercredi": 7.5, "jeudi": 7.5, "vendredi": 7.5, "samedi": 0, "dimanche": 0 },
+    "absenceTypes": [
+      { "id": "cp", "label": "Congés payés", "color": "#c9a227" },
+      { "id": "rtt", "label": "RTT", "color": "#db7c26" },
+      { "id": "maladie", "label": "Maladie", "color": "#b33a3a" },
+      { "id": "autre", "label": "Autre", "color": "#8b7355" }
+    ],
+    "joursFeries": [],
+    "driveClientId": ""
+  },
+  "days": {},
+  "meta": { "lastModified": null }
+}
+</script>
+
+<script>
+(function(){
+
+  var STORAGE_KEY = "pointage_app_data_v1";
+  var THEME_KEY = "pointage_theme";
+  var appData = null;
+  var state = { viewYear: 0, viewMonth: 0 };
+  var editingDateStr = null;
+  var editingType = "travail";
+  var tempAbsenceTypes = [];
+  var tempHolidays = [];
+
+  var DRIVE_FILE_NAME = "pointage_data.json";
+  var DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+  var EVER_CONNECTED_KEY = "pointage_drive_ever_connected";
+  var drive = {
+    tokenClient: null,
+    accessToken: null,
+    fileId: null,
+    connected: false,
+    syncing: false,
+    syncTimer: null
+  };
+
+  var WEEKDAY_KEYS = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+  var WEEKDAY_LABELS = { lundi:"Lundi", mardi:"Mardi", mercredi:"Mercredi", jeudi:"Jeudi", vendredi:"Vendredi", samedi:"Samedi", dimanche:"Dimanche" };
+  var MONTH_LABELS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+  var TYPE_LABELS = { travail:"Présentiel", teletravail:"Télétravail", deplacement:"Déplacement" };
+
+  // ---------- Utils ----------
+  function pad2(n){ return n < 10 ? "0" + n : "" + n; }
+
+  function formatDateStr(d){
+    return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+  }
+
+  function weekdayKeyOf(d){
+    return WEEKDAY_KEYS[d.getDay()];
+  }
+
+  function toMinutes(hhmm){
+    if (!hhmm) return null;
+    var parts = hhmm.split(":");
+    if (parts.length !== 2) return null;
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return null;
+    return h * 60 + m;
+  }
+
+  function formatHM(totalMinutes){
+    var sign = totalMinutes < 0 ? "-" : "";
+    var abs = Math.abs(Math.round(totalMinutes));
+    var h = Math.floor(abs / 60);
+    var m = abs % 60;
+    return sign + h + "h" + pad2(m);
+  }
+
+  function getAbsenceType(id){
+    for (var i = 0; i < appData.params.absenceTypes.length; i++){
+      if (appData.params.absenceTypes[i].id === id) return appData.params.absenceTypes[i];
+    }
+    return null;
+  }
+
+  function holidayLabelFor(dateStr){
+    var list = appData.params.joursFeries || [];
+    for (var i = 0; i < list.length; i++){
+      if (list[i].date === dateStr) return list[i].label;
+    }
+    return null;
+  }
+
+  function isNonWorkingWeekday(d){
+    var key = weekdayKeyOf(d);
+    var v = appData.params.theoriqueSemaine[key];
+    return !(typeof v === "number" && v > 0);
+  }
+
+  function theoriqueForDate(d){
+    var dateStr = formatDateStr(d);
+    if (holidayLabelFor(dateStr) !== null) return 0;
+    var key = weekdayKeyOf(d);
+    var v = appData.params.theoriqueSemaine[key];
+    return (typeof v === "number" ? v : 0) * 60;
+  }
+
+  function isWorkEntryType(type){
+    return type === "travail" || type === "teletravail" || type === "deplacement";
+  }
+
+  function dayReelMinutes(entry){
+    if (!entry || !isWorkEntryType(entry.type)) return 0;
+    var arrivee = toMinutes(entry.arrivee);
+    var sortie = toMinutes(entry.sortie);
+    if (arrivee === null || sortie === null) return 0;
+    var pauseDebut = toMinutes(entry.pauseDebut);
+    var pauseFin = toMinutes(entry.pauseFin);
+    var pause = 0;
+    if (pauseDebut !== null && pauseFin !== null && pauseFin > pauseDebut){
+      pause = pauseFin - pauseDebut;
+    }
+    var worked = sortie - arrivee - pause;
+    return worked > 0 ? worked : 0;
+  }
+
+  // ---------- Aggregation ----------
+  function getPeriodTotals(dateList, todayStr){
+    var reel = 0, theorique = 0, presentiel = 0, teletravail = 0, deplacement = 0, absence = 0;
+    var absenceByType = {};
+    for (var i = 0; i < dateList.length; i++){
+      var d = dateList[i];
+      var dateStr = formatDateStr(d);
+      var entry = appData.days[dateStr];
+      var isFuture = dateStr > todayStr;
+
+      if (!entry){
+        if (isFuture) continue;
+        theorique += theoriqueForDate(d);
+        continue;
+      }
+
+      if (entry.type === "absence"){
+        absence++;
+        var tid = entry.absenceType || "?";
+        absenceByType[tid] = (absenceByType[tid] || 0) + 1;
+        continue; // 0 théorique, 0 réel : neutre
+      }
+
+      if (entry.type === "teletravail") teletravail++;
+      else if (entry.type === "deplacement") deplacement++;
+      else presentiel++;
+
+      theorique += theoriqueForDate(d);
+      reel += dayReelMinutes(entry);
+    }
+    return {
+      reel: reel, theorique: theorique, ecart: reel - theorique,
+      presentiel: presentiel, teletravail: teletravail, deplacement: deplacement, absence: absence,
+      absenceByType: absenceByType,
+      travailles: presentiel + teletravail + deplacement
+    };
+  }
+
+  function datesOfWeekContaining(d){
+    var offset = (d.getDay() + 6) % 7; // lundi = 0
+    var monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - offset);
+    var out = [];
+    for (var i = 0; i < 7; i++){
+      out.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
+    }
+    return out;
+  }
+
+  function datesOfMonth(year, month){
+    var out = [];
+    var last = new Date(year, month + 1, 0).getDate();
+    for (var i = 1; i <= last; i++) out.push(new Date(year, month, i));
+    return out;
+  }
+
+  function datesOfYear(year){
+    var out = [];
+    for (var m = 0; m < 12; m++){
+      out = out.concat(datesOfMonth(year, m));
+    }
+    return out;
+  }
+
+  // ---------- French public holidays ----------
+  function computeEasterSunday(year){
+    var a = year % 19;
+    var b = Math.floor(year / 100);
+    var c = year % 100;
+    var d = Math.floor(b / 4);
+    var e = b % 4;
+    var f = Math.floor((b + 8) / 25);
+    var g = Math.floor((b - f + 1) / 3);
+    var h = (19 * a + b - d - g + 15) % 30;
+    var i = Math.floor(c / 4);
+    var k = c % 4;
+    var l = (32 + 2 * e + 2 * i - h - k) % 7;
+    var m = Math.floor((a + 11 * h + 22 * l) / 451);
+    var month = Math.floor((h + l - 7 * m + 114) / 31);
+    var day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month - 1, day);
+  }
+
+  function addDays(d, n){
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  }
+
+  function computeFrenchHolidays(year){
+    var easter = computeEasterSunday(year);
+    var list = [
+      { date: new Date(year, 0, 1), label: "Jour de l'An" },
+      { date: addDays(easter, 1), label: "Lundi de Pâques" },
+      { date: new Date(year, 4, 1), label: "Fête du Travail" },
+      { date: new Date(year, 4, 8), label: "Victoire 1945" },
+      { date: addDays(easter, 39), label: "Ascension" },
+      { date: addDays(easter, 50), label: "Lundi de Pentecôte" },
+      { date: new Date(year, 6, 14), label: "Fête Nationale" },
+      { date: new Date(year, 7, 15), label: "Assomption" },
+      { date: new Date(year, 10, 1), label: "Toussaint" },
+      { date: new Date(year, 10, 11), label: "Armistice" },
+      { date: new Date(year, 11, 25), label: "Noël" }
+    ];
+    var out = [];
+    for (var i = 0; i < list.length; i++){
+      out.push({ date: formatDateStr(list[i].date), label: list[i].label });
+    }
+    return out;
+  }
+
+  // ---------- Persistence ----------
+  function persist(){
+    appData.meta.lastModified = new Date().toISOString();
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch(e){}
+    var tag = document.getElementById("app-data");
+    if (tag) tag.textContent = JSON.stringify(appData);
+    scheduleDriveSync();
+  }
+
+  function loadData(){
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch(e){}
+    if (raw){
+      try { appData = JSON.parse(raw); } catch(e){ appData = null; }
+    }
+    if (!appData){
+      var tag = document.getElementById("app-data");
+      appData = JSON.parse(tag.textContent);
+    }
+    if (!appData.params.joursFeries) appData.params.joursFeries = [];
+    if (typeof appData.params.driveClientId !== "string") appData.params.driveClientId = "";
+    if (!appData.meta) appData.meta = { lastModified: null };
+  }
+
+  // ---------- Theme ----------
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+    var btn = document.getElementById("themeToggleBtn");
+    if (btn) btn.textContent = theme === "dark" ? "☀" : "🌙";
+  }
+
+  function loadTheme(){
+    var t = "light";
+    try { t = localStorage.getItem(THEME_KEY) || "light"; } catch(e){}
+    applyTheme(t);
+  }
+
+  function toggleTheme(){
+    var current = document.documentElement.getAttribute("data-theme");
+    var next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch(e){}
+  }
+
+  // ---------- Google Drive sync ----------
+  function formatSyncDate(iso){
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + " à " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  }
+
+  function updateSyncStatus(kind, detail){
+    var labelMap = { off:"● Drive", connecting:"● Drive…", syncing:"● Drive…", pending:"● Drive*", synced:"● Drive ✓", error:"● Drive ⚠" };
+    var classMap = { off:"sync-off", connecting:"sync-pending", syncing:"sync-pending", pending:"sync-pending", synced:"sync-ok", error:"sync-error" };
+    var btn = document.getElementById("syncStatusBtn");
+    if (btn){
+      btn.className = "sync-btn " + (classMap[kind] || "sync-off");
+      btn.textContent = labelMap[kind] || "● Drive";
+      btn.title = detail || "";
+    }
+    var dot = document.getElementById("syncDetailDot");
+    var text = document.getElementById("syncDetailText");
+    if (dot) dot.className = "sync-dot " + (classMap[kind] || "sync-off");
+    if (text) text.textContent = detail || "";
+  }
+
+  function driveApiHeaders(){
+    return { "Authorization": "Bearer " + drive.accessToken };
+  }
+
+  function driveSearchFile(){
+    var q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "'");
+    return fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=" + q + "&fields=files(id,name,modifiedTime)", {
+      headers: driveApiHeaders()
+    }).then(function(r){
+      if (!r.ok) throw new Error("Recherche Drive échouée (" + r.status + ")");
+      return r.json();
+    });
+  }
+
+  function driveGetContent(fileId){
+    return fetch("https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media", {
+      headers: driveApiHeaders()
+    }).then(function(r){
+      if (!r.ok) throw new Error("Téléchargement Drive échoué (" + r.status + ")");
+      return r.text();
+    });
+  }
+
+  function driveCreateFile(contentStr){
+    var boundary = "-------pointage314159";
+    var metadata = { name: DRIVE_FILE_NAME, parents: ["appDataFolder"] };
+    var body =
+      "--" + boundary + "\r\n" +
+      "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+      JSON.stringify(metadata) + "\r\n" +
+      "--" + boundary + "\r\n" +
+      "Content-Type: application/json\r\n\r\n" +
+      contentStr + "\r\n" +
+      "--" + boundary + "--";
+    return fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + drive.accessToken, "Content-Type": "multipart/related; boundary=" + boundary },
+      body: body
+    }).then(function(r){
+      if (!r.ok) throw new Error("Création Drive échouée (" + r.status + ")");
+      return r.json();
+    });
+  }
+
+  function driveUpdateFile(fileId, contentStr){
+    return fetch("https://www.googleapis.com/upload/drive/v3/files/" + fileId + "?uploadType=media", {
+      method: "PATCH",
+      headers: { "Authorization": "Bearer " + drive.accessToken, "Content-Type": "application/json" },
+      body: contentStr
+    }).then(function(r){
+      if (!r.ok) throw new Error("Mise à jour Drive échouée (" + r.status + ")");
+      return r.json();
+    });
+  }
+
+  function applyRemoteData(remote){
+    appData = remote;
+    if (!appData.params.joursFeries) appData.params.joursFeries = [];
+    if (typeof appData.params.driveClientId !== "string") appData.params.driveClientId = "";
+    if (!appData.meta) appData.meta = { lastModified: null };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch(e){}
+    var tag = document.getElementById("app-data");
+    if (tag) tag.textContent = JSON.stringify(appData);
+    renderAll();
+  }
+
+  function pushToDriveNow(){
+    if (!drive.connected || !drive.accessToken) return Promise.resolve();
+    drive.syncing = true;
+    updateSyncStatus("syncing", "Synchronisation en cours…");
+    var content = JSON.stringify(appData);
+    var op = drive.fileId ? driveUpdateFile(drive.fileId, content) : driveCreateFile(content).then(function(res){
+      if (res.id) drive.fileId = res.id;
+      return res;
+    });
+    return op.then(function(){
+      drive.syncing = false;
+      updateSyncStatus("synced", "Synchronisé le " + formatSyncDate(new Date().toISOString()));
+    }).catch(function(err){
+      drive.syncing = false;
+      updateSyncStatus("error", "Échec de synchronisation : " + err.message);
+    });
+  }
+
+  function scheduleDriveSync(){
+    if (!drive.connected) return;
+    updateSyncStatus("pending", "Modifications en attente de synchronisation…");
+    if (drive.syncTimer) clearTimeout(drive.syncTimer);
+    drive.syncTimer = setTimeout(function(){ pushToDriveNow(); }, 1500);
+  }
+
+  function performInitialSync(){
+    updateSyncStatus("syncing", "Recherche des données sur Drive…");
+    driveSearchFile().then(function(res){
+      var file = (res.files && res.files.length) ? res.files[0] : null;
+      if (!file){
+        drive.fileId = null;
+        return pushToDriveNow();
+      }
+      drive.fileId = file.id;
+      return driveGetContent(file.id).then(function(text){
+        var remote = null;
+        try { remote = JSON.parse(text); } catch(e){ remote = null; }
+        if (!remote || !remote.days){
+          return pushToDriveNow();
+        }
+        var localHasData = Object.keys(appData.days).length > 0;
+        var localTime = appData.meta && appData.meta.lastModified;
+        var remoteTime = (remote.meta && remote.meta.lastModified) || null;
+
+        if (!localHasData && remoteTime){
+          applyRemoteData(remote);
+          updateSyncStatus("synced", "Données chargées depuis Drive (" + formatSyncDate(remoteTime) + ").");
+          return;
+        }
+        if (!remoteTime || (localTime && localTime >= remoteTime)){
+          return pushToDriveNow();
+        }
+        var doLoad = confirm(
+          "Des données plus récentes ont été trouvées sur Google Drive (dernière modification : " +
+          formatSyncDate(remoteTime) + ").\nLes charger et remplacer les données locales de cet appareil ?"
+        );
+        if (doLoad){
+          applyRemoteData(remote);
+          updateSyncStatus("synced", "Données chargées depuis Drive (" + formatSyncDate(remoteTime) + ").");
+        } else {
+          return pushToDriveNow();
+        }
+      });
+    }).catch(function(err){
+      updateSyncStatus("error", "Erreur de connexion à Drive : " + err.message);
+    });
+  }
+
+  function handleTokenResponse(resp){
+    if (!resp || resp.error){
+      updateSyncStatus("error", "Connexion refusée ou expirée.");
+      return;
+    }
+    drive.accessToken = resp.access_token;
+    drive.connected = true;
+    try { localStorage.setItem(EVER_CONNECTED_KEY, "1"); } catch(e){}
+    refreshSyncModalButtons();
+    performInitialSync();
+  }
+
+  function connectDrive(){
+    if (!appData.params.driveClientId){
+      openSyncModal();
+      alert("Merci de renseigner votre ID client Google avant de vous connecter.");
+      return;
+    }
+    if (typeof window.google === "undefined" || !window.google.accounts || !window.google.accounts.oauth2){
+      alert("Le service Google n'est pas encore chargé. Réessayez dans un instant (vérifiez aussi votre connexion internet).");
+      return;
+    }
+    if (!drive.tokenClient){
+      drive.tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: appData.params.driveClientId,
+        scope: DRIVE_SCOPE,
+        callback: handleTokenResponse
+      });
+    }
+    updateSyncStatus("connecting", "Connexion en cours…");
+    drive.tokenClient.requestAccessToken({ prompt: "consent" });
+  }
+
+  function disconnectDrive(){
+    if (drive.accessToken && window.google && google.accounts && google.accounts.oauth2){
+      google.accounts.oauth2.revoke(drive.accessToken, function(){});
+    }
+    drive.accessToken = null;
+    drive.connected = false;
+    drive.fileId = null;
+    if (drive.syncTimer) clearTimeout(drive.syncTimer);
+    updateSyncStatus("off", "Non connecté.");
+    refreshSyncModalButtons();
+  }
+
+  function refreshSyncModalButtons(){
+    document.getElementById("driveConnectBtn").style.display = drive.connected ? "none" : "inline-block";
+    document.getElementById("syncManualActions").style.display = drive.connected ? "flex" : "none";
+    document.getElementById("syncDisconnectRow").style.display = drive.connected ? "flex" : "none";
+  }
+
+  // ---------- Rendering ----------
+  function renderSummary(){
+    var now = new Date();
+    var todayStr = formatDateStr(now);
+    var viewYear = state.viewYear, viewMonth = state.viewMonth;
+
+    var todayTotals = getPeriodTotals([now], todayStr);
+    var weekTotals = getPeriodTotals(datesOfWeekContaining(now), todayStr);
+    var monthTotals = getPeriodTotals(datesOfMonth(viewYear, viewMonth), todayStr);
+    var yearTotals = getPeriodTotals(datesOfYear(viewYear), todayStr);
+
+    var cards = [
+      { label: "Aujourd'hui", t: todayTotals },
+      { label: "Cette semaine", t: weekTotals },
+      { label: MONTH_LABELS[viewMonth] + " " + viewYear, t: monthTotals },
+      { label: "Année " + viewYear, t: yearTotals }
+    ];
+
+    var html = "";
+    for (var i = 0; i < cards.length; i++){
+      var c = cards[i];
+      var ecartClass = c.t.ecart > 0.5 ? "ecart-pos" : (c.t.ecart < -0.5 ? "ecart-neg" : "ecart-zero");
+      var ecartLabel = (c.t.ecart >= 0 ? "+" : "") + formatHM(c.t.ecart);
+      html += '<div class="summary-card">' +
+        '<div class="sc-label">' + c.label + '</div>' +
+        '<div class="sc-real">' + formatHM(c.t.reel) + '</div>' +
+        '<div class="sc-theo">théorique ' + formatHM(c.t.theorique) + '</div>' +
+        '<div class="sc-ecart ' + ecartClass + '">' + ecartLabel + '</div>' +
+        '</div>';
+    }
+    document.getElementById("summaryRow").innerHTML = html;
+
+    // counters + breakdown use the displayed month
+    var mc = monthTotals;
+    var countersHtml =
+      '<div class="counter-pill"><span class="dot" style="background:var(--travail)"></span>Présentiel <b>' + mc.presentiel + '</b></div>' +
+      '<div class="counter-pill"><span class="dot" style="background:var(--teletravail)"></span>Télétravail <b>' + mc.teletravail + '</b></div>' +
+      '<div class="counter-pill"><span class="dot" style="background:var(--deplacement)"></span>Déplacement <b>' + mc.deplacement + '</b></div>' +
+      '<div class="counter-pill"><span class="dot" style="background:var(--absence-default)"></span>Absences <b>' + mc.absence + '</b></div>' +
+      '<div class="counter-pill"><span class="dot" style="background:var(--ink)"></span>Jours travaillés <b>' + mc.travailles + '</b></div>';
+    document.getElementById("countersRow").innerHTML = countersHtml;
+
+    renderAbsenceBreakdown(mc.absenceByType);
+  }
+
+  function renderAbsenceBreakdown(absenceByType){
+    var row = document.getElementById("breakdownRow");
+    var ids = [];
+    for (var id in absenceByType){ if (absenceByType.hasOwnProperty(id)) ids.push(id); }
+    if (ids.length === 0){
+      row.className = "breakdown-row hidden";
+      row.innerHTML = "";
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < ids.length; i++){
+      var at = getAbsenceType(ids[i]);
+      var label = at ? at.label : "Type supprimé";
+      var color = at ? at.color : "#8b90a4";
+      html += '<div class="breakdown-pill"><span class="dot" style="background:' + color + '"></span>' + label + ' <b>' + absenceByType[ids[i]] + '</b></div>';
+    }
+    row.className = "breakdown-row";
+    row.innerHTML = html;
+  }
+
+  function renderCalendar(){
+    var year = state.viewYear, month = state.viewMonth;
+    document.getElementById("monthLabel").textContent = MONTH_LABELS[month] + " " + year;
+
+    var firstOfMonth = new Date(year, month, 1);
+    var startOffset = (firstOfMonth.getDay() + 6) % 7;
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+    var todayStr = formatDateStr(new Date());
+
+    var html = "";
+    for (var i = 0; i < totalCells; i++){
+      var cellDate = new Date(year, month, 1 - startOffset + i);
+      var dateStr = formatDateStr(cellDate);
+      var isCurrentMonth = cellDate.getMonth() === month;
+      var entry = appData.days[dateStr];
+
+      var classes = "day-cell";
+      if (!isCurrentMonth) classes += " other-month";
+      if (dateStr === todayStr) classes += " today";
+
+      var tagHtml = "";
+      var hoursHtml = "";
+      var offLabelHtml = "";
+
+      if (entry){
+        if (entry.type === "absence"){
+          var at = getAbsenceType(entry.absenceType);
+          var label = at ? at.label : "Absence";
+          var color = at ? at.color : "#c9a227";
+          tagHtml = '<span class="day-tag" style="background:' + color + '22;color:' + color + '">' + label + '</span>';
+        } else if (isWorkEntryType(entry.type)){
+          var tagClass = entry.type === "travail" ? "tag-travail" : (entry.type === "teletravail" ? "tag-teletravail" : "tag-deplacement");
+          tagHtml = '<span class="day-tag ' + tagClass + '">' + TYPE_LABELS[entry.type] + '</span>';
+          hoursHtml = '<span class="day-hours">' + formatHM(dayReelMinutes(entry)) + '</span>';
+        }
+      } else {
+        var hLabel = holidayLabelFor(dateStr);
+        if (hLabel !== null){
+          classes += " cell-off cell-holiday";
+          offLabelHtml = '<span class="day-off-label">' + hLabel + '</span>';
+        } else if (isNonWorkingWeekday(cellDate)){
+          classes += " cell-off";
+        }
+      }
+
+      html += '<div class="' + classes + '" data-date="' + dateStr + '">' +
+        '<div class="day-num">' + cellDate.getDate() + '</div>' +
+        tagHtml + offLabelHtml + hoursHtml +
+        '</div>';
+    }
+    document.getElementById("calGrid").innerHTML = html;
+
+    var cells = document.querySelectorAll(".day-cell");
+    for (var j = 0; j < cells.length; j++){
+      cells[j].addEventListener("click", function(){
+        openDayModal(this.getAttribute("data-date"));
+      });
+    }
+  }
+
+  function renderAll(){
+    renderSummary();
+    renderCalendar();
+  }
+
+  // ---------- Day modal ----------
+  function setSegActive(type){
+    var buttons = document.querySelectorAll("#typeSeg button");
+    for (var i = 0; i < buttons.length; i++){
+      if (buttons[i].getAttribute("data-type") === type) buttons[i].className = "active";
+      else buttons[i].className = "";
+    }
+    document.getElementById("workFields").style.display = (type === "absence") ? "none" : "block";
+    document.getElementById("absenceFields").style.display = (type === "absence") ? "block" : "none";
+    editingType = type;
+  }
+
+  function populateAbsenceSelect(selectedId){
+    var sel = document.getElementById("fAbsenceType");
+    var html = "";
+    for (var i = 0; i < appData.params.absenceTypes.length; i++){
+      var t = appData.params.absenceTypes[i];
+      html += '<option value="' + t.id + '"' + (t.id === selectedId ? " selected" : "") + '>' + t.label + '</option>';
+    }
+    sel.innerHTML = html;
+  }
+
+  function openDayModal(dateStr){
+    editingDateStr = dateStr;
+    var parts = dateStr.split("-");
+    var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+    var weekdayNames = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+    var holiday = holidayLabelFor(dateStr);
+    document.getElementById("modalDateLabel").textContent =
+      weekdayNames[d.getDay()] + " " + d.getDate() + " " + MONTH_LABELS[d.getMonth()].toLowerCase() + " " + d.getFullYear() +
+      (holiday ? " · " + holiday : "");
+
+    var entry = appData.days[dateStr];
+    populateAbsenceSelect(entry && entry.absenceType);
+
+    document.getElementById("fArrivee").value = (entry && entry.arrivee) || "";
+    document.getElementById("fSortie").value = (entry && entry.sortie) || "";
+    document.getElementById("fPauseDebut").value = (entry && entry.pauseDebut) || "";
+    document.getElementById("fPauseFin").value = (entry && entry.pauseFin) || "";
+
+    setSegActive(entry ? entry.type : "travail");
+    document.getElementById("dayDeleteBtn").style.display = entry ? "inline-block" : "none";
+    document.getElementById("dayModalOverlay").className = "modal-overlay open";
+  }
+
+  function closeDayModal(){
+    document.getElementById("dayModalOverlay").className = "modal-overlay";
+    editingDateStr = null;
+  }
+
+  function saveDay(){
+    if (!editingDateStr) return;
+    var entry;
+    if (editingType === "absence"){
+      var absenceType = document.getElementById("fAbsenceType").value;
+      entry = { type: "absence", absenceType: absenceType };
+    } else {
+      var arrivee = document.getElementById("fArrivee").value;
+      var sortie = document.getElementById("fSortie").value;
+      var pauseDebut = document.getElementById("fPauseDebut").value;
+      var pauseFin = document.getElementById("fPauseFin").value;
+
+      if (!arrivee || !sortie){
+        alert("Merci de renseigner au moins l'heure d'arrivée et l'heure de sortie.");
+        return;
+      }
+      if (toMinutes(sortie) <= toMinutes(arrivee)){
+        alert("L'heure de sortie doit être après l'heure d'arrivée.");
+        return;
+      }
+      if (pauseDebut && pauseFin && toMinutes(pauseFin) <= toMinutes(pauseDebut)){
+        alert("La fin de pause doit être après le début de pause.");
+        return;
+      }
+      entry = { type: editingType, arrivee: arrivee, sortie: sortie, pauseDebut: pauseDebut, pauseFin: pauseFin };
+    }
+    appData.days[editingDateStr] = entry;
+    persist();
+    closeDayModal();
+    renderAll();
+  }
+
+  function deleteDay(){
+    if (!editingDateStr) return;
+    delete appData.days[editingDateStr];
+    persist();
+    closeDayModal();
+    renderAll();
+  }
+
+  // ---------- Params modal ----------
+  function renderWeekdayGrid(){
+    var order = ["lundi","mardi","mercredi","jeudi","vendredi","samedi","dimanche"];
+    var html = "";
+    for (var i = 0; i < order.length; i++){
+      var key = order[i];
+      var val = appData.params.theoriqueSemaine[key];
+      html += '<div class="weekday-row"><label>' + WEEKDAY_LABELS[key] + '</label>' +
+        '<input type="number" step="0.25" min="0" max="24" data-weekday="' + key + '" value="' + val + '"></div>';
+    }
+    document.getElementById("weekdayGrid").innerHTML = html;
+  }
+
+  function renderAbsenceTypesList(){
+    var html = "";
+    for (var i = 0; i < tempAbsenceTypes.length; i++){
+      var t = tempAbsenceTypes[i];
+      html += '<div class="absence-row" data-index="' + i + '">' +
+        '<input type="color" value="' + t.color + '" data-field="color">' +
+        '<input type="text" value="' + t.label + '" data-field="label" placeholder="Nom du type">' +
+        '<button type="button" data-remove="' + i + '">✕</button>' +
+        '</div>';
+    }
+    document.getElementById("absenceTypesList").innerHTML = html;
+
+    var rows = document.querySelectorAll(".absence-row");
+    for (var j = 0; j < rows.length; j++){
+      var row = rows[j];
+      row.querySelector('[data-field="label"]').addEventListener("input", function(){
+        var i2 = parseInt(this.parentNode.getAttribute("data-index"), 10);
+        tempAbsenceTypes[i2].label = this.value;
+      });
+      row.querySelector('[data-field="color"]').addEventListener("input", function(){
+        var i2 = parseInt(this.parentNode.getAttribute("data-index"), 10);
+        tempAbsenceTypes[i2].color = this.value;
+      });
+      var removeBtn = row.querySelector("[data-remove]");
+      removeBtn.addEventListener("click", function(){
+        var i2 = parseInt(this.getAttribute("data-remove"), 10);
+        tempAbsenceTypes.splice(i2, 1);
+        renderAbsenceTypesList();
+      });
+    }
+  }
+
+  function renderHolidaysList(){
+    var html = "";
+    for (var i = 0; i < tempHolidays.length; i++){
+      var h = tempHolidays[i];
+      html += '<div class="holiday-row" data-index="' + i + '">' +
+        '<input type="date" value="' + h.date + '" data-field="date">' +
+        '<input type="text" value="' + h.label + '" data-field="label" placeholder="Nom du jour férié">' +
+        '<button type="button" data-remove="' + i + '">✕</button>' +
+        '</div>';
+    }
+    document.getElementById("holidaysList").innerHTML = html;
+
+    var rows = document.querySelectorAll(".holiday-row");
+    for (var j = 0; j < rows.length; j++){
+      var row = rows[j];
+      row.querySelector('[data-field="date"]').addEventListener("input", function(){
+        var i2 = parseInt(this.parentNode.getAttribute("data-index"), 10);
+        tempHolidays[i2].date = this.value;
+      });
+      row.querySelector('[data-field="label"]').addEventListener("input", function(){
+        var i2 = parseInt(this.parentNode.getAttribute("data-index"), 10);
+        tempHolidays[i2].label = this.value;
+      });
+      var removeBtn = row.querySelector("[data-remove]");
+      removeBtn.addEventListener("click", function(){
+        var i2 = parseInt(this.getAttribute("data-remove"), 10);
+        tempHolidays.splice(i2, 1);
+        renderHolidaysList();
+      });
+    }
+  }
+
+  function addHolidayRow(){
+    var now = new Date();
+    tempHolidays.push({ date: formatDateStr(now), label: "Nouveau jour férié" });
+    renderHolidaysList();
+  }
+
+  function addFrenchHolidaysForViewYear(){
+    var computed = computeFrenchHolidays(state.viewYear);
+    var existingDates = {};
+    for (var i = 0; i < tempHolidays.length; i++) existingDates[tempHolidays[i].date] = true;
+    var added = 0;
+    for (var j = 0; j < computed.length; j++){
+      if (!existingDates[computed[j].date]){
+        tempHolidays.push(computed[j]);
+        added++;
+      }
+    }
+    renderHolidaysList();
+    if (added === 0) alert("Les jours fériés de " + state.viewYear + " sont déjà présents.");
+  }
+
+  function openParamsModal(){
+    renderWeekdayGrid();
+    tempAbsenceTypes = JSON.parse(JSON.stringify(appData.params.absenceTypes));
+    tempHolidays = JSON.parse(JSON.stringify(appData.params.joursFeries || []));
+    renderAbsenceTypesList();
+    renderHolidaysList();
+    document.getElementById("paramsModalOverlay").className = "modal-overlay open";
+  }
+
+  function closeParamsModal(){
+    document.getElementById("paramsModalOverlay").className = "modal-overlay";
+  }
+
+  function saveParams(){
+    var inputs = document.querySelectorAll("#weekdayGrid input");
+    for (var i = 0; i < inputs.length; i++){
+      var key = inputs[i].getAttribute("data-weekday");
+      var val = parseFloat(inputs[i].value);
+      appData.params.theoriqueSemaine[key] = isNaN(val) ? 0 : val;
+    }
+    var cleanedTypes = [];
+    for (var j = 0; j < tempAbsenceTypes.length; j++){
+      var t = tempAbsenceTypes[j];
+      if (t.label && t.label.trim() !== ""){
+        cleanedTypes.push({ id: t.id, label: t.label.trim(), color: t.color });
+      }
+    }
+    if (cleanedTypes.length === 0){
+      alert("Merci de conserver au moins un type d'absence.");
+      return;
+    }
+    appData.params.absenceTypes = cleanedTypes;
+
+    var cleanedHolidays = [];
+    var seen = {};
+    for (var k = 0; k < tempHolidays.length; k++){
+      var h = tempHolidays[k];
+      if (h.date && h.label && h.label.trim() !== "" && !seen[h.date]){
+        cleanedHolidays.push({ date: h.date, label: h.label.trim() });
+        seen[h.date] = true;
+      }
+    }
+    cleanedHolidays.sort(function(a, b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+    appData.params.joursFeries = cleanedHolidays;
+
+    persist();
+    closeParamsModal();
+    renderAll();
+  }
+
+  function addAbsenceType(){
+    tempAbsenceTypes.push({ id: "type_" + Date.now(), label: "Nouveau type", color: "#8b7355" });
+    renderAbsenceTypesList();
+  }
+
+  // ---------- Sync modal ----------
+  function openSyncModal(){
+    var hasClientId = !!appData.params.driveClientId;
+    document.getElementById("syncClientIdSection").style.display = hasClientId ? "none" : "block";
+    document.getElementById("syncActionsSection").style.display = hasClientId ? "block" : "none";
+    document.getElementById("fDriveClientId").value = appData.params.driveClientId || "";
+    if (hasClientId) refreshSyncModalButtons();
+    document.getElementById("syncModalOverlay").className = "modal-overlay open";
+  }
+
+  function closeSyncModal(){
+    document.getElementById("syncModalOverlay").className = "modal-overlay";
+  }
+
+  function saveDriveClientId(){
+    var val = document.getElementById("fDriveClientId").value.trim();
+    if (!val){
+      alert("Merci de saisir un ID client valide.");
+      return;
+    }
+    appData.params.driveClientId = val;
+    drive.tokenClient = null; // force re-init with new client id
+    persist();
+    document.getElementById("syncClientIdSection").style.display = "none";
+    document.getElementById("syncActionsSection").style.display = "block";
+    refreshSyncModalButtons();
+  }
+
+  function forceDrivePull(){
+    if (!drive.connected || !drive.fileId){
+      alert("Connectez-vous d'abord, ou aucun fichier n'existe encore sur Drive.");
+      return;
+    }
+    if (!confirm("Ceci va remplacer les données locales de cet appareil par celles de Drive. Continuer ?")) return;
+    updateSyncStatus("syncing", "Téléchargement depuis Drive…");
+    driveGetContent(drive.fileId).then(function(text){
+      var remote = JSON.parse(text);
+      applyRemoteData(remote);
+      updateSyncStatus("synced", "Données rechargées depuis Drive.");
+    }).catch(function(err){
+      updateSyncStatus("error", "Échec du téléchargement : " + err.message);
+    });
+  }
+
+  // ---------- Export / Import ----------
+  function downloadBlob(content, filename, mime){
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function exportJson(){
+    var now = new Date();
+    var stamp = now.getFullYear() + pad2(now.getMonth()+1) + pad2(now.getDate());
+    downloadBlob(JSON.stringify(appData, null, 2), stamp + "_pointage_data.json", "application/json");
+  }
+
+  function importJson(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        var parsed = JSON.parse(e.target.result);
+        if (!parsed.params || !parsed.days) throw new Error("format invalide");
+        if (!parsed.params.joursFeries) parsed.params.joursFeries = [];
+        appData = parsed;
+        persist();
+        renderAll();
+        alert("Import réussi.");
+      } catch (err){
+        alert("Le fichier importé n'est pas valide.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function downloadSnapshot(){
+    persist();
+    var now = new Date();
+    var stamp = now.getFullYear() + pad2(now.getMonth()+1) + pad2(now.getDate());
+    var html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+    downloadBlob(html, stamp + "_Pointage.html", "text/html");
+  }
+
+  // ---------- Navigation ----------
+  function goToMonth(delta){
+    var d = new Date(state.viewYear, state.viewMonth + delta, 1);
+    state.viewYear = d.getFullYear();
+    state.viewMonth = d.getMonth();
+    renderAll();
+  }
+
+  function goToToday(){
+    var now = new Date();
+    state.viewYear = now.getFullYear();
+    state.viewMonth = now.getMonth();
+    renderAll();
+  }
+
+  // ---------- Init ----------
+  function init(){
+    loadTheme();
+    loadData();
+    var now = new Date();
+    state.viewYear = now.getFullYear();
+    state.viewMonth = now.getMonth();
+
+    document.getElementById("themeToggleBtn").addEventListener("click", toggleTheme);
+
+    document.getElementById("prevMonth").addEventListener("click", function(){ goToMonth(-1); });
+    document.getElementById("nextMonth").addEventListener("click", function(){ goToMonth(1); });
+    document.getElementById("todayBtn").addEventListener("click", goToToday);
+
+    document.getElementById("paramsBtn").addEventListener("click", openParamsModal);
+    document.getElementById("exportJsonBtn").addEventListener("click", exportJson);
+    document.getElementById("snapshotBtn").addEventListener("click", downloadSnapshot);
+    document.getElementById("importJsonBtn").addEventListener("click", function(){
+      document.getElementById("importFile").click();
+    });
+    document.getElementById("importFile").addEventListener("change", function(e){
+      if (e.target.files && e.target.files[0]) importJson(e.target.files[0]);
+      e.target.value = "";
+    });
+
+    var segButtons = document.querySelectorAll("#typeSeg button");
+    for (var i = 0; i < segButtons.length; i++){
+      segButtons[i].addEventListener("click", function(){
+        setSegActive(this.getAttribute("data-type"));
+      });
+    }
+    document.getElementById("daySaveBtn").addEventListener("click", saveDay);
+    document.getElementById("dayDeleteBtn").addEventListener("click", deleteDay);
+    document.getElementById("dayCancelBtn").addEventListener("click", closeDayModal);
+    document.getElementById("dayModalOverlay").addEventListener("click", function(e){
+      if (e.target === this) closeDayModal();
+    });
+
+    document.getElementById("addAbsenceTypeBtn").addEventListener("click", addAbsenceType);
+    document.getElementById("addHolidayBtn").addEventListener("click", addHolidayRow);
+    document.getElementById("quickHolidayBtn").addEventListener("click", addFrenchHolidaysForViewYear);
+    document.getElementById("paramsSaveBtn").addEventListener("click", saveParams);
+    document.getElementById("paramsCancelBtn").addEventListener("click", closeParamsModal);
+    document.getElementById("paramsModalOverlay").addEventListener("click", function(e){
+      if (e.target === this) closeParamsModal();
+    });
+
+    document.getElementById("syncStatusBtn").addEventListener("click", openSyncModal);
+    document.getElementById("saveDriveClientIdBtn").addEventListener("click", saveDriveClientId);
+    document.getElementById("driveConnectBtn").addEventListener("click", connectDrive);
+    document.getElementById("driveDisconnectBtn").addEventListener("click", disconnectDrive);
+    document.getElementById("driveForcePushBtn").addEventListener("click", pushToDriveNow);
+    document.getElementById("driveForcePullBtn").addEventListener("click", forceDrivePull);
+    document.getElementById("editClientIdBtn").addEventListener("click", function(){
+      document.getElementById("syncClientIdSection").style.display = "block";
+      document.getElementById("syncActionsSection").style.display = "none";
+    });
+    document.getElementById("syncCloseBtn").addEventListener("click", closeSyncModal);
+    document.getElementById("syncModalOverlay").addEventListener("click", function(e){
+      if (e.target === this) closeSyncModal();
+    });
+
+    document.addEventListener("keydown", function(e){
+      if (e.key === "Escape"){ closeDayModal(); closeParamsModal(); closeSyncModal(); }
+    });
+
+    // État initial de l'indicateur : la reconnexion se fait manuellement à chaque
+    // ouverture (un clic) plutôt qu'automatiquement, pour éviter les popups
+    // bloqués par le navigateur au chargement de la page (pas de geste utilisateur).
+    var everConnected = false;
+    try { everConnected = localStorage.getItem(EVER_CONNECTED_KEY) === "1"; } catch(e){}
+    if (everConnected && appData.params.driveClientId){
+      updateSyncStatus("off", "Reconnexion nécessaire — cliquez sur Drive.");
+    } else {
+      updateSyncStatus("off", "Non connecté.");
+    }
+
+    renderAll();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
