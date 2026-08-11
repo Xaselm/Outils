@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planificateur annuel</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F7F4;
+    --surface:#FFFFFF;
+    --ink:#1B1F23;
+    --muted:#70767D;
+    --line:#E4E3DE;
+    --line-strong:#CDCCC4;
+    --accent:#2C5B4F;
+    --accent-soft:#DCEAE5;
+    --today:#C4562C;
+    --marker-start:#1D6FA5;
+    --marker-end:#7A3B8C;
+    --radius:10px;
+    --row-h:52px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    max-width:1400px;
+    margin:0 auto;
+    padding:32px 40px 80px;
+  }
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .title-block h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:28px;
+    font-weight:700;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .title-block h1[contenteditable]:focus{outline:2px solid var(--accent-soft); border-radius:4px;}
+  .title-block p{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .year-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius:999px;
+    padding:6px 8px;
+  }
+  .year-nav button{
+    width:28px;height:28px;
+    border-radius:50%;
+    border:none;
+    background:transparent;
+    color:var(--ink);
+    font-size:16px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .year-nav button:hover{background:var(--accent-soft);}
+  .year-nav span{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    min-width:52px;
+    text-align:center;
+  }
+  .plan-name{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .plan-name input{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    padding:6px 10px;
+    border-radius:8px;
+    border:1px solid var(--line-strong);
+    background:var(--surface);
+    width:190px;
+  }
+  .project-markers{
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    align-items:center;
+    margin:-10px 0 20px;
+    padding:12px 16px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+  .marker-field{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .marker-dot{width:9px;height:9px;border-radius:50%; flex-shrink:0;}
+  .marker-field input[type=date]{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:6px 8px;
+    border-radius:6px;
+    border:1px solid var(--line-strong);
+    background:#fff;
+  }
+  .marker-field button{
+    border:none; background:transparent; cursor:pointer;
+    color:var(--muted); font-size:12px; text-decoration:underline;
+    font-family:'Inter',sans-serif;
+  }
+  .marker-field button:hover{color:var(--today);}
+  .countdown-chip{
+    font-size:12px;
+    font-weight:600;
+    color:var(--accent);
+    background:var(--accent-soft);
+    padding:6px 12px;
+    border-radius:999px;
+    white-space:nowrap;
+    margin-left:auto;
+  }
+  .history-group{
+    display:flex;
+    gap:4px;
+  }
+  button.btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+  button.btn:disabled:hover{border-color:var(--line-strong); color:var(--ink);}
+  #toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(12px);
+    background:var(--ink);
+    color:#fff;
+    font-size:13px;
+    font-weight:500;
+    padding:10px 18px;
+    border-radius:999px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:50;
+  }
+  #toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .toolbar .spacer{flex:1;}
+  button.btn{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    border-radius:8px;
+    border:1px solid var(--line-strong);
+    background:var(--surface);
+    color:var(--ink);
+    padding:9px 14px;
+    cursor:pointer;
+  }
+  button.btn:hover{border-color:var(--accent); color:var(--accent);}
+  button.btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  button.btn.primary:hover{opacity:0.9;color:#fff;}
+  button.btn.active{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .drive-btn{display:inline-flex; align-items:center; gap:7px;}
+  .drive-dot{
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background:var(--line-strong); transition:background .2s ease;
+  }
+  .drive-dot.is-connected{background:var(--accent);}
+  .drive-dot.is-syncing{background:var(--today); animation:drive-pulse 1s ease-in-out infinite;}
+  .drive-dot.is-error{background:#B23A3A;}
+  @keyframes drive-pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+
+  .add-form{
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:20px;
+    display:none;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+  }
+  .add-form.open{display:flex;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field label{font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+  .field input[type=text], .field input[type=date]{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:6px;
+    border:1px solid var(--line-strong);
+    background:#fff;
+    min-width:140px;
+  }
+  .swatches{display:flex; gap:6px;}
+  .swatch{
+    width:22px;height:22px;border-radius:50%;
+    cursor:pointer; border:2px solid transparent;
+  }
+  .swatch.selected{border-color:var(--ink);}
+  .field select{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:6px;
+    border:1px solid var(--line-strong);
+    background:#fff;
+    min-width:170px;
+  }
+  .cat-field-row{display:flex; align-items:flex-end; gap:8px;}
+
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:16px;
+    align-items:center;
+  }
+  .legend-chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--ink);
+  }
+  .legend-dot{width:10px;height:10px;border-radius:50%; flex-shrink:0;}
+  .legend-edit{
+    font-size:11px;
+    color:var(--muted);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    padding:0;
+    font-family:'Inter',sans-serif;
+  }
+  .legend-edit:hover{color:var(--accent);}
+
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(27,31,35,0.45);
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:22px;
+    width:100%;
+    max-width:440px;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  .modal h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px;
+    margin:0 0 4px;
+  }
+  .modal p.hint{margin:0 0 16px; color:var(--muted); font-size:12px;}
+  .cat-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .cat-row input[type=color]{
+    width:32px;height:32px;
+    border:1px solid var(--line-strong);
+    border-radius:6px;
+    padding:2px;
+    cursor:pointer;
+    background:none;
+  }
+  .cat-row input[type=text]{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:6px;
+    border:1px solid var(--line-strong);
+  }
+  .cat-row button{
+    border:none;background:transparent;cursor:pointer;
+    color:var(--muted); font-size:14px; padding:4px;
+  }
+  .cat-row button:hover{color:var(--today);}
+  .modal-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:16px;
+    gap:10px;
+  }
+
+  .chart{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .chart-scroll{
+    overflow-x:auto;
+  }
+  .grid-wrap{
+    display:grid;
+    grid-template-columns: 230px 1fr;
+    min-width:1500px;
+  }
+  .label-col-header{
+    padding:10px 16px;
+    font-size:11px;
+    font-weight:600;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:flex-end;
+  }
+  .header-rows{
+    display:flex;
+    flex-direction:column;
+  }
+  .months-header{
+    display:grid;
+    border-bottom:1px solid var(--line);
+  }
+  .month-cell{
+    padding:7px 6px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+    text-align:center;
+    border-right:1px solid var(--line-strong);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .month-cell:last-child{border-right:none;}
+  .weeks-header{
+    display:grid;
+    border-bottom:1px solid var(--line);
+  }
+  .week-cell{
+    padding:5px 2px;
+    font-size:9px;
+    font-weight:500;
+    color:var(--muted);
+    text-align:center;
+    border-right:1px solid var(--line);
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .week-cell.month-start{border-right:1px solid var(--line-strong);}
+  .week-cell:last-child{border-right:none;}
+  .body-row{display:grid; grid-template-columns:230px 1fr;}
+  .body-row:nth-child(odd) .label-cell, .body-row:nth-child(odd) .bars-cell{background:#FBFBF9;}
+  .label-cell{
+    padding:8px 16px;
+    min-height:var(--row-h);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .label-dot{width:9px;height:9px;border-radius:50%; flex-shrink:0; margin-top:3px; align-self:flex-start;}
+  .label-text-wrap{display:flex; flex-direction:column; min-width:0; line-height:1.35;}
+  .label-text{white-space:normal; overflow-wrap:break-word;}
+  .label-dates{font-size:10px; color:var(--muted); white-space:nowrap;}
+  .row-actions{
+    margin-left:auto;
+    display:none;
+    gap:4px;
+    flex-shrink:0;
+    align-self:flex-start;
+  }
+  .label-cell:hover .row-actions{display:flex;}
+  .row-actions button{
+    border:none;background:transparent;cursor:pointer;
+    color:var(--muted); font-size:13px; padding:2px;
+  }
+  .row-actions button:hover{color:var(--today);}
+
+  .bars-cell{
+    position:relative;
+    min-height:var(--row-h);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:2px;
+    padding:4px 0;
+  }
+  .bg-weeks{
+    position:absolute; inset:0;
+    display:grid;
+    pointer-events:none;
+  }
+  .bg-weeks div{border-right:1px solid var(--line);}
+  .bg-weeks div:last-child{border-right:none;}
+  .bg-weeks div.month-start{border-right:1px solid var(--line-strong);}
+
+  .bar-track{
+    position:relative;
+    height:24px;
+    flex-shrink:0;
+  }
+  .bar-caption{
+    font-size:11px;
+    font-weight:600;
+    color:var(--ink);
+    line-height:1.25;
+    max-width:200px;
+    overflow-wrap:break-word;
+    pointer-events:none;
+  }
+
+  .task-bar{
+    position:absolute;
+    top:0;
+    height:100%;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    padding:0 8px;
+    font-size:11px;
+    font-weight:600;
+    color:#fff;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    box-shadow:0 1px 2px rgba(0,0,0,0.12);
+  }
+  .task-bar.bar-compact{ color:transparent; }
+
+  .today-line{
+    position:absolute;
+    top:0; bottom:0;
+    width:0;
+    border-left:2px dashed var(--today);
+    z-index:5;
+  }
+  .today-flag{
+    position:absolute;
+    top:-9px;
+    left:4px;
+    font-size:10px;
+    font-weight:700;
+    color:var(--today);
+    background:#fff;
+    padding:1px 5px;
+    border-radius:4px;
+    white-space:nowrap;
+  }
+  .marker-line{
+    position:absolute;
+    top:0; bottom:0;
+    width:0;
+    z-index:5;
+    pointer-events:none;
+  }
+  .marker-line-flag{
+    position:absolute;
+    left:4px;
+    font-size:10px;
+    font-weight:700;
+    background:#fff;
+    padding:1px 5px;
+    border-radius:4px;
+    white-space:nowrap;
+  }
+  .months-header .today-flag-header{
+    position:absolute;
+    bottom:-1px;
+  }
+
+  .empty-state{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  footer{
+    margin-top:14px;
+    color:var(--muted);
+    font-size:12px;
+    text-align:right;
+  }
+
+  @media print{
+    body{background:#fff;}
+    .toolbar, .add-form, .row-actions, .year-nav button, .plan-name, .modal-overlay, .legend-edit, .project-markers{display:none !important;}
+    .page{padding:0;}
+    .chart{border:none;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="title-block">
+      <h1 contenteditable="true" id="chartTitle">Planning annuel</h1>
+      <p>Cliquez sur le titre pour le modifier · glissez pour faire défiler</p>
+    </div>
+    <div class="plan-name">
+      <label for="planName">Nom du planning</label>
+      <input type="text" id="planName" value="mon-planning">
+    </div>
+    <div class="year-nav">
+      <button id="prevYear">‹</button>
+      <span id="yearLabel">2026</span>
+      <button id="nextYear">›</button>
+    </div>
+  </header>
+
+  <div class="project-markers">
+    <div class="marker-field">
+      <span class="marker-dot" style="background:var(--marker-start)"></span>
+      <label for="projectStartInput">Début du projet</label>
+      <input type="date" id="projectStartInput">
+      <button type="button" id="clearStart">effacer</button>
+    </div>
+    <div class="marker-field">
+      <span class="marker-dot" style="background:var(--marker-end)"></span>
+      <label for="projectEndInput">Fin du projet</label>
+      <input type="date" id="projectEndInput">
+      <button type="button" id="clearEnd">effacer</button>
+    </div>
+    <div class="countdown-chip" id="countdownChip"></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn primary" id="toggleForm">+ Ajouter une tâche</button>
+    <div class="history-group">
+      <button class="btn" id="undoBtn" title="Annuler">↺ Annuler</button>
+      <button class="btn" id="redoBtn" title="Rétablir">↻ Rétablir</button>
+    </div>
+    <button class="btn" id="saveBtn">💾 Enregistrer</button>
+    <button class="btn" id="toggleMultiYear" title="Affiche exactement la période entre début et fin de projet">Vue sur la durée du projet</button>
+    <button class="btn" id="printBtn">Imprimer / Capturer</button>
+    <div class="spacer"></div>
+    <button id="btn-drive-connect" class="btn drive-btn" title="Connecter Google Drive pour synchroniser tous vos plannings">
+      <span id="drive-dot" class="drive-dot"></span> <span id="drive-status-label">Drive : non connecté</span>
+    </button>
+    <button id="btn-drive-force" class="btn" title="Forcer l'envoi de tous les plannings vers Drive maintenant">Forcer synchro</button>
+    <button id="btnExportPlans" class="btn" title="Exporter tous les plannings (JSON)">Exporter (JSON)</button>
+    <button id="btnImportPlans" class="btn" title="Importer des plannings (JSON)">Importer (JSON)</button>
+    <input type="file" id="importPlansInput" accept="application/json" style="display:none;">
+  </div>
+
+  <div class="legend" id="legend">
+    <!-- rempli par JS -->
+  </div>
+
+  <div class="add-form" id="addForm">
+    <div class="field">
+      <label>Nom de la tâche</label>
+      <input type="text" id="taskName" placeholder="Ex. Rédaction du rapport">
+    </div>
+    <div class="field">
+      <label>Début</label>
+      <input type="date" id="taskStart">
+    </div>
+    <div class="field">
+      <label>Fin</label>
+      <input type="date" id="taskEnd">
+    </div>
+    <div class="field">
+      <label>Catégorie</label>
+      <div class="cat-field-row">
+        <select id="taskCategory"></select>
+        <button class="btn" id="manageCatBtn" type="button">Gérer</button>
+      </div>
+    </div>
+    <button class="btn primary" id="saveTask">Ajouter</button>
+    <button class="btn" id="cancelTask">Annuler</button>
+  </div>
+
+  <div class="modal-overlay" id="catModalOverlay">
+    <div class="modal">
+      <h2>Catégories</h2>
+      <p class="hint">Chaque catégorie a un sens et une couleur — réutilisable pour n'importe quel projet.</p>
+      <div id="catList"></div>
+      <div class="modal-actions">
+        <button class="btn" id="addCatBtn" type="button">+ Ajouter une catégorie</button>
+        <button class="btn primary" id="closeCatModal" type="button">Terminé</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart">
+    <div class="chart-scroll">
+      <div class="grid-wrap" id="chartWrap">
+        <!-- built by JS -->
+      </div>
+    </div>
+  </div>
+
+  <footer>Sauvegarde automatique dans ce navigateur, sous le nom du planning ci-dessus · bouton 💾 pour forcer l'enregistrement · Ctrl/Cmd+Z pour annuler.</footer>
+</div>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — variante multi-documents
+   dynamique. Contrairement au Générateur SN (2 clés fixes connues à
+   l'avance), ce planificateur a un nombre ILLIMITÉ de plannings
+   nommés par l'utilisateur, chacun sous sa propre clé localStorage
+   ('gantt-planner-v2::<slug>'). On découvre donc l'ensemble des
+   plannings à synchroniser dynamiquement : union des clés locales
+   ET des fichiers déjà présents sur Drive (pour rapatrier un
+   planning créé sur un autre appareil, jamais vu ici).
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'ganttplanner';
+  var LOCAL_PREFIX = 'gantt-planner-v2::'; /* doit rester identique à storageKey() du script principal */
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+  var PUSH_DEBOUNCE_MS = 1200;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+  var pushTimers = {};
+
+  /* ---------- Découverte des plannings locaux ---------- */
+  function localPlanSlugs() {
+    var out = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(LOCAL_PREFIX) === 0) out.push(k.slice(LOCAL_PREFIX.length));
+      }
+    } catch (e) {}
+    return out;
+  }
+
+  /* ---------- Cache local = la clé localStorage réelle du planning,
+     avec un horodatage "modified" tenu à part par slug ---------- */
+  function modifiedKeyFor(slug) { return LS_PREFIX + 'modified__' + slug; }
+  function localGet(slug) {
+    try {
+      var raw = localStorage.getItem(LOCAL_PREFIX + slug);
+      if (raw === null) return null;
+      var modified = parseInt(localStorage.getItem(modifiedKeyFor(slug)), 10) || 0;
+      return { value: raw, modified: modified };
+    } catch (e) { return null; }
+  }
+  function localSet(slug, value, modifiedOverride) {
+    try {
+      var modified = modifiedOverride;
+      if (!modified) {
+        var existing = localGet(slug);
+        modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      }
+      localStorage.setItem(LOCAL_PREFIX + slug, value);
+      localStorage.setItem(modifiedKeyFor(slug), String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* ---------- Statut visuel ---------- */
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = {
+      idle: 'Drive : non connecté',
+      connected: 'Drive : connecté',
+      ok: 'Drive : synchronisé',
+      sync: 'Drive : synchro…',
+      error: 'Drive : erreur de synchro'
+    };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  /* ---------- Appels API Drive ---------- */
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) throw new Error('Drive API ' + res.status);
+      return res;
+    });
+  }
+
+  var FILE_PREFIX = 'storage__' + APP_NS + '__';
+  function driveFileName(slug) { return FILE_PREFIX + slug + '.json'; }
+  function slugFromFileName(name) {
+    if (name.indexOf(FILE_PREFIX) !== 0 || name.slice(-5) !== '.json') return null;
+    return name.slice(FILE_PREFIX.length, -5);
+  }
+
+  /* Liste TOUS les fichiers de cette app sur Drive (pour découvrir les
+     plannings créés sur un autre appareil, absents en local ici). */
+  function driveListAllFiles() {
+    var q = encodeURIComponent("name contains '" + FILE_PREFIX + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)&pageSize=1000';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return data.files || []; });
+  }
+
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+
+  function driveCreateFile(slug, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(slug), parents: ['appDataFolder'] };
+    var body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' +
+      '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    });
+  }
+
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  }
+
+  function drivePushRecord(slug, record, knownFileId) {
+    if (knownFileId) return driveUpdateFile(knownFileId, record);
+    return driveListAllFiles().then(function (files) {
+      var existing = files.find(function (f) { return f.name === driveFileName(slug); });
+      return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(slug, record);
+    });
+  }
+
+  /* ---------- Synchro bidirectionnelle (dernier modifié gagne), par planning ---------- */
+  function syncOneSlug(slug, firstConnect, filesList) {
+    var local = localGet(slug);
+    var existing = filesList.find(function (f) { return f.name === driveFileName(slug); });
+    if (!existing) {
+      if (local) return drivePushRecord(slug, local).then(function () { return false; });
+      return Promise.resolve(false);
+    }
+    return driveGetRecord(existing.id).then(function (remote) {
+      if (!remote) return false;
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        localSet(slug, remote.value, remote.modified);
+        return changed;
+      } else if (local.modified > remote.modified) {
+        return driveUpdateFile(existing.id, local).then(function () { return false; });
+      }
+      return false;
+    });
+  }
+
+  function syncAllFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    return driveListAllFiles().then(function (files) {
+      var remoteSlugs = files.map(function (f) { return slugFromFileName(f.name); }).filter(Boolean);
+      var allSlugs = localPlanSlugs().concat(remoteSlugs).filter(function (s, i, arr) { return arr.indexOf(s) === i; });
+      var chain = Promise.resolve();
+      var anyChange = false;
+      allSlugs.forEach(function (slug) {
+        chain = chain.then(function () { return syncOneSlug(slug, firstConnect, files); }).then(function (changed) {
+          if (changed) anyChange = true;
+        });
+      });
+      return chain.then(function () {
+        setSyncStatus('ok');
+        if (anyChange) {
+          setSyncStatus('sync');
+          if (typeof window.showToast === 'function') window.showToast('Plannings mis à jour depuis Drive, actualisation…');
+          setTimeout(function () { location.reload(); }, 900);
+        }
+      });
+    }).catch(function (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync] Échec de la synchronisation :', e);
+    });
+  }
+
+  /* ---------- Sauvegarde différée déclenchée par saveState(), par planning ---------- */
+  function scheduleDrivePush(slug) {
+    if (!hasValidToken()) return;
+    clearTimeout(pushTimers[slug]);
+    pushTimers[slug] = setTimeout(function () {
+      var local = localGet(slug);
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(slug, local).then(function () {
+        setSyncStatus('ok');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive pour "' + slug + '" :', e);
+      });
+    }, PUSH_DEBOUNCE_MS);
+  }
+  window.__driveTouch = function (slug) {
+    try {
+      localStorage.setItem(modifiedKeyFor(slug), String(Date.now()));
+    } catch (e) {}
+    scheduleDrivePush(slug);
+  };
+
+  /* ---------- Auth Google ---------- */
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncAllFromDrive(isFirstConnect);
+  }
+
+  function describeError(e) {
+    if (e && e.message) return e.message;
+    try { return JSON.stringify(e); } catch (e2) { return String(e); }
+  }
+
+  function forceSyncPush() {
+    if (!hasValidToken()) {
+      alert('Pas encore connecté à Drive (ou session expirée). Clique d\'abord sur "Drive : non connecté", puis réessaie "Forcer synchro".');
+      return;
+    }
+    setSyncStatus('sync');
+    var slugs = localPlanSlugs();
+    if (slugs.length === 0) {
+      setSyncStatus('ok');
+      alert('Rien à synchroniser : aucun planning local.');
+      return;
+    }
+    driveListAllFiles().then(function (files) {
+      var report = [];
+      var chain = Promise.resolve();
+      slugs.forEach(function (slug) {
+        chain = chain.then(function () {
+          var local = localGet(slug);
+          if (!local) { report.push(slug + ' : rien en local'); return; }
+          var existing = files.find(function (f) { return f.name === driveFileName(slug); });
+          return drivePushRecord(slug, local, existing ? existing.id : null).then(function () {
+            report.push(slug + ' : OK (' + Math.round(local.value.length / 1024) + ' Ko)');
+          }).catch(function (e) {
+            report.push(slug + ' : ERREUR - ' + describeError(e));
+          });
+        });
+      });
+      chain.then(function () {
+        var hasError = report.some(function (line) { return line.indexOf('ERREUR') !== -1; });
+        setSyncStatus(hasError ? 'error' : 'ok');
+        alert('Résultat de la synchro forcée :\n\n' + report.join('\n'));
+      });
+    }).catch(function (e) {
+      setSyncStatus('error');
+      alert('Synchro forcée : impossible de lister les plannings sur Drive - ' + describeError(e));
+    });
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setTimeout(initGis, 300);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: onTokenReceived
+    });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', forceSyncPush);
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+    setInterval(function () {
+      if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }, SILENT_REFRESH_MS);
+  }
+  initGis();
+})();
+</script>
+
+<script>
+const DEFAULT_CATEGORIES = [
+  { id:'prep',  name:'Préparation', color:'#3C6E9E' },
+  { id:'real',  name:'Réalisation', color:'#2C5B4F' },
+  { id:'valid', name:'Validation',  color:'#B08900' },
+  { id:'cloture', name:'Clôture',   color:'#8A5FBF' },
+  { id:'jalon', name:'Jalon',       color:'#C4562C' },
+];
+
+let state = {
+  year: 2026,
+  planName: 'mon-planning',
+  projectStart: '',
+  projectEnd: '',
+  multiYear: false,
+  categories: DEFAULT_CATEGORIES.map(c=>({...c})),
+  tasks: []
+};
+let nextId = 1;
+let nextCatId = 100;
+let editingId = null;
+
+function taskColor(t){
+  const cat = state.categories.find(c=>c.id===t.categoryId);
+  return cat ? cat.color : '#9AA0A6';
+}
+function taskCategoryName(t){
+  const cat = state.categories.find(c=>c.id===t.categoryId);
+  return cat ? cat.name : 'Sans catégorie';
+}
+
+const LAST_PLAN_KEY = 'gantt-planner-last-plan-v2';
+let history = [];
+let historyIndex = -1;
+
+function slugify(s){
+  return (s || '').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/(^-+|-+$)/g,'') || 'planning';
+}
+function storageKey(name){ return 'gantt-planner-v2::' + slugify(name); }
+
+function showToast(msg){
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=> t.classList.remove('show'), 2000);
+}
+
+function saveState(silent){
+  try{
+    localStorage.setItem(storageKey(state.planName), JSON.stringify({
+      year: state.year,
+      tasks: state.tasks,
+      categories: state.categories,
+      projectStart: state.projectStart,
+      projectEnd: state.projectEnd,
+      multiYear: state.multiYear,
+      nextId: nextId,
+      nextCatId: nextCatId,
+      title: document.getElementById('chartTitle').textContent
+    }));
+    localStorage.setItem(LAST_PLAN_KEY, state.planName);
+    if(typeof window.__driveTouch === 'function') window.__driveTouch(slugify(state.planName));
+    if(!silent) showToast('Planning « ' + state.planName + ' » enregistré ✓');
+  }catch(e){
+    if(!silent) showToast("Sauvegarde impossible ici (aperçu) — téléchargez le fichier");
+  }
+}
+
+// Charge les données d'un planning nommé. Retourne true si des données existaient déjà.
+function loadPlanData(name){
+  try{
+    const raw = localStorage.getItem(storageKey(name));
+    if(raw){
+      const saved = JSON.parse(raw);
+      if(saved.tasks) state.tasks = saved.tasks;
+      if(saved.categories && saved.categories.length) state.categories = saved.categories;
+      else state.categories = DEFAULT_CATEGORIES.map(c=>({...c}));
+      state.projectStart = saved.projectStart || '';
+      state.projectEnd = saved.projectEnd || '';
+      state.multiYear = !!saved.multiYear;
+      if(saved.year) state.year = saved.year;
+      if(saved.nextId) nextId = saved.nextId;
+      if(saved.nextCatId) nextCatId = saved.nextCatId;
+      document.getElementById('chartTitle').textContent = saved.title || document.getElementById('chartTitle').textContent;
+      return true;
+    }
+  }catch(e){ /* stockage indisponible */ }
+  return false;
+}
+
+function loadState(){
+  try{
+    const lastName = localStorage.getItem(LAST_PLAN_KEY);
+    if(lastName){
+      state.planName = lastName;
+      document.getElementById('planName').value = lastName;
+    }
+  }catch(e){ /* stockage indisponible */ }
+  loadPlanData(state.planName);
+}
+
+// --- Historique (annuler / rétablir) ---
+function snapshot(){
+  return JSON.stringify({
+    tasks: state.tasks,
+    categories: state.categories,
+    projectStart: state.projectStart,
+    projectEnd: state.projectEnd,
+    nextId: nextId,
+    nextCatId: nextCatId,
+    title: document.getElementById('chartTitle').textContent
+  });
+}
+function pushHistory(){
+  const snap = snapshot();
+  if(history[historyIndex] === snap) return;
+  history = history.slice(0, historyIndex + 1);
+  history.push(snap);
+  historyIndex = history.length - 1;
+  updateHistoryButtons();
+}
+function applySnapshot(snap){
+  const data = JSON.parse(snap);
+  state.tasks = data.tasks;
+  state.categories = data.categories || state.categories;
+  state.projectStart = data.projectStart || '';
+  state.projectEnd = data.projectEnd || '';
+  nextId = data.nextId;
+  nextCatId = data.nextCatId || nextCatId;
+  document.getElementById('chartTitle').textContent = data.title;
+  syncMarkerInputs();
+}
+function resetHistory(){
+  history = [snapshot()];
+  historyIndex = 0;
+  updateHistoryButtons();
+}
+function undo(){
+  if(historyIndex <= 0) return;
+  historyIndex--;
+  applySnapshot(history[historyIndex]);
+  render();
+  saveState(true);
+  updateHistoryButtons();
+}
+function redo(){
+  if(historyIndex >= history.length - 1) return;
+  historyIndex++;
+  applySnapshot(history[historyIndex]);
+  render();
+  saveState(true);
+  updateHistoryButtons();
+}
+function updateHistoryButtons(){
+  document.getElementById('undoBtn').disabled = historyIndex <= 0;
+  document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+}
+
+const MONTHS_FR = ['Janv.','Févr.','Mars','Avr.','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
+
+function isLeap(y){ return (y%4===0 && y%100!==0) || y%400===0; }
+function daysInYear(y){ return isLeap(y) ? 366 : 365; }
+function dayOfYear(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const start = new Date(d.getFullYear(),0,1);
+  return Math.floor((d - start)/86400000) + 1;
+}
+
+function getDisplayYears(){
+  if(state.multiYear && state.projectStart && state.projectEnd){
+    const y1 = parseInt(state.projectStart.slice(0,4), 10);
+    const y2 = parseInt(state.projectEnd.slice(0,4), 10);
+    const lo = Math.min(y1, y2), hi = Math.max(y1, y2);
+    const years = [];
+    for(let y = lo; y <= hi; y++) years.push(y);
+    return years;
+  }
+  return [state.year];
+}
+function totalDaysForYears(years){
+  return years.reduce((sum,y)=> sum + daysInYear(y), 0);
+}
+// Jour absolu (1-indexé) depuis le 1er janvier de la première année affichée.
+// Fonctionne aussi pour les dates hors de la plage (valeur <1 ou > total).
+function dayInRange(dateStr, years){
+  const d = new Date(dateStr+'T00:00:00');
+  const start = new Date(years[0], 0, 1);
+  return Math.floor((d - start)/86400000) + 1;
+}
+
+// Découpe la ou les années affichées en semaines de 7 jours à partir du 1er janvier.
+// Chaque semaine porte le mois/année du jour situé en son milieu (pour un rattachement naturel).
+function computeWeeksRange(years){
+  const totalDays = totalDaysForYears(years);
+  const baseYear = years[0];
+  const weeks = [];
+  for(let startDay = 1; startDay <= totalDays; startDay += 7){
+    const endDay = Math.min(totalDays, startDay + 6);
+    const midDay = Math.min(totalDays, startDay + 3);
+    const midDate = new Date(baseYear, 0, midDay);
+    const startDate = new Date(baseYear, 0, startDay);
+    weeks.push({
+      startDay, endDay,
+      month: midDate.getMonth(),
+      year: midDate.getFullYear(),
+      weekNo: weeks.length + 1,
+      label: 'S' + (weeks.length + 1),
+      dateLabel: String(startDate.getDate()).padStart(2,'0') + '/' + String(startDate.getMonth()+1).padStart(2,'0')
+    });
+  }
+  return weeks;
+}
+
+function computeMonthSpans(weeks, multiYear){
+  const spans = [];
+  weeks.forEach((w, i)=>{
+    const last = spans[spans.length-1];
+    if(last && last.month === w.month && last.year === w.year){
+      last.span++;
+    } else {
+      spans.push({ month:w.month, year:w.year, span:1, startIndex:i });
+    }
+  });
+  return spans;
+}
+
+function formatShort(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+// Détermine la plage de jours à afficher (sur les années listées), en fonction des
+// dates de début/fin de projet, arrondie aux limites de semaine pour ne pas couper
+// une semaine en deux.
+function getVisibleDayRange(years, totalDays){
+  let start = 1, end = totalDays;
+  if(state.projectStart){
+    const v = dayInRange(state.projectStart, years);
+    if(v >= 1 && v <= totalDays) start = v;
+  }
+  if(state.projectEnd){
+    const v = dayInRange(state.projectEnd, years);
+    if(v >= 1 && v <= totalDays) end = v;
+  }
+  if(start > end){ start = 1; end = totalDays; }
+  const weekStart = Math.floor((start-1)/7)*7 + 1;
+  const idx = Math.floor((end-1)/7);
+  const weekEnd = Math.min(totalDays, idx*7 + 7);
+  return { start: weekStart, end: weekEnd };
+}
+
+function updateCountdown(){
+  const el = document.getElementById('countdownChip');
+  if(!el) return;
+  if(!state.projectEnd){
+    el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+  el.style.display = 'inline-block';
+  const end = new Date(state.projectEnd+'T00:00:00');
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  const diffDays = Math.round((end - now)/86400000);
+
+  if(diffDays > 0){
+    const weeksLeft = Math.floor(diffDays/7);
+    const daysLeft = diffDays % 7;
+    const parts = [];
+    if(weeksLeft > 0) parts.push(weeksLeft + (weeksLeft>1 ? ' semaines' : ' semaine'));
+    if(daysLeft > 0) parts.push(daysLeft + (daysLeft>1 ? ' jours' : ' jour'));
+    el.textContent = '⏳ ' + parts.join(' et ') + ' avant la fin du projet';
+  } else if(diffDays === 0){
+    el.textContent = "⏳ Le projet se termine aujourd'hui";
+  } else {
+    const overdue = -diffDays;
+    el.textContent = '✅ Projet terminé depuis ' + overdue + (overdue>1 ? ' jours' : ' jour');
+  }
+}
+
+function renderLegend(){
+  const el = document.getElementById('legend');
+  el.innerHTML = '';
+  state.categories.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'legend-chip';
+    chip.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span><span>${c.name}</span>`;
+    el.appendChild(chip);
+  });
+  const editBtn = document.createElement('button');
+  editBtn.className = 'legend-edit';
+  editBtn.type = 'button';
+  editBtn.textContent = 'Modifier les catégories';
+  editBtn.onclick = openCatModal;
+  el.appendChild(editBtn);
+}
+
+function renderCategorySelect(selectedId){
+  const sel = document.getElementById('taskCategory');
+  sel.innerHTML = '';
+  state.categories.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  sel.value = selectedId && state.categories.some(c=>c.id===selectedId) ? selectedId : (state.categories[0] ? state.categories[0].id : '');
+}
+
+function openCatModal(){
+  renderCatModal();
+  document.getElementById('catModalOverlay').classList.add('open');
+}
+function closeCatModal(){
+  document.getElementById('catModalOverlay').classList.remove('open');
+  renderCategorySelect(document.getElementById('taskCategory').value);
+  renderLegend();
+  render();
+  pushHistory();
+  saveState(true);
+}
+function renderCatModal(){
+  const list = document.getElementById('catList');
+  list.innerHTML = '';
+  state.categories.forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.innerHTML = `
+      <input type="color" value="${c.color}" data-color="${c.id}">
+      <input type="text" value="${c.name}" data-name="${c.id}">
+      <button type="button" data-remove="${c.id}" title="Supprimer">✕</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('[data-color]').forEach(inp=>{
+    inp.oninput = ()=>{
+      const cat = state.categories.find(c=>c.id===inp.getAttribute('data-color'));
+      if(cat) cat.color = inp.value;
+    };
+  });
+  list.querySelectorAll('[data-name]').forEach(inp=>{
+    inp.oninput = ()=>{
+      const cat = state.categories.find(c=>c.id===inp.getAttribute('data-name'));
+      if(cat) cat.name = inp.value;
+    };
+  });
+  list.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(state.categories.length <= 1){
+        alert('Il faut garder au moins une catégorie.');
+        return;
+      }
+      const id = btn.getAttribute('data-remove');
+      state.categories = state.categories.filter(c=>c.id!==id);
+      const fallback = state.categories[0].id;
+      state.tasks.forEach(t=>{ if(t.categoryId===id) t.categoryId = fallback; });
+      renderCatModal();
+    };
+  });
+}
+
+document.getElementById('addCatBtn').onclick = ()=>{
+  const id = 'cat' + (nextCatId++);
+  state.categories.push({ id, name:'Nouvelle catégorie', color:'#5E6470' });
+  renderCatModal();
+};
+document.getElementById('closeCatModal').onclick = closeCatModal;
+document.getElementById('manageCatBtn').onclick = openCatModal;
+
+function render(){
+  const years = getDisplayYears();
+  document.getElementById('yearLabel').textContent = years.length > 1 ? years[0] + '–' + years[years.length-1] : years[0];
+  document.getElementById('toggleMultiYear').classList.toggle('active', years.length > 1);
+  renderLegend();
+  updateCountdown();
+  const totalDays = totalDaysForYears(years);
+  const allWeeks = computeWeeksRange(years);
+  const range = getVisibleDayRange(years, totalDays);
+  const weeks = allWeeks.filter(w => w.endDay >= range.start && w.startDay <= range.end);
+  const rangeStartDay = weeks[0].startDay;
+  const rangeEndDay = weeks[weeks.length-1].endDay;
+  const total = rangeEndDay - rangeStartDay + 1;
+  const numWeeks = weeks.length;
+  const monthSpans = computeMonthSpans(weeks);
+  const wrap = document.getElementById('chartWrap');
+  wrap.innerHTML = '';
+
+  // header row
+  const labelHeader = document.createElement('div');
+  labelHeader.className = 'label-col-header';
+  labelHeader.textContent = 'Tâches';
+  wrap.appendChild(labelHeader);
+
+  const headerRows = document.createElement('div');
+  headerRows.className = 'header-rows';
+
+  const monthsHeader = document.createElement('div');
+  monthsHeader.className = 'months-header';
+  monthsHeader.style.gridTemplateColumns = monthSpans.map(s=>`${s.span}fr`).join(' ');
+  monthSpans.forEach(s=>{
+    const c = document.createElement('div');
+    c.className = 'month-cell';
+    c.textContent = MONTHS_FR[s.month] + (years.length > 1 ? " '" + String(s.year).slice(2) : '');
+    monthsHeader.appendChild(c);
+  });
+  headerRows.appendChild(monthsHeader);
+
+  const weeksHeader = document.createElement('div');
+  weeksHeader.className = 'weeks-header';
+  weeksHeader.style.gridTemplateColumns = `repeat(${numWeeks}, 1fr)`;
+  const monthStartIndices = new Set(monthSpans.map(s=>s.startIndex));
+  weeks.forEach((w, i)=>{
+    const c = document.createElement('div');
+    c.className = 'week-cell' + (monthStartIndices.has(i) ? ' month-start' : '');
+    c.textContent = w.label;
+    c.title = 'Semaine ' + w.weekNo + ' — débute le ' + w.dateLabel;
+    weeksHeader.appendChild(c);
+  });
+  headerRows.appendChild(weeksHeader);
+
+  wrap.appendChild(headerRows);
+
+  const tasksInYear = state.tasks.filter(t=>{
+    const taskStartDay = dayInRange(t.start, years);
+    const taskEndDay = dayInRange(t.end, years);
+    return taskEndDay >= rangeStartDay && taskStartDay <= rangeEndDay;
+  });
+
+  if(tasksInYear.length === 0){
+    const emptyLabel = document.createElement('div');
+    emptyLabel.className = 'label-cell';
+    emptyLabel.style.gridColumn = '1 / -1';
+    emptyLabel.style.height = 'auto';
+    emptyLabel.innerHTML = '<div class="empty-state" style="width:100%;">Aucune tâche visible sur cette période. Ajoutez-en une avec le bouton ci-dessus.</div>';
+    wrap.appendChild(emptyLabel);
+  } else {
+    tasksInYear
+      .sort((a,b)=> a.start.localeCompare(b.start))
+      .forEach(t=>{
+        const row = document.createElement('div');
+        row.className = 'body-row';
+        row.style.display = 'contents';
+
+        const labelCell = document.createElement('div');
+        labelCell.className = 'label-cell';
+        labelCell.innerHTML = `
+          <span class="label-dot" style="background:${taskColor(t)}"></span>
+          <span class="label-text-wrap">
+            <span class="label-text" title="${t.name} — ${taskCategoryName(t)}">${t.name}</span>
+            <span class="label-dates">${formatShort(t.start)} → ${formatShort(t.end)}</span>
+          </span>
+          <span class="row-actions">
+            <button data-edit="${t.id}" title="Modifier">✎</button>
+            <button data-del="${t.id}" title="Supprimer">✕</button>
+          </span>`;
+        wrap.appendChild(labelCell);
+
+        const barsCell = document.createElement('div');
+        barsCell.className = 'bars-cell';
+
+        const bg = document.createElement('div');
+        bg.className = 'bg-weeks';
+        bg.style.gridTemplateColumns = `repeat(${numWeeks}, 1fr)`;
+        weeks.forEach((w,i)=>{
+          const d = document.createElement('div');
+          if(monthStartIndices.has(i)) d.classList.add('month-start');
+          bg.appendChild(d);
+        });
+        barsCell.appendChild(bg);
+
+        const rawStartDay = dayInRange(t.start, years);
+        const rawEndDay = dayInRange(t.end, years);
+        const startDay = Math.max(rangeStartDay, rawStartDay);
+        const endDay = Math.min(rangeEndDay, rawEndDay);
+        const leftPct = ((startDay - rangeStartDay)/total)*100;
+        const widthPct = Math.max(0.6, ((endDay-startDay+1)/total)*100);
+
+        const barTrack = document.createElement('div');
+        barTrack.className = 'bar-track';
+
+        const bar = document.createElement('div');
+        bar.className = 'task-bar';
+        bar.style.left = leftPct+'%';
+        bar.style.width = widthPct+'%';
+        bar.style.background = taskColor(t);
+        bar.textContent = t.name;
+        bar.title = t.name + ' (' + taskCategoryName(t) + ') — ' + formatFr(t.start) + ' au ' + formatFr(t.end);
+        barTrack.appendChild(bar);
+        barsCell.appendChild(barTrack);
+        wrap.appendChild(barsCell);
+
+        // Si le nom ne tient pas dans la barre, rappel compact (repliable) juste au-dessus,
+        // borné en largeur pour ne jamais nécessiter de défiler pour le lire en entier.
+        if(bar.scrollWidth > bar.clientWidth + 1){
+          bar.classList.add('bar-compact');
+          const caption = document.createElement('div');
+          caption.className = 'bar-caption';
+          caption.textContent = t.name;
+          caption.style.marginLeft = leftPct + '%';
+          barsCell.insertBefore(caption, barTrack);
+        }
+      });
+  }
+
+  // ligne "aujourd'hui" gérée par overlayTodayLine() après le rendu, voir plus bas
+
+  // rebuild actions listeners
+  wrap.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = ()=>{
+      const id = parseInt(b.getAttribute('data-del'));
+      state.tasks = state.tasks.filter(t=>t.id!==id);
+      render();
+      pushHistory();
+      saveState(true);
+    };
+  });
+  wrap.querySelectorAll('[data-edit]').forEach(b=>{
+    b.onclick = ()=>{
+      const id = parseInt(b.getAttribute('data-edit'));
+      const t = state.tasks.find(t=>t.id===id);
+      if(!t) return;
+      editingId = id;
+      document.getElementById('taskName').value = t.name;
+      document.getElementById('taskStart').value = t.start;
+      document.getElementById('taskEnd').value = t.end;
+      renderCategorySelect(t.categoryId);
+      document.getElementById('addForm').classList.add('open');
+      document.getElementById('saveTask').textContent = 'Enregistrer';
+    };
+  });
+
+  overlayTodayLine(rangeStartDay, total, years);
+}
+
+function drawMarkerLine(chartWrap, dateStr, colorVar, label, rangeStartDay, total, years, flagOffset){
+  if(!dateStr) return;
+  const doy = dayInRange(dateStr, years);
+  if(doy < rangeStartDay || doy > rangeStartDay + total - 1) return;
+  const pct = ((doy - rangeStartDay)/total)*100;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'marker-line today-overlay';
+  overlay.style.left = 'calc(230px + (100% - 230px) * ' + (pct/100) + ')';
+  overlay.style.borderLeft = '2px dashed ' + colorVar;
+
+  const flag = document.createElement('div');
+  flag.className = 'marker-line-flag';
+  flag.textContent = label;
+  flag.style.color = colorVar;
+  flag.style.top = flagOffset + 'px';
+  overlay.appendChild(flag);
+
+  chartWrap.appendChild(overlay);
+}
+
+function overlayTodayLine(rangeStartDay, total, years){
+  const chartWrap = document.getElementById('chartWrap');
+  chartWrap.querySelectorAll('.today-overlay').forEach(el=>el.remove());
+  chartWrap.style.position = 'relative';
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0,10);
+
+  drawMarkerLine(chartWrap, todayStr, 'var(--today)', "Aujourd'hui", rangeStartDay, total, years, -9);
+  drawMarkerLine(chartWrap, state.projectStart, 'var(--marker-start)', 'Début projet', rangeStartDay, total, years, -22);
+  drawMarkerLine(chartWrap, state.projectEnd, 'var(--marker-end)', 'Fin projet', rangeStartDay, total, years, -35);
+}
+
+function formatFr(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+// Events
+document.getElementById('prevYear').onclick = ()=>{ state.year--; render(); saveState(true); };
+document.getElementById('nextYear').onclick = ()=>{ state.year++; render(); saveState(true); };
+
+document.getElementById('toggleForm').onclick = ()=>{
+  editingId = null;
+  document.getElementById('taskName').value = '';
+  document.getElementById('taskStart').value = '';
+  document.getElementById('taskEnd').value = '';
+  renderCategorySelect();
+  document.getElementById('saveTask').textContent = 'Ajouter';
+  document.getElementById('addForm').classList.toggle('open');
+};
+document.getElementById('cancelTask').onclick = ()=>{
+  document.getElementById('addForm').classList.remove('open');
+};
+
+document.getElementById('saveTask').onclick = ()=>{
+  const name = document.getElementById('taskName').value.trim();
+  const start = document.getElementById('taskStart').value;
+  const end = document.getElementById('taskEnd').value;
+  const categoryId = document.getElementById('taskCategory').value;
+  if(!name || !start || !end){
+    alert('Merci de renseigner le nom, la date de début et la date de fin.');
+    return;
+  }
+  if(end < start){
+    alert('La date de fin doit être postérieure à la date de début.');
+    return;
+  }
+  if(editingId){
+    const t = state.tasks.find(t=>t.id===editingId);
+    t.name = name; t.start = start; t.end = end; t.categoryId = categoryId;
+  } else {
+    state.tasks.push({ id: nextId++, name, start, end, categoryId });
+  }
+  document.getElementById('addForm').classList.remove('open');
+  render();
+  pushHistory();
+  saveState(true);
+};
+
+document.getElementById('printBtn').onclick = ()=> window.print();
+document.getElementById('saveBtn').onclick = ()=> saveState(false);
+document.getElementById('undoBtn').onclick = undo;
+document.getElementById('redoBtn').onclick = redo;
+document.getElementById('toggleMultiYear').onclick = ()=>{
+  if(!state.multiYear && (!state.projectStart || !state.projectEnd)){
+    showToast('Renseignez le début et la fin du projet pour activer cette vue.');
+    return;
+  }
+  state.multiYear = !state.multiYear;
+  render();
+  saveState(true);
+};
+
+function syncMarkerInputs(){
+  document.getElementById('projectStartInput').value = state.projectStart || '';
+  document.getElementById('projectEndInput').value = state.projectEnd || '';
+}
+
+document.getElementById('projectStartInput').addEventListener('change', (e)=>{
+  state.projectStart = e.target.value;
+  render(); pushHistory(); saveState(true);
+});
+document.getElementById('projectEndInput').addEventListener('change', (e)=>{
+  state.projectEnd = e.target.value;
+  render(); pushHistory(); saveState(true);
+});
+document.getElementById('clearStart').onclick = ()=>{
+  state.projectStart = '';
+  syncMarkerInputs();
+  render(); pushHistory(); saveState(true);
+};
+document.getElementById('clearEnd').onclick = ()=>{
+  state.projectEnd = '';
+  syncMarkerInputs();
+  render(); pushHistory(); saveState(true);
+};
+
+document.addEventListener('keydown', (e)=>{
+  const mod = e.ctrlKey || e.metaKey;
+  if(!mod) return;
+  if(e.key === 'z' && !e.shiftKey){ e.preventDefault(); undo(); }
+  else if(e.key === 'y' || (e.key === 'z' && e.shiftKey)){ e.preventDefault(); redo(); }
+  else if(e.key === 's'){ e.preventDefault(); saveState(false); }
+});
+
+document.getElementById('chartTitle').addEventListener('blur', ()=>{ pushHistory(); saveState(true); });
+
+document.getElementById('planName').addEventListener('change', (e)=>{
+  const newName = e.target.value.trim() || 'mon-planning';
+  e.target.value = newName;
+  const existed = loadPlanData(newName);
+  state.planName = newName;
+  syncMarkerInputs();
+  render();
+  resetHistory();
+  saveState(true);
+  showToast(existed ? 'Planning « ' + newName + ' » chargé' : 'Nouveau planning « ' + newName + ' » créé');
+});
+
+/* ---------- Import / Export JSON (tous les plannings locaux) ---------- */
+const LOCAL_PLAN_PREFIX = 'gantt-planner-v2::';
+function allLocalPlanKeys(){
+  const out = [];
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf(LOCAL_PLAN_PREFIX) === 0) out.push(k);
+    }
+  }catch(e){}
+  return out;
+}
+function exportPlansJSON(){
+  const plans = {};
+  allLocalPlanKeys().forEach(k => { plans[k] = localStorage.getItem(k); });
+  const payload = { app:'gantt_planner', version:1, exportedAt:new Date().toISOString(), lastPlan: state.planName, plans: plans };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const datePart = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.href = url;
+  a.download = datePart + '_Planning_tous-plannings_export.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+document.getElementById('btnExportPlans').addEventListener('click', exportPlansJSON);
+
+document.getElementById('btnImportPlans').addEventListener('click', () => {
+  document.getElementById('importPlansInput').click();
+});
+document.getElementById('importPlansInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    let data;
+    try{ data = JSON.parse(ev.target.result); }
+    catch(err){ alert('Fichier JSON invalide.'); return; }
+    if(!data || typeof data.plans !== 'object'){
+      alert('Ce fichier ne semble pas être un export valide de plannings.');
+      return;
+    }
+    const incomingKeys = Object.keys(data.plans);
+    const collisions = incomingKeys.filter(k => localStorage.getItem(k) !== null);
+    let msg = 'Importer ' + incomingKeys.length + ' planning(s) ?';
+    if(collisions.length > 0) msg += '\n' + collisions.length + ' existent déjà localement et seront écrasés.';
+    if(!confirm(msg)) return;
+    incomingKeys.forEach(k => {
+      localStorage.setItem(k, data.plans[k]);
+      const slug = k.slice(LOCAL_PLAN_PREFIX.length);
+      if(typeof window.__driveTouch === 'function') window.__driveTouch(slug);
+    });
+    if(data.lastPlan){
+      loadPlanData(data.lastPlan);
+      state.planName = data.lastPlan;
+      document.getElementById('planName').value = data.lastPlan;
+    }
+    syncMarkerInputs();
+    render();
+    resetHistory();
+    showToast('Import réussi (' + incomingKeys.length + ' planning(s))');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+renderCategorySelect();
+loadState();
+syncMarkerInputs();
+resetHistory();
+render();
+</script>
+</body>
+</html>

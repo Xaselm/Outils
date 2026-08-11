@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Générateur de numéros de série</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    max-width: 760px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #222;
+  }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  p.desc { color: #555; font-size: 14px; margin-top: 0; margin-bottom: 24px; }
+  h2 { font-size: 15px; margin: 24px 0 6px; }
+  .controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+  .field label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+  input[type="number"] {
+    width: 140px; height: 34px; padding: 0 8px; box-sizing: border-box;
+    border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+  }
+  select {
+    height: 36px; padding: 0 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+  }
+  button {
+    height: 36px; padding: 0 16px; border: 1px solid #999; border-radius: 4px;
+    background: #f5f5f5; cursor: pointer; font-size: 14px;
+  }
+  button:hover { background: #ebebeb; }
+  button.danger {
+    height: 36px; padding: 0 16px; border: 1px solid #c0392b; border-radius: 4px;
+    background: #fdecea; color: #c0392b; cursor: pointer; font-size: 14px;
+  }
+  button.danger:hover { background: #fbdad6; }
+  #stats, #memstats { font-size: 13px; color: #555; margin-bottom: 8px; }
+  textarea {
+    width: 100%; font-family: "Courier New", monospace; font-size: 13px; padding: 10px;
+    box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; resize: vertical;
+  }
+  #output { height: 380px; }
+  #existing { height: 100px; font-size: 12px; }
+  .box { border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; margin-bottom: 20px; background: #fafafa; }
+  .type-desc { font-size: 12px; color: #777; margin: 4px 0 16px; }
+  .drive-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 10px 0 20px; font-size: 13px; }
+  .drive-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+    background: #bbb; transition: background .2s ease;
+  }
+  .drive-dot.is-connected { background: #3d8a4e; }
+  .drive-dot.is-syncing { background: #c99a2e; animation: drive-pulse 1s ease-in-out infinite; }
+  .drive-dot.is-error { background: #c0392b; }
+  @keyframes drive-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+</style>
+</head>
+<body>
+
+<h1>Générateur de numéros de série</h1>
+<p class="desc">Choisissez un format, générez des numéros uniques, et exportez-les facilement.</p>
+
+<div class="field" style="margin-bottom: 4px;">
+  <label for="serialType">Type de numéro de série</label>
+  <select id="serialType">
+    <option value="classique">Classique (14 chiffres, préfixe 3)</option>
+    <option value="russe">Russe ((21)/(91)/(92))</option>
+  </select>
+</div>
+<p class="type-desc" id="typeDesc"></p>
+
+<div class="drive-row">
+  <button id="btn-drive-connect" title="Connecter Google Drive pour synchroniser les pools mémorisés">
+    <span id="drive-dot" class="drive-dot"></span> <span id="drive-status-label">Drive : non connecté</span>
+  </button>
+  <button id="btn-drive-force" title="Forcer l'envoi des pools vers Drive maintenant">Forcer synchro</button>
+  <button id="exportPoolsBtn" title="Exporter les pools mémorisés (JSON)">Exporter les pools (JSON)</button>
+  <button id="importPoolsBtn" title="Importer des pools mémorisés (JSON)">Importer des pools (JSON)</button>
+  <input type="file" id="importPoolsInput" accept="application/json" style="display:none;">
+</div>
+
+<div class="box">
+  <h2 style="margin-top:0;">Pool existant (à exclure de la génération)</h2>
+  <div id="memstats"></div>
+  <label style="font-size:12px; color:#555;">Coller ici d'anciens numéros de ce type (un par ligne) pour les ajouter au pool à exclure :</label>
+  <textarea id="existing" placeholder=""></textarea>
+  <div style="margin-top:8px; display:flex; gap:14px; align-items:center;">
+    <button id="addExistingBtn">Ajouter ce texte au pool mémorisé</button>
+    <button class="danger" id="clearMemoryBtn">Vider complètement le pool mémorisé (ce type)</button>
+  </div>
+</div>
+
+<h2>Génération</h2>
+<div class="controls">
+  <div class="field">
+    <label for="qty">Quantité à générer</label>
+    <input type="number" id="qty" value="10" min="1" max="1000000">
+  </div>
+  <button id="genBtn">Générer</button>
+  <button id="copyBtn">Copier</button>
+  <button id="downloadBtn">Télécharger .txt</button>
+</div>
+
+<div id="stats"></div>
+
+<textarea id="output" readonly placeholder="Les numéros générés apparaîtront ici..."></textarea>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — variante multi-clés
+   Ce générateur a DEUX pools indépendants (classique / russe), chacun
+   sous sa propre clé localStorage. On synchronise donc une LISTE de
+   clés (comme la toute première version du module, avant son passage
+   à IndexedDB pour la Ludothèque — pas nécessaire ici, les pools
+   restent de simples listes de chaînes, pas d'images).
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'generateursn';
+  /* id = nom du fichier Drive (court, stable) / storageKey = clé localStorage réelle de l'app */
+  var ALL_KEYS = [
+    { id: 'classique', storageKey: 'serial_pool_classique_v1' },
+    { id: 'russe', storageKey: 'serial_pool_russe_v1' }
+  ];
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+  var PUSH_DEBOUNCE_MS = 1200;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+  var pushTimers = {};
+
+  function findKeyDef(storageKey) {
+    for (var i = 0; i < ALL_KEYS.length; i++) { if (ALL_KEYS[i].storageKey === storageKey) return ALL_KEYS[i]; }
+    return null;
+  }
+
+  /* ---------- Cache local = la clé localStorage réelle de l'app,
+     avec un horodatage "modified" tenu à part par clé ---------- */
+  function modifiedKeyFor(storageKey) { return LS_PREFIX + 'modified__' + storageKey; }
+  function localGet(storageKey) {
+    try {
+      var raw = localStorage.getItem(storageKey);
+      if (raw === null) return null;
+      var modified = parseInt(localStorage.getItem(modifiedKeyFor(storageKey)), 10) || 0;
+      return { value: raw, modified: modified };
+    } catch (e) { return null; }
+  }
+  function localSet(storageKey, value, modifiedOverride) {
+    try {
+      var modified = modifiedOverride;
+      if (!modified) {
+        var existing = localGet(storageKey);
+        modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      }
+      localStorage.setItem(storageKey, value);
+      localStorage.setItem(modifiedKeyFor(storageKey), String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* ---------- Statut visuel ---------- */
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = {
+      idle: 'Drive : non connecté',
+      connected: 'Drive : connecté',
+      ok: 'Drive : synchronisé',
+      sync: 'Drive : synchro…',
+      error: 'Drive : erreur de synchro'
+    };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  /* ---------- Appels API Drive ---------- */
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) throw new Error('Drive API ' + res.status);
+      return res;
+    });
+  }
+
+  function driveFileName(id) { return 'storage__' + APP_NS + '__' + id + '.json'; }
+
+  function driveFindFile(id) {
+    var q = encodeURIComponent("name='" + driveFileName(id) + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      return (data.files && data.files[0]) || null;
+    });
+  }
+
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+
+  function driveCreateFile(id, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(id), parents: ['appDataFolder'] };
+    var body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' +
+      '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    });
+  }
+
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  }
+
+  function drivePushRecord(id, record) {
+    return driveFindFile(id).then(function (existing) {
+      return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(id, record);
+    });
+  }
+
+  /* ---------- Synchro bidirectionnelle (dernier modifié gagne), par clé ---------- */
+  function syncOneKey(keyDef, firstConnect) {
+    var local = localGet(keyDef.storageKey);
+    return driveFindFile(keyDef.id).then(function (existing) {
+      if (!existing) {
+        if (local) return drivePushRecord(keyDef.id, local).then(function () { return false; });
+        return false;
+      }
+      return driveGetRecord(existing.id).then(function (remote) {
+        if (!remote) return false;
+        if (firstConnect || !local || remote.modified > local.modified) {
+          var changed = !(local && local.value === remote.value);
+          localSet(keyDef.storageKey, remote.value, remote.modified);
+          return changed;
+        } else if (local.modified > remote.modified) {
+          return driveUpdateFile(existing.id, local).then(function () { return false; });
+        }
+        return false;
+      });
+    });
+  }
+
+  function syncAllFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    var chain = Promise.resolve();
+    var anyChange = false;
+    ALL_KEYS.forEach(function (keyDef) {
+      chain = chain.then(function () { return syncOneKey(keyDef, firstConnect); }).then(function (changed) {
+        if (changed) anyChange = true;
+      });
+    });
+    return chain.then(function () {
+      setSyncStatus('ok');
+      if (anyChange) {
+        setSyncStatus('sync');
+        alert('Des pools plus récents ont été reçus de Drive. La page va se recharger.');
+        setTimeout(function () { location.reload(); }, 300);
+      }
+    }).catch(function (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync] Échec de la synchronisation :', e);
+    });
+  }
+
+  /* ---------- Sauvegarde différée déclenchée par savePool() ---------- */
+  function scheduleDrivePush(storageKey) {
+    if (!hasValidToken()) return;
+    var keyDef = findKeyDef(storageKey);
+    if (!keyDef) return;
+    clearTimeout(pushTimers[storageKey]);
+    pushTimers[storageKey] = setTimeout(function () {
+      var local = localGet(storageKey);
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(keyDef.id, local).then(function () {
+        setSyncStatus('ok');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive pour "' + storageKey + '" :', e);
+      });
+    }, PUSH_DEBOUNCE_MS);
+  }
+  window.__driveTouch = function (storageKey) {
+    try {
+      localStorage.setItem(modifiedKeyFor(storageKey), String(Date.now()));
+    } catch (e) {}
+    scheduleDrivePush(storageKey);
+  };
+
+  /* ---------- Auth Google ---------- */
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncAllFromDrive(isFirstConnect);
+  }
+
+  function describeError(e) {
+    if (e && e.message) return e.message;
+    try { return JSON.stringify(e); } catch (e2) { return String(e); }
+  }
+
+  function forceSyncPush() {
+    if (!hasValidToken()) {
+      alert('Pas encore connecté à Drive (ou session expirée). Clique d\'abord sur "Drive : non connecté", puis réessaie "Forcer synchro".');
+      return;
+    }
+    setSyncStatus('sync');
+    var report = [];
+    var chain = Promise.resolve();
+    ALL_KEYS.forEach(function (keyDef) {
+      chain = chain.then(function () {
+        var local = localGet(keyDef.storageKey);
+        if (!local) { report.push(keyDef.id + ' : rien en local'); return; }
+        return drivePushRecord(keyDef.id, local).then(function () {
+          report.push(keyDef.id + ' : OK (' + Math.round(local.value.length / 1024) + ' Ko)');
+        }).catch(function (e) {
+          report.push(keyDef.id + ' : ERREUR - ' + describeError(e));
+        });
+      });
+    });
+    chain.then(function () {
+      var hasError = report.some(function (line) { return line.indexOf('ERREUR') !== -1; });
+      setSyncStatus(hasError ? 'error' : 'ok');
+      alert('Résultat de la synchro forcée :\n\n' + report.join('\n'));
+    });
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setTimeout(initGis, 300);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: onTokenReceived
+    });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', forceSyncPush);
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+    setInterval(function () {
+      if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }, SILENT_REFRESH_MS);
+  }
+  initGis();
+})();
+</script>
+
+<script>
+const CHARSET_ALNUM = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const CHARSET_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const CHARSET_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const CHARSET_UPPER_DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+const TYPES = {
+  classique: {
+    label: 'Classique',
+    storageKey: 'serial_pool_classique_v1',
+    desc: '14 chiffres au total, commence toujours par 3.',
+    placeholder: '30512847391026\n31984723650192\n...',
+    validate: function (s) { return /^3\d{13}$/.test(s); },
+    generate: function () {
+      let suffix = '';
+      for (let i = 0; i < 13; i++) suffix += Math.floor(Math.random() * 10);
+      return '3' + suffix;
+    }
+  },
+  russe: {
+    label: 'Russe',
+    storageKey: 'serial_pool_russe_v1',
+    desc: 'Format (21) + "1" + 12 alphanumériques majuscules + (91)TEST + (92) + 43 alphanumériques (maj/min) + =',
+    placeholder: '(21)1676YG5C086Y0(91)TEST(92)dGVzdNl27mYO7wscA42XMgvB8e9sc5CT3q8GLlbchEU=\n...',
+    validate: function (s) { return /^\(21\)1[A-Z0-9]{12}\(91\)TEST\(92\)[A-Za-z0-9]{43}=$/.test(s); },
+    generate: function () {
+      function randChar(set) { return set[Math.floor(Math.random() * set.length)]; }
+      function randFrom(set, len) {
+        let out = '';
+        for (let i = 0; i < len; i++) out += randChar(set);
+        return out;
+      }
+      const part21 = '1' + randFrom(CHARSET_UPPER_DIGITS, 12);
+      let part92 = randFrom(CHARSET_ALNUM, 43).split('');
+      const p1 = Math.floor(Math.random() * 43);
+      let p2 = Math.floor(Math.random() * 43);
+      if (p2 === p1) p2 = (p2 + 1) % 43;
+      part92[p1] = randChar(CHARSET_UPPER);
+      part92[p2] = randChar(CHARSET_LOWER);
+      part92 = part92.join('');
+      return '(21)' + part21 + '(91)TEST(92)' + part92 + '=';
+    }
+  }
+};
+
+let pendingBatch = new Set();
+let batchStatus = 'none';
+
+function currentType() {
+  return TYPES[document.getElementById('serialType').value];
+}
+
+function loadPool(type) {
+  try {
+    const raw = localStorage.getItem(type.storageKey);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function savePool(type, poolSet) {
+  try {
+    localStorage.setItem(type.storageKey, JSON.stringify(Array.from(poolSet)));
+    if (typeof window.__driveTouch === 'function') window.__driveTouch(type.storageKey);
+  } catch (e) {
+    console.error('Impossible de sauvegarder le pool localement.', e);
+  }
+}
+
+function refreshMemStats() {
+  const type = currentType();
+  const pool = loadPool(type);
+  document.getElementById('memstats').textContent =
+    pool.size + ' numéro(s) ' + type.label.toLowerCase() + '(s) actuellement mémorisé(s) et exclus des futures générations.';
+}
+
+function extractSerials(text, type) {
+  return text
+    .split(/\n/)
+    .map(function (s) { return s.trim(); })
+    .filter(function (s) { return s.length > 0 && type.validate(s); });
+}
+
+function generateBatch(count, type, excludeSet) {
+  const result = [];
+  let attempts = 0;
+  const maxAttempts = count * 50 + 2000;
+
+  while (result.length < count && attempts < maxAttempts) {
+    attempts++;
+    const candidate = type.generate();
+    if (!excludeSet.has(candidate)) {
+      excludeSet.add(candidate);
+      result.push(candidate);
+    }
+  }
+  return result;
+}
+
+function commitPendingBatchToPool() {
+  const type = currentType();
+
+  if (batchStatus === 'none') {
+    alert('Aucun lot n\'a encore été généré. Cliquez sur "Générer" avant de copier ou télécharger.');
+    return;
+  }
+
+  if (batchStatus === 'committed') {
+    alert('Ce lot a déjà été copié/téléchargé précédemment : ces numéros sont déjà dans le pool mémorisé. Générez un nouveau lot si vous avez besoin de nouveaux numéros.');
+    return;
+  }
+
+  const pool = loadPool(type);
+  const alreadyPresent = [];
+  pendingBatch.forEach(function (s) {
+    if (pool.has(s)) alreadyPresent.push(s);
+  });
+
+  if (alreadyPresent.length > 0) {
+    alert('Attention : ' + alreadyPresent.length + ' numéro(s) de ce lot existaient déjà dans le pool mémorisé. Ils ne seront comptés qu\'une seule fois.');
+  }
+
+  pendingBatch.forEach(function (s) { pool.add(s); });
+  savePool(type, pool);
+  batchStatus = 'committed';
+  refreshMemStats();
+}
+
+function updateTypeUI() {
+  const type = currentType();
+  document.getElementById('typeDesc').textContent = type.desc;
+  document.getElementById('existing').placeholder = type.placeholder;
+  document.getElementById('output').value = '';
+  document.getElementById('stats').textContent = '';
+  pendingBatch = new Set();
+  batchStatus = 'none';
+  refreshMemStats();
+}
+
+document.getElementById('serialType').addEventListener('change', updateTypeUI);
+
+document.getElementById('addExistingBtn').addEventListener('click', function () {
+  const type = currentType();
+  const text = document.getElementById('existing').value;
+  const serials = extractSerials(text, type);
+  const pool = loadPool(type);
+
+  const alreadyInPool = [];
+  const trulyNew = [];
+  const seenInInput = new Set();
+  let duplicatedWithinInput = 0;
+
+  serials.forEach(function (s) {
+    if (seenInInput.has(s)) {
+      duplicatedWithinInput++;
+      return;
+    }
+    seenInInput.add(s);
+    if (pool.has(s)) {
+      alreadyInPool.push(s);
+    } else {
+      trulyNew.push(s);
+    }
+  });
+
+  trulyNew.forEach(function (s) { pool.add(s); });
+  savePool(type, pool);
+  document.getElementById('existing').value = '';
+  refreshMemStats();
+
+  if (alreadyInPool.length > 0 || duplicatedWithinInput > 0) {
+    let msg = 'Attention :\n';
+    if (alreadyInPool.length > 0) {
+      msg += '- ' + alreadyInPool.length + ' numéro(s) existaient déjà dans le pool mémorisé (non réajoutés).\n';
+    }
+    if (duplicatedWithinInput > 0) {
+      msg += '- ' + duplicatedWithinInput + ' numéro(s) étaient en double dans le texte collé (ignorés).\n';
+    }
+    msg += '\n' + trulyNew.length + ' nouveau(x) numéro(s) ajouté(s) au pool.';
+    alert(msg);
+  } else {
+    document.getElementById('memstats').textContent += ' (' + trulyNew.length + ' ajouté(s) à l\'instant, aucun doublon détecté)';
+  }
+});
+
+document.getElementById('clearMemoryBtn').addEventListener('click', function () {
+  const type = currentType();
+  if (confirm('Cette action va vider ENTIÈREMENT le pool mémorisé (' + type.label + ') sur ce navigateur. Continuer ?')) {
+    savePool(type, new Set()); /* pool vidé explicitement (et non supprimé) pour que la suppression se propage via Drive */
+    document.getElementById('stats').textContent = '';
+    document.getElementById('output').value = '';
+    pendingBatch = new Set();
+    batchStatus = 'none';
+    refreshMemStats();
+  }
+});
+
+document.getElementById('genBtn').addEventListener('click', function () {
+  const type = currentType();
+  let qty = parseInt(document.getElementById('qty').value, 10);
+  if (!qty || qty < 1) qty = 1;
+  if (qty > 1000000) qty = 1000000;
+
+  document.getElementById('stats').textContent = 'Génération en cours...';
+
+  setTimeout(function () {
+    const pool = loadPool(type);
+    const excludeSet = new Set(pool);
+    pendingBatch.forEach(function (s) { excludeSet.add(s); });
+
+    const serials = generateBatch(qty, type, excludeSet);
+    pendingBatch = new Set(serials);
+    batchStatus = 'pending';
+
+    document.getElementById('output').value = serials.join('\n');
+    document.getElementById('stats').textContent =
+      serials.length + ' numéro(s) ' + type.label.toLowerCase() + '(s) unique(s) généré(s), sans doublon avec le pool mémorisé. Pas encore ajoutés au pool : cliquez sur Copier ou Télécharger pour valider ce lot.';
+    refreshMemStats();
+  }, 10);
+});
+
+document.getElementById('copyBtn').addEventListener('click', async function () {
+  const output = document.getElementById('output');
+  output.select();
+  try {
+    await navigator.clipboard.writeText(output.value);
+    const btn = document.getElementById('copyBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Copié !';
+    setTimeout(function () { btn.textContent = original; }, 1500);
+  } catch (e) {
+    document.execCommand('copy');
+  }
+  commitPendingBatchToPool();
+});
+
+document.getElementById('downloadBtn').addEventListener('click', function () {
+  const type = currentType();
+  const output = document.getElementById('output');
+  if (!output.value) return;
+  const blob = new Blob([output.value], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'numeros_de_serie_' + type.label.toLowerCase() + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  commitPendingBatchToPool();
+});
+
+/* ---------- Import / Export JSON des pools mémorisés ---------- */
+function exportPoolsJSON() {
+  const pools = {};
+  Object.keys(TYPES).forEach(function (key) {
+    pools[key] = Array.from(loadPool(TYPES[key]));
+  });
+  const payload = { app: 'generateur_sn', version: 1, exportedAt: new Date().toISOString(), pools: pools };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  a.href = url;
+  a.download = datePart + '_GenerateurSN_pools_export.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('exportPoolsBtn').addEventListener('click', exportPoolsJSON);
+
+document.getElementById('importPoolsBtn').addEventListener('click', function () {
+  document.getElementById('importPoolsInput').click();
+});
+document.getElementById('importPoolsInput').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (ev) {
+    let data;
+    try { data = JSON.parse(ev.target.result); }
+    catch (err) { alert('Fichier JSON invalide.'); return; }
+    if (!data || typeof data.pools !== 'object') {
+      alert('Ce fichier ne semble pas être un export valide des pools.');
+      return;
+    }
+    let totalNew = 0, totalDup = 0;
+    Object.keys(data.pools).forEach(function (key) {
+      const type = TYPES[key];
+      if (!type || !Array.isArray(data.pools[key])) return;
+      const pool = loadPool(type);
+      const incoming = data.pools[key].filter(function (s) { return typeof s === 'string' && type.validate(s); });
+      incoming.forEach(function (s) {
+        if (pool.has(s)) { totalDup++; } else { pool.add(s); totalNew++; }
+      });
+      savePool(type, pool);
+    });
+    refreshMemStats();
+    alert('Import terminé : ' + totalNew + ' numéro(s) ajouté(s) au pool, ' + totalDup + ' déjà présent(s) (ignoré(s)).');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+updateTypeUI();
+document.getElementById('genBtn').click();
+</script>
+
+</body>
+</html>

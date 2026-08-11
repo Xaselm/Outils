@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compte-rendu de réunion</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --ink:#1b2a3a;
+    --ink-soft:#4a5a6a;
+    --paper:#eceff2;
+    --sheet:#ffffff;
+    --line:#d3d8de;
+    --primary:#20384f;
+    --primary-soft:#33506c;
+    --stamp:#8a2e2e;
+    --ok:#3d7068;
+    --ok-bg:#e4efec;
+    --warn:#b5793a;
+    --warn-bg:#f6ecdc;
+    --idle-bg:#eef0f2;
+    --mono: Consolas, "Courier New", monospace;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Arial, Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:32px 16px 80px;
+    background:var(--paper);
+    font-family:var(--sans);
+    color:var(--ink);
+  }
+  .sheet{
+    max-width:920px;
+    margin:0 auto;
+    background:var(--sheet);
+    box-shadow:0 1px 3px rgba(27,42,58,0.15), 0 12px 32px rgba(27,42,58,0.10);
+    border:1px solid var(--line);
+    padding:40px 48px 48px;
+    position:relative;
+  }
+  .toolbar{
+    max-width:920px;
+    margin:0 auto 14px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+  }
+  .toolbar .spacer{flex:1;}
+  button{
+    font-family:var(--sans);
+    font-size:13px;
+    cursor:pointer;
+    border-radius:3px;
+    border:1px solid var(--line);
+    background:var(--sheet);
+    color:var(--primary);
+    padding:8px 14px;
+    transition:background .15s, border-color .15s;
+  }
+  button:hover{background:#f2f4f6; border-color:var(--primary-soft);}
+  button.primary{background:var(--primary); color:#fff; border-color:var(--primary);}
+  button.primary:hover{background:var(--primary-soft);}
+  button.ghost-danger{color:var(--stamp); border-color:transparent; background:transparent; padding:4px 8px; font-size:12px;}
+  button.ghost-danger:hover{background:#faeaea;}
+  button.small{padding:5px 10px; font-size:12px;}
+
+  .drive-btn{display:inline-flex; align-items:center; gap:7px;}
+  .drive-dot{
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    background:#b7c0c8; transition:background .2s ease;
+  }
+  .drive-dot.is-connected{background:var(--ok);}
+  .drive-dot.is-syncing{background:var(--warn); animation:drive-pulse 1s ease-in-out infinite;}
+  .drive-dot.is-error{background:var(--stamp);}
+  @keyframes drive-pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+
+  .stamp{
+    position:absolute;
+    top:36px;
+    right:44px;
+    border:2px dashed var(--stamp);
+    color:var(--stamp);
+    padding:8px 14px;
+    font-family:var(--mono);
+    text-align:center;
+    transform:rotate(-4deg);
+    line-height:1.35;
+    background:rgba(138,46,46,0.02);
+  }
+  .stamp .num{font-size:20px; font-weight:bold; letter-spacing:1px;}
+  .stamp .suj{font-size:10px; text-transform:uppercase; letter-spacing:0.5px; max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  h1.doc-title{
+    font-family:var(--serif);
+    font-size:30px;
+    margin:0 0 4px;
+    padding-right:170px;
+  }
+  input.title-input{
+    font-family:var(--serif);
+    font-size:30px;
+    border:none;
+    border-bottom:2px solid transparent;
+    width:100%;
+    padding:2px 2px 6px;
+    background:transparent;
+    color:var(--ink);
+  }
+  input.title-input:hover, input.title-input:focus{border-bottom-color:var(--line); outline:none;}
+  input.title-input::placeholder{color:#9aa5af;}
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    color:var(--ink-soft);
+    margin:0 0 6px;
+  }
+
+  .meta-grid{
+    display:grid;
+    grid-template-columns:1.3fr 0.7fr 1fr 1fr;
+    gap:14px 18px;
+    margin:22px 0 28px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+  }
+  .field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .field input[type=text], .field input[type=date], .field input[type=time], .field input[type=number]{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:7px 9px;
+    font-size:14px;
+    font-family:var(--sans);
+    color:var(--ink);
+  }
+  .type-toggle{display:flex; gap:14px; align-items:center; padding:6px 0;}
+  .type-toggle label{display:flex; align-items:center; gap:6px; font-size:13px; text-transform:none; letter-spacing:0; color:var(--ink); cursor:pointer;}
+
+  section.block{margin-top:34px;}
+  .block-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    padding-bottom:6px;
+    margin-bottom:14px;
+  }
+  .block-head h2{
+    font-family:var(--serif);
+    font-size:17px;
+    margin:0;
+    color:var(--primary);
+  }
+  .block-head .count{font-family:var(--mono); font-size:12px; color:var(--ink-soft);}
+
+  table{width:100%; border-collapse:collapse;}
+  table.people th, table.people td{padding:6px 8px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:middle;}
+  table.people th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--ink-soft); font-weight:normal;}
+  table.people td input[type=text]{width:100%; border:1px solid transparent; border-radius:3px; padding:5px 6px; font-size:13px; background:transparent;}
+  table.people td input[type=text]:hover, table.people td input[type=text]:focus{border-color:var(--line); background:#fff; outline:none;}
+  .present-check{width:18px; height:18px; accent-color:var(--ok); cursor:pointer;}
+  tr.present-row{background:var(--ok-bg);}
+
+  .add-row-btn{margin-top:10px;}
+
+  .cr-editor{
+    min-height:180px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:14px 16px;
+    font-size:14px;
+    line-height:1.6;
+    color:var(--ink);
+  }
+  .cr-editor:focus{outline:2px solid var(--primary-soft); outline-offset:2px;}
+  .cr-editor img{max-width:100%; border-radius:2px; margin:6px 0; display:block;}
+  .cr-editor:empty:before{content:attr(data-placeholder); color:#9aa5af;}
+
+  .attach-zone{
+    margin-top:14px;
+    border:1.5px dashed var(--line);
+    border-radius:4px;
+    padding:16px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    transition:border-color .15s, background .15s;
+  }
+  .attach-zone.drag{border-color:var(--primary-soft); background:#f2f6f8;}
+  .attach-zone .hint{font-size:11px; margin-top:4px;}
+
+  .attach-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:14px;
+  }
+  .attach-card{
+    width:130px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:8px;
+    position:relative;
+    background:#fbfbfb;
+    font-size:11px;
+  }
+  .attach-card img{width:100%; height:80px; object-fit:cover; border-radius:2px; display:block; margin-bottom:6px; border:1px solid var(--line);}
+  .attach-card .file-icon{
+    width:100%; height:80px; border-radius:2px; margin-bottom:6px;
+    background:var(--idle-bg); display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:10px; color:var(--ink-soft); text-transform:uppercase; border:1px solid var(--line);
+  }
+  .attach-card .name{word-break:break-word; font-weight:600; color:var(--ink); display:block; margin-bottom:2px; max-height:44px; overflow:hidden;}
+  .attach-card .size{color:var(--ink-soft);}
+  .attach-card .actions{display:flex; justify-content:space-between; margin-top:6px;}
+  .attach-card .actions a, .attach-card .actions button{font-size:10px;}
+  .attach-card .rm{position:absolute; top:2px; right:4px; border:none; background:none; color:var(--stamp); font-size:14px; cursor:pointer; line-height:1;}
+
+  table.suivi{margin-top:2px;}
+  table.suivi th, table.suivi td{border-bottom:1px solid var(--line); padding:7px 6px; font-size:12.5px; vertical-align:top;}
+  table.suivi th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-soft); font-weight:normal;}
+  table.suivi td input[type=text], table.suivi td input[type=date], table.suivi td textarea{
+    width:100%; border:1px solid transparent; border-radius:3px; padding:5px 6px; font-size:12.5px; font-family:var(--sans); background:transparent; resize:vertical;
+  }
+  table.suivi td input:hover, table.suivi td input:focus, table.suivi td textarea:hover, table.suivi td textarea:focus{border-color:var(--line); background:#fff; outline:none;}
+  table.suivi td textarea{min-height:36px;}
+  select.statut{
+    border:1px solid var(--line); border-radius:12px; font-size:11px; padding:4px 8px; font-family:var(--sans); cursor:pointer;
+  }
+  select.statut.st-afaire{background:var(--idle-bg); color:var(--ink-soft);}
+  select.statut.st-encours{background:var(--warn-bg); color:var(--warn);}
+  select.statut.st-fait{background:var(--ok-bg); color:var(--ok);}
+
+  .footer-note{
+    margin-top:40px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+  }
+
+  input[type=file]{display:none;}
+
+  @media print{
+    body{background:#fff; padding:0; margin:0;}
+    .toolbar{display:none;}
+    .sheet{box-shadow:none; border:none; padding:0 8px; max-width:100%;}
+    .attach-zone{display:none;}
+    button.small, .add-row-btn, .rm, .attach-card .actions{display:none;}
+    input.title-input, .field input, table.people td input, table.suivi td input, table.suivi td textarea{border:none !important; background:transparent !important;}
+    select.statut{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .cr-editor{border:none; padding:0;}
+    .stamp{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    tr.present-row{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .attach-card{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <button id="btnNew">Nouvelle réunion (vide)</button>
+    <button id="btnNext">Réunion suivante (même sujet)</button>
+    <div class="spacer"></div>
+    <button id="btnClearLocal" class="small" title="Effacer la sauvegarde automatique locale">Effacer sauvegarde locale</button>
+    <button id="btnLoad">Ouvrir un compte-rendu (.json)</button>
+    <button id="btnSave" class="primary">Enregistrer (.json)</button>
+    <button id="btnPrint">Imprimer / PDF</button>
+    <button id="btn-drive-connect" class="small drive-btn" title="Connecter Google Drive pour synchroniser le compte-rendu en cours">
+      <span id="drive-dot" class="drive-dot"></span>
+      <span id="drive-status-label">Drive : non connecté</span>
+    </button>
+    <button id="btn-drive-force" class="small" title="Forcer l'envoi vers Drive maintenant">Forcer synchro</button>
+    <input type="file" id="fileLoadInput" accept=".json">
+  </div>
+
+  <div class="sheet">
+
+    <div class="stamp">
+      <div class="num" id="stampNum">N°1</div>
+      <div class="suj" id="stampSuj">—</div>
+    </div>
+
+    <div class="eyebrow">Compte-rendu de réunion</div>
+    <input type="text" class="title-input" id="titre" placeholder="Titre de la réunion...">
+
+    <div class="meta-grid">
+      <div class="field">
+        <label>Sujet / thème (série de réunions)</label>
+        <input type="text" id="sujet" placeholder="Ex : Revue qualification fournisseur X">
+      </div>
+      <div class="field">
+        <label>N° de réunion</label>
+        <input type="number" id="numero" min="1" value="1">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="date">
+      </div>
+      <div class="field">
+        <label>Horaire</label>
+        <div style="display:flex; gap:6px;">
+          <input type="time" id="heureDebut">
+          <input type="time" id="heureFin">
+        </div>
+      </div>
+
+      <div class="field" style="grid-column:1 / span 2;">
+        <label>Type de réunion</label>
+        <div class="type-toggle">
+          <label><input type="radio" name="typeReunion" value="presentiel" id="typePresentiel" checked> Présentiel</label>
+          <label><input type="radio" name="typeReunion" value="teams" id="typeTeams"> TEAMS</label>
+        </div>
+      </div>
+      <div class="field" style="grid-column:3 / span 2;">
+        <label id="lieuLienLabel">Salle / Lieu</label>
+        <input type="text" id="lieuLien" placeholder="Ex : Salle B2 - Bâtiment R&D">
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>Participants</h2>
+        <span class="count" id="countPresents">0 présent(s) / 0 attendu(s)</span>
+      </div>
+      <table class="people">
+        <thead>
+          <tr>
+            <th style="width:60px;">Présent</th>
+            <th>Nom</th>
+            <th>Service</th>
+            <th style="width:30px;"></th>
+          </tr>
+        </thead>
+        <tbody id="peopleBody"></tbody>
+      </table>
+      <button class="small add-row-btn" id="btnAddPerson">+ Ajouter un participant</button>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>Compte-rendu</h2>
+      </div>
+      <div class="cr-editor" id="crEditor" contenteditable="true" data-placeholder="Résumé des échanges, décisions, points abordés... (vous pouvez coller une image directement ici avec Ctrl+V)"></div>
+
+      <div class="attach-zone" id="attachZone">
+        Glissez-déposez des fichiers ici, ou
+        <button class="small" id="btnPickFile" style="margin-left:4px;">choisir un fichier</button>
+        <input type="file" id="fileAttachInput" multiple>
+        <div class="hint">Images, PDF, Office... tout type de fichier est accepté et intégré au compte-rendu.</div>
+      </div>
+      <div class="attach-grid" id="attachGrid"></div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>Suivi des questions</h2>
+        <span class="count" id="countSuivi">0 point(s)</span>
+      </div>
+      <table class="suivi">
+        <thead>
+          <tr>
+            <th style="width:14%;">Qui a demandé</th>
+            <th style="width:34%;">Question</th>
+            <th style="width:10%;">Date</th>
+            <th style="width:16%;">Qui doit répondre</th>
+            <th style="width:10%;">Deadline</th>
+            <th style="width:12%;">Statut</th>
+            <th style="width:20px;"></th>
+          </tr>
+        </thead>
+        <tbody id="suiviBody"></tbody>
+      </table>
+      <button class="small add-row-btn" id="btnAddSuivi">+ Ajouter une question / action</button>
+    </section>
+
+    <div class="footer-note">
+      <span id="genInfo">Document généré le —</span>
+      <span>Compte-rendu de réunion — outil autonome</span>
+    </div>
+
+  </div>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive
+   Même patron que sur le Semainier : l'app stocke tout son état sous
+   UNE seule clé localStorage (STORAGE_KEY = 'compte_rendu_v1', posée
+   par la sauvegarde locale automatique). Ce module se branche en
+   périphérie via window.__driveTouch(), appelé depuis persist().
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'compterendu';
+  var DATA_KEY = 'data';
+  var APP_STORAGE_KEY = 'compte_rendu_v1'; /* doit rester identique à STORAGE_KEY du script principal */
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var MODIFIED_KEY = LS_PREFIX + 'modified';
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+  var PUSH_DEBOUNCE_MS = 1200;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+  var pushTimer = null;
+
+  function toast(msg, type) {
+    if (typeof window.showToast === 'function') window.showToast(msg, type);
+  }
+
+  /* ---------- Cache local = la clé localStorage réelle de l'app,
+     avec un horodatage "modified" tenu à part ---------- */
+  function localGet() {
+    try {
+      var raw = localStorage.getItem(APP_STORAGE_KEY);
+      if (!raw) return null;
+      var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10) || 0;
+      return { value: raw, modified: modified };
+    } catch (e) { return null; }
+  }
+  function localSet(value, modifiedOverride) {
+    try {
+      var modified = modifiedOverride;
+      if (!modified) {
+        var existing = localGet();
+        modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      }
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* ---------- Statut visuel ---------- */
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = {
+      idle: 'Drive : non connecté',
+      connected: 'Drive : connecté',
+      ok: 'Drive : synchronisé',
+      sync: 'Drive : synchro…',
+      error: 'Drive : erreur de synchro'
+    };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  /* ---------- Appels API Drive ---------- */
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) throw new Error('Drive API ' + res.status);
+      return res;
+    });
+  }
+
+  function driveFileName(key) { return 'storage__' + APP_NS + '__' + key + '.json'; }
+
+  function driveFindFile(key) {
+    var q = encodeURIComponent("name='" + driveFileName(key) + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      return (data.files && data.files[0]) || null;
+    });
+  }
+
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+
+  function driveCreateFile(key, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(key), parents: ['appDataFolder'] };
+    var body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' +
+      '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    });
+  }
+
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  }
+
+  function drivePushRecord(key, record) {
+    return driveFindFile(key).then(function (existing) {
+      return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(key, record);
+    });
+  }
+
+  /* ---------- Synchro bidirectionnelle (dernier modifié gagne) ---------- */
+  function syncData(firstConnect) {
+    setSyncStatus('sync');
+    var local = localGet();
+    return driveFindFile(DATA_KEY).then(function (existing) {
+      if (!existing) {
+        if (local) return drivePushRecord(DATA_KEY, local).then(function () { setSyncStatus('ok'); });
+        setSyncStatus('ok');
+        return;
+      }
+      return driveGetRecord(existing.id).then(function (remote) {
+        if (!remote) { setSyncStatus('ok'); return; }
+        if (firstConnect || !local || remote.modified > local.modified) {
+          /* Première connexion sur ce navigateur (le cloud fait toujours foi), ou
+             donnée distante plus récente : on adopte la version Drive. */
+          var changed = !(local && local.value === remote.value);
+          localSet(remote.value, remote.modified);
+          setSyncStatus('ok');
+          if (changed) {
+            setSyncStatus('sync');
+            toast('Compte-rendu plus récent reçu de Drive, actualisation…', 'info');
+            setTimeout(function () { location.reload(); }, 900);
+          }
+        } else if (local.modified > remote.modified) {
+          return driveUpdateFile(existing.id, local).then(function () { setSyncStatus('ok'); });
+        } else {
+          setSyncStatus('ok');
+        }
+      });
+    }).catch(function (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync] Échec de la synchronisation :', e);
+    });
+  }
+
+  /* ---------- Sauvegarde différée déclenchée par persist() ---------- */
+  function scheduleDrivePush() {
+    if (!hasValidToken()) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function () {
+      var local = localGet();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(DATA_KEY, local).then(function () {
+        setSyncStatus('ok');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive :', e);
+      });
+    }, PUSH_DEBOUNCE_MS);
+  }
+  window.__driveTouch = function () {
+    try {
+      localStorage.setItem(MODIFIED_KEY, String(Date.now()));
+    } catch (e) {}
+    scheduleDrivePush();
+  };
+
+  /* ---------- Auth Google ---------- */
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncData(isFirstConnect);
+  }
+
+  function describeError(e) {
+    if (e && e.message) return e.message;
+    try { return JSON.stringify(e); } catch (e2) { return String(e); }
+  }
+
+  function forceSyncPush() {
+    if (!hasValidToken()) {
+      alert('Pas encore connecté à Drive (ou session expirée). Clique d\'abord sur "Drive : non connecté", puis réessaie "Forcer synchro".');
+      return;
+    }
+    setSyncStatus('sync');
+    var local = localGet();
+    if (!local) {
+      setSyncStatus('ok');
+      alert('Rien à synchroniser : aucune donnée locale.');
+      return;
+    }
+    drivePushRecord(DATA_KEY, local).then(function () {
+      setSyncStatus('ok');
+      alert('Synchro forcée : OK (' + Math.round(local.value.length / 1024) + ' Ko envoyés).');
+    }).catch(function (e) {
+      setSyncStatus('error');
+      alert('Synchro forcée : ERREUR - ' + describeError(e));
+    });
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setTimeout(initGis, 300);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: onTokenReceived
+    });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', forceSyncPush);
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+    setInterval(function () {
+      if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }, SILENT_REFRESH_MS);
+  }
+  initGis();
+})();
+</script>
+
+<script>
+(function(){
+
+  // ---------- state ----------
+  var STORAGE_KEY = 'compte_rendu_v1';
+  var state = {
+    titre: "",
+    sujet: "",
+    numero: 1,
+    date: "",
+    heureDebut: "",
+    heureFin: "",
+    type: "presentiel",
+    lieuLien: "",
+    participants: [],
+    compteRendu: "",
+    piecesJointes: [],
+    questions: []
+  };
+
+  var uidCounter = 1;
+  function nextId(){ uidCounter += 1; return "id" + Date.now() + "_" + uidCounter; }
+
+  // ---------- dom refs ----------
+  var el = {};
+  ["titre","sujet","numero","date","heureDebut","heureFin","lieuLien","lieuLienLabel",
+   "typePresentiel","typeTeams","peopleBody","suiviBody","attachGrid","attachZone",
+   "crEditor","stampNum","stampSuj","countPresents","countSuivi","genInfo",
+   "fileLoadInput","fileAttachInput"].forEach(function(id){
+    el[id] = document.getElementById(id);
+  });
+
+  function todayISO(){
+    var d = new Date();
+    var m = ("0"+(d.getMonth()+1)).slice(-2);
+    var day = ("0"+d.getDate()).slice(-2);
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  // ---------- rendering ----------
+  function renderStamp(){
+    el.stampNum.textContent = "N°" + (state.numero || 1);
+    el.stampSuj.textContent = state.sujet ? state.sujet : "—";
+  }
+
+  function renderPeopleCount(){
+    var total = state.participants.length;
+    var present = state.participants.filter(function(p){return p.present;}).length;
+    el.countPresents.textContent = present + " présent(s) / " + total + " attendu(s)";
+  }
+
+  function renderPeople(){
+    el.peopleBody.innerHTML = "";
+    state.participants.forEach(function(p){
+      var tr = document.createElement("tr");
+      tr.className = p.present ? "present-row" : "";
+      tr.setAttribute("data-id", p.id);
+
+      var tdCheck = document.createElement("td");
+      var chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.className = "present-check";
+      chk.checked = !!p.present;
+      chk.addEventListener("change", function(){
+        p.present = chk.checked;
+        tr.className = p.present ? "present-row" : "";
+        renderPeopleCount();
+      });
+      tdCheck.appendChild(chk);
+
+      var tdNom = document.createElement("td");
+      var inNom = document.createElement("input");
+      inNom.type = "text";
+      inNom.placeholder = "Nom Prénom";
+      inNom.value = p.nom || "";
+      inNom.addEventListener("input", function(){ p.nom = inNom.value; });
+      tdNom.appendChild(inNom);
+
+      var tdService = document.createElement("td");
+      var inServ = document.createElement("input");
+      inServ.type = "text";
+      inServ.placeholder = "Service / société";
+      inServ.value = p.service || "";
+      inServ.addEventListener("input", function(){ p.service = inServ.value; });
+      tdService.appendChild(inServ);
+
+      var tdRm = document.createElement("td");
+      var btnRm = document.createElement("button");
+      btnRm.className = "ghost-danger";
+      btnRm.textContent = "✕";
+      btnRm.title = "Retirer ce participant";
+      btnRm.addEventListener("click", function(){
+        state.participants = state.participants.filter(function(x){return x.id !== p.id;});
+        renderPeople();
+        renderPeopleCount();
+      });
+      tdRm.appendChild(btnRm);
+
+      tr.appendChild(tdCheck);
+      tr.appendChild(tdNom);
+      tr.appendChild(tdService);
+      tr.appendChild(tdRm);
+      el.peopleBody.appendChild(tr);
+    });
+    renderPeopleCount();
+  }
+
+  function addParticipant(nom, service, present){
+    state.participants.push({id: nextId(), nom: nom || "", service: service || "", present: !!present});
+    renderPeople();
+  }
+
+  function humanFileSize(bytes){
+    if (bytes < 1024) return bytes + " o";
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + " Ko";
+    return (bytes/(1024*1024)).toFixed(1) + " Mo";
+  }
+
+  function extOf(name){
+    var parts = (name || "").split(".");
+    return parts.length > 1 ? parts[parts.length-1].toUpperCase() : "FICHIER";
+  }
+
+  function renderAttachments(){
+    el.attachGrid.innerHTML = "";
+    state.piecesJointes.forEach(function(f){
+      var card = document.createElement("div");
+      card.className = "attach-card";
+
+      var rm = document.createElement("button");
+      rm.className = "rm";
+      rm.textContent = "✕";
+      rm.title = "Retirer";
+      rm.addEventListener("click", function(){
+        state.piecesJointes = state.piecesJointes.filter(function(x){return x.id !== f.id;});
+        renderAttachments();
+      });
+      card.appendChild(rm);
+
+      if (f.type && f.type.indexOf("image/") === 0){
+        var img = document.createElement("img");
+        img.src = f.dataUrl;
+        card.appendChild(img);
+      } else {
+        var icon = document.createElement("div");
+        icon.className = "file-icon";
+        icon.textContent = extOf(f.nom);
+        card.appendChild(icon);
+      }
+
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = f.nom;
+      card.appendChild(name);
+
+      var size = document.createElement("span");
+      size.className = "size";
+      size.textContent = humanFileSize(f.taille || 0);
+      card.appendChild(size);
+
+      var actions = document.createElement("div");
+      actions.className = "actions";
+      var dl = document.createElement("a");
+      dl.href = f.dataUrl;
+      dl.download = f.nom;
+      dl.textContent = "Télécharger";
+      actions.appendChild(dl);
+      card.appendChild(actions);
+
+      el.attachGrid.appendChild(card);
+    });
+  }
+
+  function addFilesToState(fileList){
+    Array.prototype.forEach.call(fileList, function(file){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        state.piecesJointes.push({
+          id: nextId(),
+          nom: file.name,
+          type: file.type,
+          taille: file.size,
+          dataUrl: e.target.result
+        });
+        renderAttachments();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function renderSuiviCount(){
+    el.countSuivi.textContent = state.questions.length + " point(s)";
+  }
+
+  function statutClass(v){
+    if (v === "encours") return "st-encours";
+    if (v === "fait") return "st-fait";
+    return "st-afaire";
+  }
+
+  function renderSuivi(){
+    el.suiviBody.innerHTML = "";
+    state.questions.forEach(function(q){
+      var tr = document.createElement("tr");
+
+      function textCell(field, placeholder, type){
+        var td = document.createElement("td");
+        var input = document.createElement("input");
+        input.type = type || "text";
+        input.placeholder = placeholder || "";
+        input.value = q[field] || "";
+        input.addEventListener("input", function(){ q[field] = input.value; });
+        td.appendChild(input);
+        return td;
+      }
+
+      function textAreaCell(field, placeholder){
+        var td = document.createElement("td");
+        var ta = document.createElement("textarea");
+        ta.placeholder = placeholder || "";
+        ta.value = q[field] || "";
+        ta.rows = 1;
+        ta.addEventListener("input", function(){ q[field] = ta.value; });
+        td.appendChild(ta);
+        return td;
+      }
+
+      tr.appendChild(textCell("qui", "Nom"));
+      tr.appendChild(textAreaCell("question", "Question posée..."));
+      tr.appendChild(textCell("date", "", "date"));
+      tr.appendChild(textCell("responsable", "Nom"));
+      tr.appendChild(textCell("deadline", "", "date"));
+
+      var tdStatut = document.createElement("td");
+      var sel = document.createElement("select");
+      sel.className = "statut " + statutClass(q.statut);
+      [["afaire","À faire"],["encours","En cours"],["fait","Fait"]].forEach(function(opt){
+        var o = document.createElement("option");
+        o.value = opt[0]; o.textContent = opt[1];
+        if ((q.statut || "afaire") === opt[0]) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener("change", function(){
+        q.statut = sel.value;
+        sel.className = "statut " + statutClass(sel.value);
+      });
+      tdStatut.appendChild(sel);
+      tr.appendChild(tdStatut);
+
+      var tdRm = document.createElement("td");
+      var btnRm = document.createElement("button");
+      btnRm.className = "ghost-danger";
+      btnRm.textContent = "✕";
+      btnRm.addEventListener("click", function(){
+        state.questions = state.questions.filter(function(x){return x.id !== q.id;});
+        renderSuivi();
+      });
+      tdRm.appendChild(btnRm);
+      tr.appendChild(tdRm);
+
+      el.suiviBody.appendChild(tr);
+    });
+    renderSuiviCount();
+  }
+
+  function addQuestion(data){
+    data = data || {};
+    state.questions.push({
+      id: nextId(),
+      qui: data.qui || "",
+      question: data.question || "",
+      date: data.date || todayISO(),
+      responsable: data.responsable || "",
+      deadline: data.deadline || "",
+      statut: data.statut || "afaire"
+    });
+    renderSuivi();
+  }
+
+  // ---------- meta bindings ----------
+  el.titre.addEventListener("input", function(){ state.titre = el.titre.value; });
+  el.sujet.addEventListener("input", function(){ state.sujet = el.sujet.value; renderStamp(); });
+  el.numero.addEventListener("input", function(){ state.numero = parseInt(el.numero.value,10) || 1; renderStamp(); });
+  el.date.addEventListener("input", function(){ state.date = el.date.value; });
+  el.heureDebut.addEventListener("input", function(){ state.heureDebut = el.heureDebut.value; });
+  el.heureFin.addEventListener("input", function(){ state.heureFin = el.heureFin.value; });
+  el.lieuLien.addEventListener("input", function(){ state.lieuLien = el.lieuLien.value; });
+
+  function updateTypeUI(){
+    if (state.type === "teams"){
+      el.lieuLienLabel.textContent = "Lien TEAMS";
+      el.lieuLien.placeholder = "Coller le lien de la réunion TEAMS...";
+    } else {
+      el.lieuLienLabel.textContent = "Salle / Lieu";
+      el.lieuLien.placeholder = "Ex : Salle B2 - Bâtiment R&D";
+    }
+  }
+  el.typePresentiel.addEventListener("change", function(){ if (el.typePresentiel.checked){ state.type = "presentiel"; updateTypeUI(); } });
+  el.typeTeams.addEventListener("change", function(){ if (el.typeTeams.checked){ state.type = "teams"; updateTypeUI(); } });
+
+  el.crEditor.addEventListener("input", function(){ state.compteRendu = el.crEditor.innerHTML; });
+  el.crEditor.addEventListener("paste", function(e){
+    var items = (e.clipboardData || window.clipboardData).items;
+    if (!items) return;
+    var handled = false;
+    for (var i=0; i<items.length; i++){
+      if (items[i].type.indexOf("image/") === 0){
+        handled = true;
+        var blob = items[i].getAsFile();
+        var reader = new FileReader();
+        reader.onload = function(ev){
+          document.execCommand("insertImage", false, ev.target.result);
+          state.compteRendu = el.crEditor.innerHTML;
+        };
+        reader.readAsDataURL(blob);
+      }
+    }
+    if (handled) e.preventDefault();
+  });
+
+  // ---------- attachments UI ----------
+  document.getElementById("btnPickFile").addEventListener("click", function(){ el.fileAttachInput.click(); });
+  el.fileAttachInput.addEventListener("change", function(){
+    if (el.fileAttachInput.files.length){ addFilesToState(el.fileAttachInput.files); }
+    el.fileAttachInput.value = "";
+  });
+  ["dragenter","dragover"].forEach(function(evt){
+    el.attachZone.addEventListener(evt, function(e){ e.preventDefault(); el.attachZone.className = "attach-zone drag"; });
+  });
+  ["dragleave","drop"].forEach(function(evt){
+    el.attachZone.addEventListener(evt, function(e){ e.preventDefault(); el.attachZone.className = "attach-zone"; });
+  });
+  el.attachZone.addEventListener("drop", function(e){
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){
+      addFilesToState(e.dataTransfer.files);
+    }
+  });
+
+  // ---------- buttons ----------
+  document.getElementById("btnAddPerson").addEventListener("click", function(){ addParticipant("", "", false); });
+  document.getElementById("btnAddSuivi").addEventListener("click", function(){ addQuestion(); });
+
+  document.getElementById("btnNew").addEventListener("click", function(){
+    if (!confirm("Créer une nouvelle réunion vide ? Les données non enregistrées seront perdues.")) return;
+    loadState({
+      titre:"", sujet:"", numero:1, date: todayISO(), heureDebut:"", heureFin:"",
+      type:"presentiel", lieuLien:"", participants:[], compteRendu:"", piecesJointes:[], questions:[]
+    });
+  });
+
+  document.getElementById("btnNext").addEventListener("click", function(){
+    if (!confirm("Créer la réunion suivante sur le même sujet (participants conservés, présences réinitialisées) ?")) return;
+    var newParticipants = state.participants.map(function(p){
+      return {id: nextId(), nom: p.nom, service: p.service, present:false};
+    });
+    loadState({
+      titre: state.titre,
+      sujet: state.sujet,
+      numero: (parseInt(state.numero,10)||1) + 1,
+      date: todayISO(),
+      heureDebut:"", heureFin:"",
+      type: state.type,
+      lieuLien: state.type === "teams" ? state.lieuLien : "",
+      participants: newParticipants,
+      compteRendu:"",
+      piecesJointes:[],
+      questions:[]
+    });
+  });
+
+  document.getElementById("btnPrint").addEventListener("click", function(){ window.print(); });
+
+  document.getElementById("btnSave").addEventListener("click", function(){
+    state.compteRendu = el.crEditor.innerHTML;
+    var payload = JSON.stringify(state, null, 2);
+    var blob = new Blob([payload], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var datePart = (state.date || todayISO()).split("-").join("");
+    var safeSujet = (state.sujet || state.titre || "reunion").replace(/[^a-z0-9\-_ ]/gi,"").trim().slice(0,40) || "reunion";
+    a.href = url;
+    a.download = datePart + "_CR reunion n" + (state.numero||1) + " - " + safeSujet + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  });
+
+  document.getElementById("btnLoad").addEventListener("click", function(){ el.fileLoadInput.click(); });
+  el.fileLoadInput.addEventListener("change", function(){
+    var file = el.fileLoadInput.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var data = JSON.parse(e.target.result);
+        loadState(data);
+      } catch(err){
+        alert("Fichier illisible : ce n'est pas un compte-rendu JSON valide.");
+      }
+    };
+    reader.readAsText(file);
+    el.fileLoadInput.value = "";
+  });
+
+  function loadState(data){
+    state = {
+      titre: data.titre || "",
+      sujet: data.sujet || "",
+      numero: data.numero || 1,
+      date: data.date || todayISO(),
+      heureDebut: data.heureDebut || "",
+      heureFin: data.heureFin || "",
+      type: data.type || "presentiel",
+      lieuLien: data.lieuLien || "",
+      participants: (data.participants || []).map(function(p){
+        return {id: p.id || nextId(), nom: p.nom || "", service: p.service || "", present: !!p.present};
+      }),
+      compteRendu: data.compteRendu || "",
+      piecesJointes: (data.piecesJointes || []).map(function(f){
+        return {id: f.id || nextId(), nom: f.nom || "fichier", type: f.type || "", taille: f.taille || 0, dataUrl: f.dataUrl || ""};
+      }),
+      questions: (data.questions || []).map(function(q){
+        return {
+          id: q.id || nextId(), qui: q.qui || "", question: q.question || "", date: q.date || "",
+          responsable: q.responsable || "", deadline: q.deadline || "", statut: q.statut || "afaire"
+        };
+      })
+    };
+    el.titre.value = state.titre;
+    el.sujet.value = state.sujet;
+    el.numero.value = state.numero;
+    el.date.value = state.date;
+    el.heureDebut.value = state.heureDebut;
+    el.heureFin.value = state.heureFin;
+    el.lieuLien.value = state.lieuLien;
+    if (state.type === "teams"){ el.typeTeams.checked = true; } else { el.typePresentiel.checked = true; }
+    updateTypeUI();
+    el.crEditor.innerHTML = state.compteRendu;
+    renderStamp();
+    renderPeople();
+    renderAttachments();
+    renderSuivi();
+    updateGenInfo();
+  }
+
+  function updateGenInfo(){
+    var now = new Date();
+    var d = ("0"+now.getDate()).slice(-2) + "/" + ("0"+(now.getMonth()+1)).slice(-2) + "/" + now.getFullYear();
+    var t = ("0"+now.getHours()).slice(-2) + ":" + ("0"+now.getMinutes()).slice(-2);
+    el.genInfo.textContent = "Document généré le " + d + " à " + t;
+  }
+
+  // ---------- sauvegarde locale automatique (socle pour la synchro Drive) ----------
+  function persist(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (typeof window.__driveTouch === "function") window.__driveTouch();
+    } catch(e){ /* quota dépassé : on ignore silencieusement, l'export JSON reste dispo */ }
+  }
+  setInterval(persist, 4000);
+  window.addEventListener("beforeunload", persist);
+  document.getElementById("btnClearLocal").addEventListener("click", function(){
+    if (!confirm("Effacer la sauvegarde locale de ce compte-rendu ? Cette action n'affecte pas Drive ni vos exports JSON.")) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+    showToastLocal("Sauvegarde locale effacée");
+  });
+  function showToastLocal(msg){
+    var t = document.createElement("div");
+    t.textContent = msg;
+    t.style.cssText = "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:8px 16px;border-radius:4px;font-size:13px;z-index:999;";
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2500);
+  }
+  window.showToast = showToastLocal;
+
+  // ---------- init ----------
+  var restored = false;
+  try {
+    var savedRaw = localStorage.getItem(STORAGE_KEY);
+    if (savedRaw) {
+      var saved = JSON.parse(savedRaw);
+      if (confirm("Une sauvegarde locale a été trouvée (compte-rendu en cours). Voulez-vous la restaurer ?")) {
+        loadState(saved);
+        restored = true;
+      }
+    }
+  } catch(e){}
+  if (!restored) {
+    state.date = todayISO();
+    el.date.value = state.date;
+    addParticipant("", "", false);
+    updateTypeUI();
+    renderStamp();
+    renderPeople();
+    renderAttachments();
+    renderSuivi();
+    updateGenInfo();
+  }
+
+})();
+</script>
+
+</body>
+</html>

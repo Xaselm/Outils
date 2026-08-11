@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Change Control Tracker</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root {
+  --color-primary: #0e5c6b;
+  --color-primary-dark: #093f49;
+  --color-primary-light: #eaf4f5;
+  --color-accent: #c17f2a;
+  --color-success: #2e7d4f;
+  --color-success-bg: #e7f4ec;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fbeae9;
+  --color-warning: #9a6b00;
+  --color-warning-bg: #fdf3df;
+  --color-bg: #f5f7f8;
+  --color-surface: #ffffff;
+  --color-border: #dde3e5;
+  --color-text: #1c2b2e;
+  --color-text-muted: #5c7378;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radius: 8px;
+  --shadow-card: 0 1px 2px rgba(28,43,46,0.06), 0 1px 8px rgba(28,43,46,0.05);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app { max-width: 1200px; margin: 0 auto; padding: 24px 24px 80px; }
+
+/* Header */
+.app-header {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius); padding: 14px 20px; margin-bottom: 16px;
+  box-shadow: var(--shadow-card); border-top: 3px solid var(--color-primary);
+  flex-wrap: wrap;
+}
+.app-brand { display: flex; align-items: center; gap: 12px; }
+.app-brand-icon { color: var(--color-primary); flex-shrink: 0; }
+.app-name { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); font-weight: 700; }
+.app-doc-title { font-size: 18px; font-weight: 700; color: var(--color-text); line-height: 1.3; }
+.header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.save-status { font-size: 11.5px; color: var(--color-text-muted); margin-right: 6px; white-space: nowrap; }
+.save-status.saving { color: var(--color-warning); }
+.save-status.error { color: var(--color-danger); font-weight: 600; }
+.drive-btn { display: inline-flex; align-items: center; gap: 6px; }
+.drive-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: var(--color-text-muted); transition: background .2s ease;
+}
+.drive-dot.is-connected { background: var(--color-success); }
+.drive-dot.is-syncing { background: var(--color-warning); animation: drive-pulse 1s ease-in-out infinite; }
+.drive-dot.is-error { background: var(--color-danger); }
+@keyframes drive-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; font-family: inherit;
+  font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 6px;
+  border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease, border-color 0.15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover { background: var(--color-primary-dark); }
+.btn-secondary { background: #fff; color: var(--color-primary); border-color: var(--color-primary); }
+.btn-secondary:hover { background: var(--color-primary-light); }
+.btn-icon { background: transparent; color: var(--color-text-muted); border: 1px solid var(--color-border); padding: 8px; }
+.btn-icon:hover { background: var(--color-primary-light); color: var(--color-primary); border-color: var(--color-primary); }
+.btn-icon-danger { background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; padding: 4px; border-radius: 4px; display: inline-flex; }
+.btn-icon-danger:hover { color: var(--color-danger); background: var(--color-danger-bg); }
+.btn-attach-mini { background: transparent; border: 1px dashed var(--color-border); color: var(--color-text-muted); border-radius: 4px; padding: 4px 6px; cursor: pointer; display: inline-flex; align-items: center; }
+.btn-attach-mini:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Tab nav */
+.tab-nav {
+  display: flex; gap: 4px; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius); padding: 6px; margin-bottom: 16px; overflow-x: auto;
+}
+.tab-btn {
+  font-family: inherit; background: transparent; border: none; padding: 10px 16px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; color: var(--color-text-muted);
+  cursor: pointer; border-radius: 6px; white-space: nowrap; display: flex; align-items: center; gap: 7px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.tab-btn:hover { background: var(--color-primary-light); color: var(--color-primary); }
+.tab-btn.active { background: var(--color-primary); color: #fff; }
+.tab-badge { background: var(--color-primary-light); color: var(--color-primary); border-radius: 10px; padding: 1px 7px; font-size: 10.5px; font-weight: 700; }
+.tab-btn.active .tab-badge { background: rgba(255,255,255,0.25); color: #fff; }
+
+/* Panels & cards */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.card {
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius);
+  box-shadow: var(--shadow-card); padding: 24px; margin-bottom: 16px;
+}
+.card-wide { padding: 20px; }
+.card-muted { background: var(--color-primary-light); border-color: transparent; }
+.card-title {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+  color: var(--color-primary); margin: 0 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border);
+}
+.card-subtitle { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin: 0 0 10px; font-weight: 700; }
+.card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+.card-header-row .card-title { margin: 0; padding: 0; border: none; }
+.card-note { font-size: 11.5px; color: var(--color-text-muted); margin: -8px 0 14px; }
+
+.field-section { margin-bottom: 28px; }
+.field-section:last-child { margin-bottom: 0; }
+.field-section-title { font-size: 11.5px; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 14px; }
+
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
+.field .required { color: var(--color-danger); }
+.field-hint { font-size: 11.5px; color: var(--color-text-muted); margin: 6px 0 0; }
+
+input[type="text"], input[type="date"], textarea, select {
+  width: 100%; font-family: inherit; font-size: 13.5px; color: var(--color-text);
+  border: 1px solid var(--color-border); border-radius: 6px; padding: 9px 11px; background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+textarea { resize: vertical; min-height: 44px; font-family: inherit; }
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(14,92,107,0.13);
+}
+select { cursor: pointer; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.pair-block { background: var(--color-bg); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+.pair-block:last-child { margin-bottom: 0; }
+
+.meta-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12.5px; border-bottom: 1px dashed var(--color-border); gap: 12px; }
+.meta-row:last-child { border-bottom: none; }
+.meta-row span:first-child { color: var(--color-text-muted); flex-shrink: 0; }
+.meta-row code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; color: var(--color-text); text-align: right; word-break: break-all; }
+
+/* Tag input */
+.tag-input-wrap {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 7px; border: 1px solid var(--color-border);
+  border-radius: 6px; background: #fff; min-height: 42px;
+}
+.tag-input-wrap:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(14,92,107,0.13); }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 4px; background: var(--color-primary-light); color: var(--color-primary-dark);
+  border-radius: 14px; padding: 4px 4px 4px 12px; font-size: 12.5px; font-weight: 600;
+}
+.tag-remove { background: transparent; border: none; color: var(--color-primary-dark); cursor: pointer; font-size: 15px; line-height: 1; padding: 3px 6px; border-radius: 50%; }
+.tag-remove:hover { background: rgba(14,92,107,0.15); }
+.tag-input-field { border: none; outline: none; flex: 1; min-width: 140px; font-family: inherit; font-size: 13px; padding: 4px; background: transparent; }
+
+/* Attachments */
+.attachment-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.attachment-summary { font-size: 11.5px; color: var(--color-text-muted); }
+.attachment-summary.warn { color: var(--color-warning); font-weight: 700; }
+.attachment-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.attachment-item {
+  display: flex; align-items: center; gap: 8px; border: 1px solid var(--color-border); border-radius: 6px;
+  padding: 6px 8px; background: #fff; cursor: pointer; max-width: 220px; transition: border-color 0.15s ease;
+}
+.attachment-item:hover { border-color: var(--color-primary); }
+.attachment-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.attachment-icon { color: var(--color-text-muted); display: flex; flex-shrink: 0; }
+.attachment-meta { display: flex; flex-direction: column; overflow: hidden; }
+.attachment-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+.attachment-size { font-size: 10.5px; color: var(--color-text-muted); }
+.attachment-remove { background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; padding: 2px; border-radius: 4px; display: inline-flex; flex-shrink: 0; }
+.attachment-remove:hover { color: var(--color-danger); background: var(--color-danger-bg); }
+.mini-attachment-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.mini-attachment-list .attachment-item { max-width: 160px; padding: 3px 6px; }
+.mini-attachment-list .attachment-thumb, .mini-attachment-list .attachment-icon svg { width: 18px; height: 18px; }
+.mini-attachment-list .attachment-name { max-width: 90px; font-size: 10.5px; }
+.mini-attachment-list .attachment-size { display: none; }
+.empty-hint { color: var(--color-text-muted); font-size: 12.5px; }
+
+/* Tables */
+.table-scroll { overflow-x: auto; }
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data-table th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted);
+  padding: 10px; border-bottom: 2px solid var(--color-border); white-space: nowrap; font-weight: 700;
+}
+table.data-table td { padding: 8px 10px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+table.data-table tbody tr:hover { background: var(--color-primary-light); }
+.col-num { width: 30px; color: var(--color-text-muted); font-size: 12px; text-align: center; }
+.col-actions { width: 40px; text-align: center; }
+.col-attach { width: 120px; }
+.cell-input, .cell-textarea, .cell-select { min-width: 130px; }
+.cell-textarea { min-height: 38px; }
+.empty-row td { text-align: center; color: var(--color-text-muted); padding: 26px !important; }
+
+/* Status-coded selects (signature element) */
+select.status-pill { font-weight: 700; }
+select.badge-yes, select.status-progress { background: var(--color-warning-bg); border-color: var(--color-warning); color: #7a5400; }
+select.badge-no, select.status-completed { background: var(--color-success-bg); border-color: var(--color-success); color: var(--color-success); }
+select.badge-na, select.status-cancelled { background: #f1f1f1; border-color: #c9c9c9; color: #66686a; }
+select.status-open { background: var(--color-primary-light); border-color: var(--color-primary); color: var(--color-primary-dark); }
+
+/* Notes */
+.note-form { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--color-border); }
+.notes-list { display: flex; flex-direction: column; gap: 12px; }
+.note-card { border: 1px solid var(--color-border); border-left: 3px solid var(--color-primary); border-radius: 6px; padding: 12px 14px; background: var(--color-bg); }
+.note-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.note-date { font-size: 12px; font-weight: 700; color: var(--color-primary-dark); }
+.note-author { font-size: 11.5px; color: var(--color-text-muted); background: #fff; border: 1px solid var(--color-border); border-radius: 10px; padding: 1px 9px; }
+.note-card-header .btn-icon-danger { margin-left: auto; }
+.note-text { margin: 0; font-size: 13.5px; white-space: pre-wrap; }
+
+/* Toasts */
+.toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; max-width: 320px; }
+.toast {
+  background: var(--color-text); color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 12.5px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2); opacity: 1; transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.toast-success { background: var(--color-success); }
+.toast-error { background: var(--color-danger); }
+.toast-warning { background: #8a6300; }
+.toast-hide { opacity: 0; transform: translateY(6px); }
+
+/* Print */
+@media print {
+  body { background: #fff; }
+  #app { max-width: none; padding: 0; margin: 0; }
+  .app-header .header-right, .tab-nav, #toast-container { display: none !important; }
+  .app-header { box-shadow: none; border: none; border-bottom: 2px solid var(--color-primary); border-radius: 0; }
+  body.printing-all .tab-panel { display: block !important; page-break-before: always; }
+  body.printing-all .tab-panel:first-child { page-break-before: avoid; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+  .btn-attach-mini, .btn-icon-danger, .tag-remove, .attachment-remove, .tag-input-field, .col-actions button { display: none !important; }
+  input, textarea, select { border: 1px solid #999 !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  #app { padding: 12px; }
+  .app-header { flex-direction: column; align-items: stretch; }
+  .header-right { justify-content: flex-start; }
+  .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="app-header">
+    <div class="app-brand">
+      <span class="app-brand-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"></path><path d="M9 14l2 2 4-4"></path></svg></span>
+      <div>
+        <div class="app-name">Change Control Tracker</div>
+        <div class="app-doc-title" id="header-title">Sans titre</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="save-status" id="save-status">-</span>
+      <button type="button" id="btn-drive-connect" class="btn btn-icon drive-btn" title="Connecter Google Drive pour synchroniser vos Change Control">
+        <span id="drive-dot" class="drive-dot"></span> <span id="drive-status-label" style="font-size:11px;">Drive : non connecté</span>
+      </button>
+      <button type="button" id="btn-drive-force" class="btn btn-icon" title="Forcer l'envoi vers Drive maintenant"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><polyline points="21 3 21 9 15 9"></polyline></svg></button>
+      <button type="button" class="btn btn-icon" id="btn-print" title="Imprimer / Export PDF"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+      <button type="button" class="btn btn-icon" id="btn-import" title="Importer un JSON"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
+      <button type="button" class="btn btn-secondary" id="btn-export-json"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Exporter JSON</button>
+      <button type="button" class="btn btn-primary" id="btn-download-html"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Télécharger HTML</button>
+      <button type="button" class="btn btn-icon" id="btn-new" title="Nouveau Change Control"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+    </div>
+  </header>
+
+  <nav class="tab-nav" id="tab-nav">
+    <button type="button" class="tab-btn active" data-tab="general">Général</button>
+    <button type="button" class="tab-btn" data-tab="change-description">CHANGE DESCRIPTION</button>
+    <button type="button" class="tab-btn" data-tab="application-scope">APPLICATION SCOPE</button>
+    <button type="button" class="tab-btn" data-tab="impact-analysis">CHANGE IMPACT ANALYSIS<span class="tab-badge" id="badge-impact">0</span></button>
+    <button type="button" class="tab-btn" data-tab="action-plan">ACTION PLAN FOLLOW-UP<span class="tab-badge" id="badge-action">0</span></button>
+    <button type="button" class="tab-btn" data-tab="notes">NOTES<span class="tab-badge" id="badge-notes">0</span></button>
+  </nav>
+
+  <main class="tab-content">
+
+    <section id="panel-general" class="tab-panel active">
+      <div class="card">
+        <h2 class="card-title">Informations générales</h2>
+        <div class="field">
+          <label for="f-title">Titre du Change Control <span class="required">*</span></label>
+          <input type="text" id="f-title" placeholder="Ex : Remplacement de la vanne V-102 sur ligne de conditionnement" />
+          <p class="field-hint">Ce titre sert à nommer les fichiers exportés (HTML et JSON).</p>
+        </div>
+      </div>
+      <div class="card card-muted">
+        <h3 class="card-subtitle">Informations système</h3>
+        <div class="meta-row"><span>Identifiant du document</span><code id="meta-doc-id">-</code></div>
+        <div class="meta-row"><span>Créé le</span><span id="meta-created">-</span></div>
+        <div class="meta-row"><span>Dernière modification</span><span id="meta-modified">-</span></div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Paramètres des listes déroulantes</h2>
+        <p class="card-note">Ajoutez, renommez (supprimez puis rajoutez) ou retirez les valeurs proposées dans les listes du formulaire. Tapez une valeur puis Entrée pour l'ajouter ; cliquez sur le &times; pour la retirer.</p>
+
+        <div class="field">
+          <label>Origin of Change</label>
+          <div class="tag-input-wrap" id="cfg-originOfChange-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Change Category</label>
+          <div class="tag-input-wrap" id="cfg-changeCategory-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Change classification proposal</label>
+          <div class="tag-input-wrap" id="cfg-classificationProposal-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Type of change</label>
+          <div class="tag-input-wrap" id="cfg-typeOfChange-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Type of change implementation</label>
+          <div class="tag-input-wrap" id="cfg-typeOfChangeImplementation-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Yes / No / N-A (Impact analysis)</label>
+          <div class="tag-input-wrap" id="cfg-yesNo-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Action Type (suggestions)</label>
+          <div class="tag-input-wrap" id="cfg-actionType-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Status (Action Plan Follow-up)</label>
+          <div class="tag-input-wrap" id="cfg-actionStatus-wrap"></div>
+        </div>
+        <div class="field">
+          <label>Subjects to evaluate (Change Impact Analysis)</label>
+          <div class="tag-input-wrap" id="cfg-subjects-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-change-description" class="tab-panel">
+      <div class="card">
+        <h2 class="card-title">Change Description</h2>
+
+        <div class="field-section">
+          <h3 class="field-section-title">Description</h3>
+          <div class="field">
+            <label for="f-briefDescription">Brief description of the change</label>
+            <input type="text" id="f-briefDescription" placeholder="Résumé en une phrase" />
+          </div>
+          <div class="field">
+            <label for="f-description">Description of the Change</label>
+            <textarea id="f-description" rows="4"></textarea>
+          </div>
+          <div class="field">
+            <label for="f-currentSituation">Current situation description</label>
+            <textarea id="f-currentSituation" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label for="f-proposalSituation">Proposal situation description</label>
+            <textarea id="f-proposalSituation" rows="3"></textarea>
+          </div>
+          <div class="field">
+            <label for="f-reasonOfChange">Reason of Change</label>
+            <textarea id="f-reasonOfChange" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="field-section">
+          <h3 class="field-section-title">Origin &amp; classification</h3>
+          <div class="field">
+            <label for="f-originOfChange">Origin of Change</label>
+            <select id="f-originOfChange"></select>
+          </div>
+          <div class="field">
+            <label for="f-originDetails">Origin of change - Details</label>
+            <textarea id="f-originDetails" rows="3"></textarea>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="f-changeCategory">Change Category</label>
+              <select id="f-changeCategory"></select>
+            </div>
+            <div class="field">
+              <label for="f-classificationProposal">Change classification proposal</label>
+              <select id="f-classificationProposal"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-section">
+          <h3 class="field-section-title">Ownership &amp; implementation</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="f-changeOwner">Change owner</label>
+              <input type="text" id="f-changeOwner" />
+            </div>
+            <div class="field">
+              <label for="f-typeOfChange">Type of change</label>
+              <select id="f-typeOfChange"></select>
+            </div>
+            <div class="field">
+              <label for="f-typeOfChangeImplementation">Type of change implementation</label>
+              <select id="f-typeOfChangeImplementation"></select>
+            </div>
+            <div class="field">
+              <label for="f-expectedDate">Expected date of implementation</label>
+              <input type="date" id="f-expectedDate" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field-section">
+          <h3 class="field-section-title">Change description attachments</h3>
+          <div class="attachment-controls">
+            <button type="button" class="btn btn-secondary" id="btn-add-cd-attachment"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> Ajouter un fichier</button>
+            <span class="attachment-summary" id="attachment-summary"></span>
+          </div>
+          <div class="attachment-list" id="cd-attachments-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-application-scope" class="tab-panel">
+      <div class="card">
+        <h2 class="card-title">Application Scope</h2>
+
+        <div class="field">
+          <label>Department impacted by the change</label>
+          <div class="tag-input-wrap" id="f-departments-wrap"></div>
+        </div>
+
+        <div class="pair-block">
+          <div class="form-grid">
+            <div class="field">
+              <label for="f-equipmentInvolved">Equipment involved by the change</label>
+              <input type="text" id="f-equipmentInvolved" />
+            </div>
+            <div class="field">
+              <label for="f-equipmentDescription">Description of the equipment</label>
+              <textarea id="f-equipmentDescription" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="pair-block">
+          <div class="form-grid">
+            <div class="field">
+              <label for="f-productInvolved">Product involved by the change</label>
+              <input type="text" id="f-productInvolved" />
+            </div>
+            <div class="field">
+              <label for="f-productDescription">description of the products</label>
+              <textarea id="f-productDescription" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-itemCodes">Items codes and description</label>
+          <textarea id="f-itemCodes" rows="3"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Market involved by the change</label>
+          <div class="tag-input-wrap" id="f-markets-wrap"></div>
+        </div>
+
+        <div class="pair-block">
+          <div class="form-grid">
+            <div class="field">
+              <label for="f-customerInvolved">Customer involved by the change</label>
+              <input type="text" id="f-customerInvolved" />
+            </div>
+            <div class="field">
+              <label for="f-customerName">Name of the Customer</label>
+              <input type="text" id="f-customerName" />
+            </div>
+          </div>
+        </div>
+
+        <div class="pair-block">
+          <div class="form-grid">
+            <div class="field">
+              <label for="f-supplierInvolved">Supplier involved by the change</label>
+              <input type="text" id="f-supplierInvolved" />
+            </div>
+            <div class="field">
+              <label for="f-supplierName">Name of the Supplier</label>
+              <input type="text" id="f-supplierName" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-impact-analysis" class="tab-panel">
+      <div class="card card-wide">
+        <div class="card-header-row">
+          <h2 class="card-title">Change Impact Analysis</h2>
+          <button type="button" class="btn btn-primary" id="btn-add-impact-row"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter une ligne</button>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th>Subjects to evaluate</th>
+                <th>Is there an impact ?</th>
+                <th>Impact Description</th>
+                <th>Impact attachment</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody id="impact-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-action-plan" class="tab-panel">
+      <div class="card card-wide">
+        <div class="card-header-row">
+          <h2 class="card-title">Action Plan Follow-up</h2>
+          <button type="button" class="btn btn-primary" id="btn-add-action-row"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter une ligne</button>
+        </div>
+        <p class="card-note">Une colonne "Status" a été ajoutée pour le suivi (non demandée explicitement, facile à retirer si inutile).</p>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th>Action Brief Description</th>
+                <th>Action Description</th>
+                <th>Action Owner</th>
+                <th>Action Type</th>
+                <th>Initial due date</th>
+                <th>Status</th>
+                <th class="col-actions"></th>
+              </tr>
+            </thead>
+            <tbody id="action-table-body"></tbody>
+          </table>
+        </div>
+        <datalist id="action-type-options"></datalist>
+      </div>
+    </section>
+
+    <section id="panel-notes" class="tab-panel">
+      <div class="card">
+        <h2 class="card-title">Notes</h2>
+        <div class="note-form">
+          <div class="form-grid form-grid-3">
+            <div class="field">
+              <label for="f-note-date">Date</label>
+              <input type="date" id="f-note-date" />
+            </div>
+            <div class="field">
+              <label for="f-note-author">Responsable</label>
+              <input type="text" id="f-note-author" placeholder="Nom" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-note-text">Note</label>
+            <textarea id="f-note-text" rows="3" placeholder="Ajouter une note..."></textarea>
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-add-note">Ajouter la note</button>
+        </div>
+        <div class="notes-list" id="notes-list"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<input type="file" id="hidden-file-input" accept=".json,application/json" style="display:none" />
+<input type="file" id="hidden-attachment-input" multiple style="display:none" />
+
+<div id="toast-container" class="toast-container"></div>
+
+<script id="app-data-store" type="application/json">{}</script>
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — variante multi-documents
+   dynamique (même principe que le Planning). Chaque Change Control a
+   son propre localStorage sous 'cc_tracker_doc_<documentId>' (UUID
+   généré, pas un nom tapé). On découvre donc l'ensemble des documents
+   à synchroniser à la volée : union des clés locales ET des fichiers
+   déjà présents sur Drive (pour rapatrier un CC édité sur un autre
+   appareil, ou repris depuis un export HTML plus ancien).
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'cctracker';
+  var LOCAL_PREFIX = 'cc_tracker_doc_'; /* doit rester identique à STORAGE_PREFIX du script principal */
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+  var PUSH_DEBOUNCE_MS = 1200;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+  var pushTimers = {};
+
+  function localDocIds() {
+    var out = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(LOCAL_PREFIX) === 0) out.push(k.slice(LOCAL_PREFIX.length));
+      }
+    } catch (e) {}
+    return out;
+  }
+
+  function modifiedKeyFor(docId) { return LS_PREFIX + 'modified__' + docId; }
+  function localGet(docId) {
+    try {
+      var raw = localStorage.getItem(LOCAL_PREFIX + docId);
+      if (raw === null) return null;
+      var modified = parseInt(localStorage.getItem(modifiedKeyFor(docId)), 10) || 0;
+      return { value: raw, modified: modified };
+    } catch (e) { return null; }
+  }
+  function localSet(docId, value, modifiedOverride) {
+    try {
+      var modified = modifiedOverride;
+      if (!modified) {
+        var existing = localGet(docId);
+        modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      }
+      localStorage.setItem(LOCAL_PREFIX + docId, value);
+      localStorage.setItem(modifiedKeyFor(docId), String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = {
+      idle: 'Drive : non connecté',
+      connected: 'Drive : connecté',
+      ok: 'Drive : synchronisé',
+      sync: 'Drive : synchro…',
+      error: 'Drive : erreur de synchro'
+    };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) throw new Error('Drive API ' + res.status);
+      return res;
+    });
+  }
+
+  var FILE_PREFIX = 'storage__' + APP_NS + '__';
+  function driveFileName(docId) { return FILE_PREFIX + docId + '.json'; }
+  function docIdFromFileName(name) {
+    if (name.indexOf(FILE_PREFIX) !== 0 || name.slice(-5) !== '.json') return null;
+    return name.slice(FILE_PREFIX.length, -5);
+  }
+
+  function driveListAllFiles() {
+    var q = encodeURIComponent("name contains '" + FILE_PREFIX + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)&pageSize=1000';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return data.files || []; });
+  }
+
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+
+  function driveCreateFile(docId, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(docId), parents: ['appDataFolder'] };
+    var body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' +
+      '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    });
+  }
+
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  }
+
+  function drivePushRecord(docId, record, knownFileId) {
+    if (knownFileId) return driveUpdateFile(knownFileId, record);
+    return driveListAllFiles().then(function (files) {
+      var existing = files.find(function (f) { return f.name === driveFileName(docId); });
+      return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(docId, record);
+    });
+  }
+
+  function syncOneDoc(docId, firstConnect, filesList) {
+    var local = localGet(docId);
+    var existing = filesList.find(function (f) { return f.name === driveFileName(docId); });
+    if (!existing) {
+      if (local) return drivePushRecord(docId, local).then(function () { return false; });
+      return Promise.resolve(false);
+    }
+    return driveGetRecord(existing.id).then(function (remote) {
+      if (!remote) return false;
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        localSet(docId, remote.value, remote.modified);
+        return changed;
+      } else if (local.modified > remote.modified) {
+        return driveUpdateFile(existing.id, local).then(function () { return false; });
+      }
+      return false;
+    });
+  }
+
+  function syncAllFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    return driveListAllFiles().then(function (files) {
+      var remoteIds = files.map(function (f) { return docIdFromFileName(f.name); }).filter(Boolean);
+      var allIds = localDocIds().concat(remoteIds).filter(function (s, i, arr) { return arr.indexOf(s) === i; });
+      var chain = Promise.resolve();
+      var anyChange = false;
+      allIds.forEach(function (docId) {
+        chain = chain.then(function () { return syncOneDoc(docId, firstConnect, files); }).then(function (changed) {
+          if (changed) anyChange = true;
+        });
+      });
+      return chain.then(function () {
+        setSyncStatus('ok');
+        if (anyChange) {
+          setSyncStatus('sync');
+          if (typeof window.showToast === 'function') window.showToast('Change Control mis a jour depuis Drive, actualisation…', 'info');
+          setTimeout(function () { location.reload(); }, 900);
+        }
+      });
+    }).catch(function (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync] Échec de la synchronisation :', e);
+    });
+  }
+
+  function scheduleDrivePush(docId) {
+    if (!hasValidToken()) return;
+    clearTimeout(pushTimers[docId]);
+    pushTimers[docId] = setTimeout(function () {
+      var local = localGet(docId);
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(docId, local).then(function () {
+        setSyncStatus('ok');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive pour "' + docId + '" :', e);
+      });
+    }, PUSH_DEBOUNCE_MS);
+  }
+  window.__driveTouch = function (docId) {
+    try {
+      localStorage.setItem(modifiedKeyFor(docId), String(Date.now()));
+    } catch (e) {}
+    scheduleDrivePush(docId);
+  };
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncAllFromDrive(isFirstConnect);
+  }
+
+  function describeError(e) {
+    if (e && e.message) return e.message;
+    try { return JSON.stringify(e); } catch (e2) { return String(e); }
+  }
+
+  function forceSyncPush() {
+    if (!hasValidToken()) {
+      alert('Pas encore connecté à Drive (ou session expirée). Clique d\'abord sur "Drive : non connecté", puis réessaie "Forcer synchro".');
+      return;
+    }
+    setSyncStatus('sync');
+    var ids = localDocIds();
+    if (ids.length === 0) {
+      setSyncStatus('ok');
+      alert('Rien à synchroniser : aucun Change Control local.');
+      return;
+    }
+    driveListAllFiles().then(function (files) {
+      var report = [];
+      var chain = Promise.resolve();
+      ids.forEach(function (docId) {
+        chain = chain.then(function () {
+          var local = localGet(docId);
+          if (!local) { report.push(docId + ' : rien en local'); return; }
+          var existing = files.find(function (f) { return f.name === driveFileName(docId); });
+          return drivePushRecord(docId, local, existing ? existing.id : null).then(function () {
+            report.push(docId + ' : OK (' + Math.round(local.value.length / 1024) + ' Ko)');
+          }).catch(function (e) {
+            report.push(docId + ' : ERREUR - ' + describeError(e));
+          });
+        });
+      });
+      chain.then(function () {
+        var hasError = report.some(function (line) { return line.indexOf('ERREUR') !== -1; });
+        setSyncStatus(hasError ? 'error' : 'ok');
+        alert('Résultat de la synchro forcée :\n\n' + report.join('\n'));
+      });
+    }).catch(function (e) {
+      setSyncStatus('error');
+      alert('Synchro forcée : impossible de lister les documents sur Drive - ' + describeError(e));
+    });
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setTimeout(initGis, 300);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: onTokenReceived
+    });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', forceSyncPush);
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+    setInterval(function () {
+      if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }, SILENT_REFRESH_MS);
+  }
+  initGis();
+})();
+</script>
+
+<script>
+'use strict';
+
+/* ============ Constants ============ */
+var DOC_TYPE = 'changeControlTracker';
+var TOOL_VERSION = 'v2';
+var STORAGE_PREFIX = 'cc_tracker_doc_';
+var ICON_TRASH = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+var ICON_PAPERCLIP = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>';
+var ICON_FILE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
+
+/* Captured BEFORE any rendering touches the DOM: the pristine, always-blank skeleton.
+   Exporting a filled HTML file never depends on live form state (inputs don't
+   auto-sync their value attribute) - it only re-injects fresh JSON into this template. */
+var PRISTINE_TEMPLATE = document.documentElement.outerHTML;
+
+var appData = null;
+var lastAuthorUsed = '';
+var autosaveTimer = null;
+var currentAttachmentTarget = null;
+var _idCounter = 1;
+
+/* ============ Utilities ============ */
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+function getDateStamp(d) {
+  d = d || new Date();
+  return '' + d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate());
+}
+
+function nowIso() { return new Date().toISOString(); }
+
+function getTodayDateString() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
+function formatDateDisplay(isoOrDateStr) {
+  if (!isoOrDateStr) return '';
+  var d = new Date(isoOrDateStr);
+  if (isNaN(d.getTime())) return isoOrDateStr;
+  return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+}
+
+function formatDateTimeDisplay(isoStr) {
+  if (!isoStr) return '';
+  var d = new Date(isoStr);
+  if (isNaN(d.getTime())) return '';
+  return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+
+function formatTimeDisplay(isoStr) {
+  var d = new Date(isoStr);
+  if (isNaN(d.getTime())) return '';
+  return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+
+function sanitizeFilenamePart(str) {
+  if (!str) return '';
+  var cleaned = str.replace(/[\\\/:\*\?"<>\|]/g, '').replace(/\s+/g, ' ');
+  cleaned = cleaned.replace(/^\s+|\s+$/g, '');
+  if (cleaned.length > 80) cleaned = cleaned.substring(0, 80).replace(/\s+$/g, '');
+  return cleaned;
+}
+
+function generateId() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0;
+    var v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function nextLocalId(prefix) {
+  _idCounter += 1;
+  return prefix + '-' + Date.now().toString(36) + '-' + _idCounter;
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatFileSize(bytes) {
+  if (!bytes && bytes !== 0) return '';
+  if (bytes < 1024) return bytes + ' o';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
+}
+
+function setFieldValue(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.value = val || '';
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = (val === 0 || val) ? val : '-';
+}
+
+/* ============ Data model ============ */
+function createImpactRow() {
+  return { id: nextLocalId('imp'), subject: '', hasImpact: '', description: '', attachments: [] };
+}
+function createActionRow() {
+  return { id: nextLocalId('act'), briefDescription: '', description: '', owner: '', type: '', initialDueDate: '', status: '' };
+}
+
+function createBlankDocument() {
+  var ts = nowIso();
+  return {
+    meta: {
+      docType: DOC_TYPE,
+      schemaVersion: 2,
+      toolVersion: TOOL_VERSION,
+      documentId: generateId(),
+      createdAt: ts,
+      lastModified: ts
+    },
+    config: {
+      originOfChangeOptions: ['Internal', 'External', 'Regulatory requirement', 'Customer request', 'Supplier notification', 'Audit finding', 'CAPA', 'Continuous improvement', 'Deviation'],
+      changeCategoryOptions: ['Equipment', 'Facility', 'Utility', 'Process', 'Analytical method', 'Document / SOP', 'IT system / Software', 'Raw material', 'Packaging material', 'Supplier', 'Organizational'],
+      classificationProposalOptions: ['Minor', 'Major', 'Critical', 'To be determined'],
+      typeOfChangeOptions: ['Temporary', 'Permanent'],
+      typeOfChangeImplementationOptions: ['Immediate', 'Planned', 'Phased / Progressive'],
+      yesNoOptions: ['Yes', 'No', 'N/A'],
+      actionTypeOptions: ['Corrective', 'Preventive', 'Implementation', 'Documentation', 'Training', 'Validation', 'Verification'],
+      actionStatusOptions: ['Open', 'In Progress', 'Completed', 'Cancelled'],
+      subjectsToEvaluateOptions: ['Product Quality', 'Regulatory / Registration', 'Validation status', 'Equipment / Facility', 'SOP / Documentation', 'Personnel Training', 'Safety / Environment (HSE)', 'Supplier / Subcontractor', 'Computerized system / Data integrity', 'Stability', 'Supply chain / Logistics']
+    },
+    general: { title: '' },
+    changeDescription: {
+      briefDescription: '', description: '', originOfChange: '',
+      originDetails: '', changeCategory: '', currentSituation: '',
+      proposalSituation: '', reasonOfChange: '', classificationProposal: '', attachments: [],
+      changeOwner: '', typeOfChange: '', typeOfChangeImplementation: '', expectedDateOfImplementation: ''
+    },
+    applicationScope: {
+      departments: [], equipmentInvolved: '', equipmentDescription: '', productInvolved: '',
+      productDescription: '', itemCodes: '', markets: [], customerInvolved: '', customerName: '',
+      supplierInvolved: '', supplierName: ''
+    },
+    impactAnalysis: [createImpactRow()],
+    actionPlan: [createActionRow()],
+    notes: []
+  };
+}
+
+function normalizeDocument(doc) {
+  var blank = createBlankDocument();
+  doc.meta = doc.meta || blank.meta;
+  if (!doc.meta.documentId) doc.meta.documentId = generateId();
+
+  doc.config = doc.config || {};
+  for (var kc in blank.config) {
+    if (blank.config.hasOwnProperty(kc) && !Array.isArray(doc.config[kc])) {
+      doc.config[kc] = blank.config[kc].slice();
+    }
+  }
+
+  doc.general = doc.general || {};
+  if (typeof doc.general.title !== 'string') doc.general.title = '';
+
+  doc.changeDescription = doc.changeDescription || {};
+  for (var k in blank.changeDescription) {
+    if (blank.changeDescription.hasOwnProperty(k) && doc.changeDescription[k] === undefined) {
+      doc.changeDescription[k] = blank.changeDescription[k];
+    }
+  }
+  if (!Array.isArray(doc.changeDescription.attachments)) doc.changeDescription.attachments = [];
+
+  doc.applicationScope = doc.applicationScope || {};
+  for (var k2 in blank.applicationScope) {
+    if (blank.applicationScope.hasOwnProperty(k2) && doc.applicationScope[k2] === undefined) {
+      doc.applicationScope[k2] = blank.applicationScope[k2];
+    }
+  }
+  if (!Array.isArray(doc.applicationScope.departments)) doc.applicationScope.departments = [];
+  if (!Array.isArray(doc.applicationScope.markets)) doc.applicationScope.markets = [];
+
+  if (!Array.isArray(doc.impactAnalysis)) doc.impactAnalysis = [];
+  doc.impactAnalysis.forEach(function (row) {
+    if (!row.id) row.id = nextLocalId('imp');
+    if (!Array.isArray(row.attachments)) row.attachments = [];
+  });
+
+  if (!Array.isArray(doc.actionPlan)) doc.actionPlan = [];
+  doc.actionPlan.forEach(function (row) {
+    if (!row.id) row.id = nextLocalId('act');
+  });
+
+  if (!Array.isArray(doc.notes)) doc.notes = [];
+  doc.notes.forEach(function (n) {
+    if (!n.id) n.id = nextLocalId('note');
+  });
+
+  return doc;
+}
+
+/* ============ Load / persist ============ */
+function tryLoadFromLocalStorage(docId) {
+  try {
+    var raw = localStorage.getItem(STORAGE_PREFIX + docId);
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    if (parsed && parsed.meta && parsed.meta.docType === DOC_TYPE) return parsed;
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function loadInitialData() {
+  var embedded = null;
+  try {
+    var el = document.getElementById('app-data-store');
+    var raw = el ? el.textContent : '';
+    embedded = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    embedded = null;
+  }
+
+  var isValid = !!(embedded && embedded.meta && embedded.meta.docType === DOC_TYPE);
+
+  if (isValid && embedded.meta.documentId) {
+    var fromStorage = tryLoadFromLocalStorage(embedded.meta.documentId);
+    if (fromStorage) return normalizeDocument(fromStorage);
+    return normalizeDocument(embedded);
+  }
+  if (isValid) return normalizeDocument(embedded);
+  return createBlankDocument();
+}
+
+function scheduleAutosave() {
+  appData.meta.lastModified = nowIso();
+  renderSaveStatus('saving');
+  if (autosaveTimer) clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(function () { persistToLocalStorage(); }, 600);
+}
+
+function persistToLocalStorage() {
+  try {
+    localStorage.setItem(STORAGE_PREFIX + appData.meta.documentId, JSON.stringify(appData));
+    renderSaveStatus('saved');
+    if (typeof window.__driveTouch === 'function') window.__driveTouch(appData.meta.documentId);
+  } catch (e) {
+    renderSaveStatus('error');
+    showToast('Echec de l\'enregistrement local (stockage plein ?). Pensez a exporter en JSON.', 'error');
+  }
+}
+
+function renderSaveStatus(state) {
+  var el = document.getElementById('save-status');
+  if (!el) return;
+  if (state === 'saving') {
+    el.textContent = 'Enregistrement...';
+    el.className = 'save-status saving';
+  } else if (state === 'error') {
+    el.textContent = 'Erreur d\'enregistrement local';
+    el.className = 'save-status error';
+  } else {
+    el.textContent = 'Enregistre a ' + formatTimeDisplay(appData.meta.lastModified);
+    el.className = 'save-status saved';
+  }
+}
+
+/* ============ Render ============ */
+function renderAll() {
+  document.title = (appData.general.title || 'Change Control Tracker') + ' - Change Control Tracker';
+  var headerTitleEl = document.getElementById('header-title');
+  if (headerTitleEl) headerTitleEl.textContent = appData.general.title || 'Sans titre';
+
+  renderGeneral();
+  renderChangeDescription();
+  renderApplicationScope();
+  renderImpactTable();
+  renderActionTable();
+  renderNotes();
+  renderTabBadges();
+  renderSaveStatus('saved');
+}
+
+function renderGeneral() {
+  setFieldValue('f-title', appData.general.title);
+  setText('meta-doc-id', appData.meta.documentId);
+  setText('meta-created', formatDateTimeDisplay(appData.meta.createdAt));
+  setText('meta-modified', formatDateTimeDisplay(appData.meta.lastModified));
+  renderConfigLists();
+}
+
+/* ---- Configurable option lists ---- */
+function populateSelect(selectId, configOptions, currentValue) {
+  var el = document.getElementById(selectId);
+  if (!el) return;
+  var opts = configOptions.slice();
+  if (currentValue && opts.indexOf(currentValue) === -1) opts.push(currentValue);
+  var html = '<option value=""' + (currentValue ? '' : ' selected') + '>-- Select --</option>';
+  for (var i = 0; i < opts.length; i++) {
+    var opt = opts[i];
+    var selected = (opt === currentValue) ? ' selected' : '';
+    html += '<option value="' + escapeHtml(opt) + '"' + selected + '>' + escapeHtml(opt) + '</option>';
+  }
+  el.innerHTML = html;
+}
+
+function handleOriginOptionsChange(newList) { appData.config.originOfChangeOptions = newList; scheduleAutosave(); renderChangeDescription(); }
+function handleCategoryOptionsChange(newList) { appData.config.changeCategoryOptions = newList; scheduleAutosave(); renderChangeDescription(); }
+function handleClassificationOptionsChange(newList) { appData.config.classificationProposalOptions = newList; scheduleAutosave(); renderChangeDescription(); }
+function handleTypeOfChangeOptionsChange(newList) { appData.config.typeOfChangeOptions = newList; scheduleAutosave(); renderChangeDescription(); }
+function handleTypeOfChangeImplOptionsChange(newList) { appData.config.typeOfChangeImplementationOptions = newList; scheduleAutosave(); renderChangeDescription(); }
+function handleYesNoOptionsChange(newList) { appData.config.yesNoOptions = newList; scheduleAutosave(); renderImpactTable(); }
+function handleActionTypeOptionsChange(newList) { appData.config.actionTypeOptions = newList; scheduleAutosave(); renderActionTypeDatalist(); }
+function handleActionStatusOptionsChange(newList) { appData.config.actionStatusOptions = newList; scheduleAutosave(); renderActionTable(); }
+function handleSubjectsOptionsChange(newList) { appData.config.subjectsToEvaluateOptions = newList; scheduleAutosave(); renderImpactTable(); }
+
+function renderConfigLists() {
+  var cfg = appData.config;
+  renderTagInput(document.getElementById('cfg-originOfChange-wrap'), cfg.originOfChangeOptions, handleOriginOptionsChange);
+  renderTagInput(document.getElementById('cfg-changeCategory-wrap'), cfg.changeCategoryOptions, handleCategoryOptionsChange);
+  renderTagInput(document.getElementById('cfg-classificationProposal-wrap'), cfg.classificationProposalOptions, handleClassificationOptionsChange);
+  renderTagInput(document.getElementById('cfg-typeOfChange-wrap'), cfg.typeOfChangeOptions, handleTypeOfChangeOptionsChange);
+  renderTagInput(document.getElementById('cfg-typeOfChangeImplementation-wrap'), cfg.typeOfChangeImplementationOptions, handleTypeOfChangeImplOptionsChange);
+  renderTagInput(document.getElementById('cfg-yesNo-wrap'), cfg.yesNoOptions, handleYesNoOptionsChange);
+  renderTagInput(document.getElementById('cfg-actionType-wrap'), cfg.actionTypeOptions, handleActionTypeOptionsChange);
+  renderTagInput(document.getElementById('cfg-actionStatus-wrap'), cfg.actionStatusOptions, handleActionStatusOptionsChange);
+  renderTagInput(document.getElementById('cfg-subjects-wrap'), cfg.subjectsToEvaluateOptions, handleSubjectsOptionsChange);
+}
+
+function handleCdAttachmentChange(newList) {
+  appData.changeDescription.attachments = newList;
+  scheduleAutosave();
+  renderAttachmentList(document.getElementById('cd-attachments-list'), appData.changeDescription.attachments, handleCdAttachmentChange);
+  renderAttachmentSummary();
+}
+
+function renderChangeDescription() {
+  var cd = appData.changeDescription;
+  var cfg = appData.config;
+  setFieldValue('f-briefDescription', cd.briefDescription);
+  setFieldValue('f-description', cd.description);
+  populateSelect('f-originOfChange', cfg.originOfChangeOptions, cd.originOfChange);
+  setFieldValue('f-originDetails', cd.originDetails);
+  populateSelect('f-changeCategory', cfg.changeCategoryOptions, cd.changeCategory);
+  setFieldValue('f-currentSituation', cd.currentSituation);
+  setFieldValue('f-proposalSituation', cd.proposalSituation);
+  setFieldValue('f-reasonOfChange', cd.reasonOfChange);
+  populateSelect('f-classificationProposal', cfg.classificationProposalOptions, cd.classificationProposal);
+  setFieldValue('f-changeOwner', cd.changeOwner);
+  populateSelect('f-typeOfChange', cfg.typeOfChangeOptions, cd.typeOfChange);
+  populateSelect('f-typeOfChangeImplementation', cfg.typeOfChangeImplementationOptions, cd.typeOfChangeImplementation);
+  setFieldValue('f-expectedDate', cd.expectedDateOfImplementation);
+  renderAttachmentList(document.getElementById('cd-attachments-list'), cd.attachments, handleCdAttachmentChange);
+  renderAttachmentSummary();
+}
+
+function handleDepartmentsChange(newTags) {
+  appData.applicationScope.departments = newTags;
+  scheduleAutosave();
+}
+function handleMarketsChange(newTags) {
+  appData.applicationScope.markets = newTags;
+  scheduleAutosave();
+}
+
+function renderApplicationScope() {
+  var as = appData.applicationScope;
+  renderTagInput(document.getElementById('f-departments-wrap'), as.departments, handleDepartmentsChange);
+  setFieldValue('f-equipmentInvolved', as.equipmentInvolved);
+  setFieldValue('f-equipmentDescription', as.equipmentDescription);
+  setFieldValue('f-productInvolved', as.productInvolved);
+  setFieldValue('f-productDescription', as.productDescription);
+  setFieldValue('f-itemCodes', as.itemCodes);
+  renderTagInput(document.getElementById('f-markets-wrap'), as.markets, handleMarketsChange);
+  setFieldValue('f-customerInvolved', as.customerInvolved);
+  setFieldValue('f-customerName', as.customerName);
+  setFieldValue('f-supplierInvolved', as.supplierInvolved);
+  setFieldValue('f-supplierName', as.supplierName);
+}
+
+/* ---- Tag input component ---- */
+function renderTagInput(container, tags, onChange) {
+  if (!container) return;
+  var html = '';
+  for (var i = 0; i < tags.length; i++) {
+    html += '<span class="tag-chip">' + escapeHtml(tags[i]) + '<button type="button" class="tag-remove" data-index="' + i + '" aria-label="Retirer">&times;</button></span>';
+  }
+  html += '<input type="text" class="tag-input-field" placeholder="Ajouter puis Entree">';
+  container.innerHTML = html;
+
+  var input = container.querySelector('.tag-input-field');
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      var val = input.value.replace(/^\s+|\s+$/g, '');
+      if (val) {
+        var newTags = tags.slice();
+        newTags.push(val);
+        onChange(newTags);
+        renderTagInput(container, newTags, onChange);
+        var newInput = container.querySelector('.tag-input-field');
+        if (newInput) newInput.focus();
+      }
+    } else if (e.key === 'Backspace' && input.value === '' && tags.length > 0) {
+      var newTags2 = tags.slice(0, tags.length - 1);
+      onChange(newTags2);
+      renderTagInput(container, newTags2, onChange);
+    }
+  });
+
+  var removeButtons = container.querySelectorAll('.tag-remove');
+  for (var j = 0; j < removeButtons.length; j++) {
+    removeButtons[j].addEventListener('click', function (e) {
+      var idx = parseInt(e.currentTarget.getAttribute('data-index'), 10);
+      var newTags3 = tags.slice();
+      newTags3.splice(idx, 1);
+      onChange(newTags3);
+      renderTagInput(container, newTags3, onChange);
+    });
+  }
+}
+
+/* ---- Attachment component (shared by Change Description + Impact rows) ---- */
+function findAttachmentById(list, id) {
+  for (var i = 0; i < list.length; i++) { if (list[i].id === id) return list[i]; }
+  return null;
+}
+
+function openAttachment(att) {
+  var a = document.createElement('a');
+  a.href = att.dataUrl;
+  a.download = att.name;
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function renderAttachmentList(container, attachments, onChange) {
+  if (!container) return;
+  if (!attachments || attachments.length === 0) {
+    container.innerHTML = '<p class="empty-hint">Aucune piece jointe.</p>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < attachments.length; i++) {
+    var a = attachments[i];
+    var isImage = a.type && a.type.indexOf('image/') === 0;
+    html += '<div class="attachment-item" data-id="' + a.id + '">';
+    html += isImage
+      ? '<img class="attachment-thumb" src="' + a.dataUrl + '" alt="" />'
+      : '<span class="attachment-icon">' + ICON_FILE + '</span>';
+    html += '<div class="attachment-meta"><span class="attachment-name">' + escapeHtml(a.name) + '</span><span class="attachment-size">' + formatFileSize(a.size) + '</span></div>';
+    html += '<button type="button" class="attachment-remove" data-id="' + a.id + '" aria-label="Supprimer">' + ICON_TRASH + '</button>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+
+  var items = container.querySelectorAll('.attachment-item');
+  for (var k = 0; k < items.length; k++) {
+    items[k].addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.attachment-remove')) return;
+      var id = e.currentTarget.getAttribute('data-id');
+      var att = findAttachmentById(attachments, id);
+      if (att) openAttachment(att);
+    });
+  }
+  var removeBtns = container.querySelectorAll('.attachment-remove');
+  for (var m = 0; m < removeBtns.length; m++) {
+    removeBtns[m].addEventListener('click', function (e) {
+      e.stopPropagation();
+      var id = e.currentTarget.getAttribute('data-id');
+      if (!window.confirm('Supprimer cette piece jointe ?')) return;
+      var newList = attachments.filter(function (x) { return x.id !== id; });
+      onChange(newList);
+    });
+  }
+}
+
+function computeTotalAttachmentSize() {
+  var total = 0;
+  var cd = appData.changeDescription;
+  if (cd.attachments) cd.attachments.forEach(function (a) { total += (a.size || 0); });
+  appData.impactAnalysis.forEach(function (row) {
+    if (row.attachments) row.attachments.forEach(function (a) { total += (a.size || 0); });
+  });
+  return total;
+}
+
+function renderAttachmentSummary() {
+  var el = document.getElementById('attachment-summary');
+  if (!el) return;
+  var total = computeTotalAttachmentSize();
+  el.textContent = 'Total pieces jointes : ' + formatFileSize(total);
+  el.className = total > 4 * 1024 * 1024 ? 'attachment-summary warn' : 'attachment-summary';
+}
+
+function triggerAttachmentUpload(attachments, onChange) {
+  currentAttachmentTarget = { attachments: attachments, onChange: onChange };
+  var input = document.getElementById('hidden-attachment-input');
+  input.value = '';
+  input.click();
+}
+
+function handleAttachmentInputChange(e) {
+  var files = e.target.files;
+  if (!files || !files.length || !currentAttachmentTarget) return;
+  var remaining = files.length;
+  var newAttachments = currentAttachmentTarget.attachments.slice();
+  var target = currentAttachmentTarget;
+  var oversizeWarned = false;
+
+  for (var i = 0; i < files.length; i++) {
+    (function (file) {
+      if (file.size > 5 * 1024 * 1024 && !oversizeWarned) {
+        oversizeWarned = true;
+        showToast('Fichier volumineux : le stockage local est limite (quelques Mo au total).', 'warning');
+      }
+      var reader = new FileReader();
+      reader.onload = function (evt) {
+        newAttachments.push({
+          id: nextLocalId('att'), name: file.name, type: file.type || 'application/octet-stream',
+          size: file.size, dataUrl: evt.target.result, addedAt: nowIso()
+        });
+        remaining -= 1;
+        if (remaining === 0) target.onChange(newAttachments);
+      };
+      reader.onerror = function () {
+        remaining -= 1;
+        showToast('Erreur de lecture du fichier ' + file.name, 'error');
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+}
+
+/* ---- Impact Analysis table ---- */
+function buildSelectHtml(fieldName, currentValue, options, extraClass) {
+  var opts = options.slice();
+  if (currentValue && opts.indexOf(currentValue) === -1) opts.push(currentValue);
+  var html = '<select class="' + extraClass + '" data-field="' + fieldName + '">';
+  for (var i = 0; i < opts.length; i++) {
+    var opt = opts[i];
+    var label = opt === '' ? '-- Select --' : opt;
+    var selected = (opt === currentValue) ? ' selected' : '';
+    html += '<option value="' + escapeHtml(opt) + '"' + selected + '>' + escapeHtml(label) + '</option>';
+  }
+  html += '</select>';
+  return html;
+}
+
+function findImpactRow(id) {
+  for (var i = 0; i < appData.impactAnalysis.length; i++) { if (appData.impactAnalysis[i].id === id) return appData.impactAnalysis[i]; }
+  return null;
+}
+
+function buildImpactRowHtml(row, index) {
+  var html = '<tr data-row-id="' + row.id + '">';
+  html += '<td class="col-num">' + (index + 1) + '</td>';
+  html += '<td>' + buildSelectHtml('subject', row.subject, [''].concat(appData.config.subjectsToEvaluateOptions), 'cell-select') + '</td>';
+  html += '<td>' + buildSelectHtml('hasImpact', row.hasImpact, [''].concat(appData.config.yesNoOptions), 'cell-select status-pill') + '</td>';
+  html += '<td><textarea class="cell-textarea" data-field="description" rows="2" placeholder="Description de l\'impact">' + escapeHtml(row.description) + '</textarea></td>';
+  html += '<td class="col-attach"><button type="button" class="btn-attach-mini" data-action="add-attachment" title="Ajouter un fichier">' + ICON_PAPERCLIP + '</button><div class="mini-attachment-list" data-attach-list></div></td>';
+  html += '<td class="col-actions"><button type="button" class="btn-icon-danger" data-action="delete-row" title="Supprimer la ligne">' + ICON_TRASH + '</button></td>';
+  html += '</tr>';
+  return html;
+}
+
+function renderImpactTable() {
+  var tbody = document.getElementById('impact-table-body');
+  if (!tbody) return;
+  var rows = appData.impactAnalysis;
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucun sujet evalue. Cliquez sur "Ajouter une ligne" pour commencer.</td></tr>';
+  } else {
+    var html = '';
+    for (var i = 0; i < rows.length; i++) html += buildImpactRowHtml(rows[i], i);
+    tbody.innerHTML = html;
+  }
+  bindImpactRowEvents();
+  renderTabBadges();
+}
+
+function bindImpactRowEvents() {
+  var tbody = document.getElementById('impact-table-body');
+  if (!tbody) return;
+  var rows = tbody.querySelectorAll('tr[data-row-id]');
+  for (var i = 0; i < rows.length; i++) {
+    (function (tr) {
+      var rowId = tr.getAttribute('data-row-id');
+      var rowData = findImpactRow(rowId);
+      if (!rowData) return;
+
+      var inputs = tr.querySelectorAll('[data-field]');
+      for (var j = 0; j < inputs.length; j++) {
+        (function (el) {
+          var field = el.getAttribute('data-field');
+          var eventName = (el.tagName.toLowerCase() === 'select') ? 'change' : 'input';
+          el.addEventListener(eventName, function () {
+            rowData[field] = el.value;
+            scheduleAutosave();
+            if (field === 'hasImpact') applyImpactBadgeStyle(el);
+          });
+          if (field === 'hasImpact') applyImpactBadgeStyle(el);
+        })(inputs[j]);
+      }
+
+      var attachList = tr.querySelector('[data-attach-list]');
+      function onAttachChange(newList) {
+        rowData.attachments = newList;
+        scheduleAutosave();
+        renderAttachmentList(attachList, rowData.attachments, onAttachChange);
+        renderAttachmentSummary();
+      }
+      renderAttachmentList(attachList, rowData.attachments, onAttachChange);
+
+      var addAttBtn = tr.querySelector('[data-action="add-attachment"]');
+      if (addAttBtn) {
+        addAttBtn.addEventListener('click', function () {
+          triggerAttachmentUpload(rowData.attachments, onAttachChange);
+        });
+      }
+
+      var deleteBtn = tr.querySelector('[data-action="delete-row"]');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', function () {
+          if (!window.confirm('Supprimer cette ligne ?')) return;
+          appData.impactAnalysis = appData.impactAnalysis.filter(function (r) { return r.id !== rowId; });
+          scheduleAutosave();
+          renderImpactTable();
+        });
+      }
+    })(rows[i]);
+  }
+}
+
+function applyImpactBadgeStyle(selectEl) {
+  selectEl.classList.remove('badge-yes', 'badge-no', 'badge-na');
+  if (selectEl.value === 'Yes') selectEl.classList.add('badge-yes');
+  else if (selectEl.value === 'No') selectEl.classList.add('badge-no');
+  else if (selectEl.value === 'N/A') selectEl.classList.add('badge-na');
+}
+
+/* ---- Action Plan table ---- */
+function findActionRow(id) {
+  for (var i = 0; i < appData.actionPlan.length; i++) { if (appData.actionPlan[i].id === id) return appData.actionPlan[i]; }
+  return null;
+}
+
+function buildActionRowHtml(row, index) {
+  var html = '<tr data-row-id="' + row.id + '">';
+  html += '<td class="col-num">' + (index + 1) + '</td>';
+  html += '<td><input type="text" class="cell-input" data-field="briefDescription" value="' + escapeHtml(row.briefDescription) + '" placeholder="Titre de l\'action" /></td>';
+  html += '<td><textarea class="cell-textarea" data-field="description" rows="2" placeholder="Description">' + escapeHtml(row.description) + '</textarea></td>';
+  html += '<td><input type="text" class="cell-input" data-field="owner" value="' + escapeHtml(row.owner) + '" placeholder="Responsable" /></td>';
+  html += '<td><input type="text" class="cell-input" data-field="type" list="action-type-options" value="' + escapeHtml(row.type) + '" placeholder="Type" /></td>';
+  html += '<td><input type="date" class="cell-input" data-field="initialDueDate" value="' + escapeHtml(row.initialDueDate) + '" /></td>';
+  html += '<td>' + buildSelectHtml('status', row.status, [''].concat(appData.config.actionStatusOptions), 'cell-select status-pill') + '</td>';
+  html += '<td class="col-actions"><button type="button" class="btn-icon-danger" data-action="delete-row" title="Supprimer la ligne">' + ICON_TRASH + '</button></td>';
+  html += '</tr>';
+  return html;
+}
+
+function renderActionTypeDatalist() {
+  var dl = document.getElementById('action-type-options');
+  if (!dl) return;
+  var html = '';
+  appData.config.actionTypeOptions.forEach(function (opt) {
+    html += '<option value="' + escapeHtml(opt) + '"></option>';
+  });
+  dl.innerHTML = html;
+}
+
+function renderActionTable() {
+  var tbody = document.getElementById('action-table-body');
+  if (!tbody) return;
+  var rows = appData.actionPlan;
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Aucune action. Cliquez sur "Ajouter une ligne" pour commencer.</td></tr>';
+  } else {
+    var html = '';
+    for (var i = 0; i < rows.length; i++) html += buildActionRowHtml(rows[i], i);
+    tbody.innerHTML = html;
+  }
+  renderActionTypeDatalist();
+  bindActionRowEvents();
+  renderTabBadges();
+}
+
+function bindActionRowEvents() {
+  var tbody = document.getElementById('action-table-body');
+  if (!tbody) return;
+  var rows = tbody.querySelectorAll('tr[data-row-id]');
+  for (var i = 0; i < rows.length; i++) {
+    (function (tr) {
+      var rowId = tr.getAttribute('data-row-id');
+      var rowData = findActionRow(rowId);
+      if (!rowData) return;
+      var inputs = tr.querySelectorAll('[data-field]');
+      for (var j = 0; j < inputs.length; j++) {
+        (function (el) {
+          var field = el.getAttribute('data-field');
+          var eventName = (el.tagName.toLowerCase() === 'select') ? 'change' : 'input';
+          el.addEventListener(eventName, function () {
+            rowData[field] = el.value;
+            scheduleAutosave();
+            if (field === 'status') applyStatusBadgeStyle(el);
+          });
+          if (field === 'status') applyStatusBadgeStyle(el);
+        })(inputs[j]);
+      }
+      var deleteBtn = tr.querySelector('[data-action="delete-row"]');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', function () {
+          if (!window.confirm('Supprimer cette action ?')) return;
+          appData.actionPlan = appData.actionPlan.filter(function (r) { return r.id !== rowId; });
+          scheduleAutosave();
+          renderActionTable();
+        });
+      }
+    })(rows[i]);
+  }
+}
+
+function applyStatusBadgeStyle(selectEl) {
+  selectEl.classList.remove('status-open', 'status-progress', 'status-completed', 'status-cancelled');
+  if (selectEl.value === 'Open') selectEl.classList.add('status-open');
+  else if (selectEl.value === 'In Progress') selectEl.classList.add('status-progress');
+  else if (selectEl.value === 'Completed') selectEl.classList.add('status-completed');
+  else if (selectEl.value === 'Cancelled') selectEl.classList.add('status-cancelled');
+}
+
+function handleAddImpactRow() {
+  appData.impactAnalysis.push(createImpactRow());
+  scheduleAutosave();
+  renderImpactTable();
+}
+function handleAddActionRow() {
+  appData.actionPlan.push(createActionRow());
+  scheduleAutosave();
+  renderActionTable();
+}
+
+/* ---- Notes ---- */
+function buildNoteCardHtml(note) {
+  return '<div class="note-card" data-id="' + note.id + '">' +
+    '<div class="note-card-header">' +
+    '<span class="note-date">' + formatDateDisplay(note.date) + '</span>' +
+    '<span class="note-author">' + escapeHtml(note.author || 'N/A') + '</span>' +
+    '<button type="button" class="btn-icon-danger note-delete" data-id="' + note.id + '" title="Supprimer">' + ICON_TRASH + '</button>' +
+    '</div>' +
+    '<p class="note-text">' + escapeHtml(note.text).replace(/\n/g, '<br>') + '</p>' +
+    '</div>';
+}
+
+function bindNoteEvents() {
+  var deleteButtons = document.querySelectorAll('.note-delete');
+  for (var i = 0; i < deleteButtons.length; i++) {
+    deleteButtons[i].addEventListener('click', function (e) {
+      var id = e.currentTarget.getAttribute('data-id');
+      if (!window.confirm('Supprimer cette note ?')) return;
+      appData.notes = appData.notes.filter(function (n) { return n.id !== id; });
+      scheduleAutosave();
+      renderNotes();
+    });
+  }
+}
+
+function renderNotes() {
+  var list = document.getElementById('notes-list');
+  if (!list) return;
+  var notes = appData.notes.slice().sort(function (a, b) {
+    if (a.date === b.date) return 0;
+    return a.date < b.date ? 1 : -1;
+  });
+  if (notes.length === 0) {
+    list.innerHTML = '<p class="empty-hint">Aucune note pour le moment.</p>';
+  } else {
+    var html = '';
+    for (var i = 0; i < notes.length; i++) html += buildNoteCardHtml(notes[i]);
+    list.innerHTML = html;
+  }
+  bindNoteEvents();
+  setFieldValue('f-note-date', getTodayDateString());
+  setFieldValue('f-note-author', lastAuthorUsed);
+  renderTabBadges();
+}
+
+function handleAddNote() {
+  var dateVal = document.getElementById('f-note-date').value;
+  var authorVal = document.getElementById('f-note-author').value.replace(/^\s+|\s+$/g, '');
+  var textVal = document.getElementById('f-note-text').value.replace(/^\s+|\s+$/g, '');
+  if (!textVal) {
+    showToast('Merci de saisir un texte de note.', 'warning');
+    return;
+  }
+  appData.notes.push({ id: nextLocalId('note'), date: dateVal || getTodayDateString(), author: authorVal, text: textVal });
+  lastAuthorUsed = authorVal;
+  scheduleAutosave();
+  renderNotes();
+  showToast('Note ajoutee.', 'success');
+}
+
+function renderTabBadges() {
+  setText('badge-impact', String(appData.impactAnalysis.length));
+  setText('badge-action', String(appData.actionPlan.length));
+  setText('badge-notes', String(appData.notes.length));
+}
+
+/* ============ Tab navigation ============ */
+function switchTab(tabId) {
+  var buttons = document.querySelectorAll('.tab-btn');
+  for (var i = 0; i < buttons.length; i++) {
+    if (buttons[i].getAttribute('data-tab') === tabId) buttons[i].classList.add('active');
+    else buttons[i].classList.remove('active');
+  }
+  var panels = document.querySelectorAll('.tab-panel');
+  for (var j = 0; j < panels.length; j++) {
+    if (panels[j].id === 'panel-' + tabId) panels[j].classList.add('active');
+    else panels[j].classList.remove('active');
+  }
+}
+
+function initTabNav() {
+  var buttons = document.querySelectorAll('.tab-btn');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', function (e) {
+      switchTab(e.currentTarget.getAttribute('data-tab'));
+    });
+  }
+}
+
+/* ============ Static field binding ============ */
+function bindTextField(elId, targetObj, key) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var eventName = (el.tagName.toLowerCase() === 'select') ? 'change' : 'input';
+  el.addEventListener(eventName, function () {
+    targetObj[key] = el.value;
+    scheduleAutosave();
+  });
+}
+
+function handleTitleInput() {
+  var el = document.getElementById('f-title');
+  appData.general.title = el.value;
+  scheduleAutosave();
+  var headerTitleEl = document.getElementById('header-title');
+  if (headerTitleEl) headerTitleEl.textContent = appData.general.title || 'Sans titre';
+  document.title = (appData.general.title || 'Change Control Tracker') + ' - Change Control Tracker';
+}
+
+function bindStaticFields() {
+  document.getElementById('f-title').addEventListener('input', handleTitleInput);
+
+  var cd = appData.changeDescription;
+  bindTextField('f-briefDescription', cd, 'briefDescription');
+  bindTextField('f-description', cd, 'description');
+  bindTextField('f-originOfChange', cd, 'originOfChange');
+  bindTextField('f-originDetails', cd, 'originDetails');
+  bindTextField('f-changeCategory', cd, 'changeCategory');
+  bindTextField('f-currentSituation', cd, 'currentSituation');
+  bindTextField('f-proposalSituation', cd, 'proposalSituation');
+  bindTextField('f-reasonOfChange', cd, 'reasonOfChange');
+  bindTextField('f-classificationProposal', cd, 'classificationProposal');
+  bindTextField('f-changeOwner', cd, 'changeOwner');
+  bindTextField('f-typeOfChange', cd, 'typeOfChange');
+  bindTextField('f-typeOfChangeImplementation', cd, 'typeOfChangeImplementation');
+  bindTextField('f-expectedDate', cd, 'expectedDateOfImplementation');
+
+  document.getElementById('btn-add-cd-attachment').addEventListener('click', function () {
+    triggerAttachmentUpload(appData.changeDescription.attachments, handleCdAttachmentChange);
+  });
+
+  var as = appData.applicationScope;
+  bindTextField('f-itemCodes', as, 'itemCodes');
+  bindTextField('f-equipmentInvolved', as, 'equipmentInvolved');
+  bindTextField('f-equipmentDescription', as, 'equipmentDescription');
+  bindTextField('f-productInvolved', as, 'productInvolved');
+  bindTextField('f-productDescription', as, 'productDescription');
+  bindTextField('f-customerInvolved', as, 'customerInvolved');
+  bindTextField('f-customerName', as, 'customerName');
+  bindTextField('f-supplierInvolved', as, 'supplierInvolved');
+  bindTextField('f-supplierName', as, 'supplierName');
+}
+
+/* ============ Export / Import / Print / New ============ */
+function buildHtmlFilename() {
+  var title = sanitizeFilenamePart(appData.general.title) || 'Sans titre';
+  return getDateStamp() + '_' + title + '_' + TOOL_VERSION + '.html';
+}
+function buildJsonFilename() {
+  var title = sanitizeFilenamePart(appData.general.title) || 'Sans titre';
+  return getDateStamp() + '_JSON_' + title + '_' + TOOL_VERSION + '.json';
+}
+
+function buildExportHtml() {
+  var dataJson = JSON.stringify(appData);
+  var safeJson = dataJson.replace(/</g, '\\u003c');
+  var exportHtml = PRISTINE_TEMPLATE.replace(
+    /<script id="app-data-store"[^>]*>[\s\S]*?<\/script>/,
+    '<script id="app-data-store" type="application/json">' + safeJson + '</' + 'script>'
+  );
+  var titleForTag = escapeHtml(appData.general.title || 'Change Control Tracker');
+  exportHtml = exportHtml.replace(/<title[^>]*>[\s\S]*?<\/title>/, '<title>' + titleForTag + ' - Change Control Tracker</title>');
+  return exportHtml;
+}
+
+function downloadBlob(content, filename, mimeType) {
+  var blob = new Blob([content], { type: mimeType });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+function handleDownloadHtml() {
+  if (!appData.general.title) showToast('Pensez a renseigner un titre (onglet General) avant export.', 'warning');
+  persistToLocalStorage();
+  downloadBlob(buildExportHtml(), buildHtmlFilename(), 'text/html');
+  showToast('Fichier HTML telecharge.', 'success');
+}
+
+function handleExportJson() {
+  if (!appData.general.title) showToast('Pensez a renseigner un titre (onglet General) avant export.', 'warning');
+  downloadBlob(JSON.stringify(appData, null, 2), buildJsonFilename(), 'application/json');
+  showToast('Fichier JSON exporte.', 'success');
+}
+
+function handleImportJsonClick() {
+  var input = document.getElementById('hidden-file-input');
+  input.value = '';
+  input.click();
+}
+
+function handleJsonFileInputChange(e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function (evt) {
+    var parsed;
+    try {
+      parsed = JSON.parse(evt.target.result);
+    } catch (err) {
+      showToast('Fichier JSON invalide.', 'error');
+      return;
+    }
+    if (!parsed || !parsed.meta || parsed.meta.docType !== DOC_TYPE) {
+      showToast('Ce fichier ne semble pas etre un export du Change Control Tracker.', 'error');
+      return;
+    }
+    if (!window.confirm('Importer ce fichier remplacera les donnees actuellement affichees. Continuer ?')) return;
+    appData = normalizeDocument(parsed);
+    renderAll();
+    persistToLocalStorage();
+    showToast('Donnees importees avec succes.', 'success');
+  };
+  reader.onerror = function () { showToast('Erreur de lecture du fichier.', 'error'); };
+  reader.readAsText(file);
+}
+
+function handleNewDocument() {
+  if (!window.confirm('Creer un nouveau Change Control ? Les donnees actuelles non exportees seront perdues.')) return;
+  appData = createBlankDocument();
+  renderAll();
+  persistToLocalStorage();
+  switchTab('general');
+  showToast('Nouveau Change Control cree.', 'success');
+}
+
+function handlePrint() {
+  document.body.classList.add('printing-all');
+  window.print();
+}
+
+/* ============ Toast ============ */
+function showToast(message, type) {
+  var container = document.getElementById('toast-container');
+  if (!container) return;
+  var toast = document.createElement('div');
+  toast.className = 'toast toast-' + (type || 'info');
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(function () {
+    toast.classList.add('toast-hide');
+    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+  }, 3500);
+}
+
+/* ============ Init ============ */
+function init() {
+  appData = loadInitialData();
+  bindStaticFields();
+  initTabNav();
+
+  document.getElementById('btn-download-html').addEventListener('click', handleDownloadHtml);
+  document.getElementById('btn-export-json').addEventListener('click', handleExportJson);
+  document.getElementById('btn-import').addEventListener('click', handleImportJsonClick);
+  document.getElementById('btn-new').addEventListener('click', handleNewDocument);
+  document.getElementById('btn-print').addEventListener('click', handlePrint);
+  document.getElementById('btn-add-impact-row').addEventListener('click', handleAddImpactRow);
+  document.getElementById('btn-add-action-row').addEventListener('click', handleAddActionRow);
+  document.getElementById('btn-add-note').addEventListener('click', handleAddNote);
+  document.getElementById('hidden-file-input').addEventListener('change', handleJsonFileInputChange);
+  document.getElementById('hidden-attachment-input').addEventListener('change', handleAttachmentInputChange);
+  window.addEventListener('afterprint', function () { document.body.classList.remove('printing-all'); });
+
+  renderAll();
+}
+
+init();
+</script>
+</body>
+</html>

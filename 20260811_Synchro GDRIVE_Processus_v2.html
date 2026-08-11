@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAS À PAS — Suivi de procédures</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#12161A;
+    --bg-alt:#171D22;
+    --panel:#1C2329;
+    --card:#232B32;
+    --card-hover:#28313A;
+    --border:#313C44;
+    --border-soft:#242C33;
+    --text:#EAE6DC;
+    --text-dim:#9AA5AC;
+    --text-faint:#5E6971;
+    --accent:#5698B4;
+    --accent-dim:#2E4A57;
+    --accent-text:#8FC4DC;
+    --ok:#49A876;
+    --ok-dim:#1E3F2E;
+    --ok-text:#7ED4A6;
+    --nok:#C25A3E;
+    --nok-dim:#4A2419;
+    --nok-text:#E68F72;
+    --warn:#D6A23A;
+    --warn-dim:#453210;
+    --warn-text:#EFC46E;
+    --font-mono:'JetBrains Mono','SF Mono','Consolas','Menlo',monospace;
+    --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --radius:6px;
+  }
+  :root[data-theme="light"]{
+    --bg:#F2F0E8;
+    --bg-alt:#FFFFFF;
+    --panel:#FFFFFF;
+    --card:#F8F6EF;
+    --card-hover:#EFEBE0;
+    --border:#DAD5C8;
+    --border-soft:#E7E3D7;
+    --text:#20242A;
+    --text-dim:#565F68;
+    --text-faint:#8B929A;
+    --accent:#3D7690;
+    --accent-dim:#D9E9F0;
+    --accent-text:#1E5A73;
+    --ok:#2E8558;
+    --ok-dim:#DDF0E3;
+    --ok-text:#1E6B41;
+    --nok:#B14A30;
+    --nok-dim:#F7E2DA;
+    --nok-text:#8E3A22;
+    --warn:#B9862A;
+    --warn-dim:#F7EDD7;
+    --warn-text:#8C651C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    transition:background 0.15s ease,color 0.15s ease;
+  }
+  ::selection{background:var(--accent-dim);color:var(--text);}
+
+  /* ---------- layout shell ---------- */
+  #app{max-width:980px;margin:0 auto;padding:0 20px 60px;}
+  header.top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 0 16px;border-bottom:1px solid var(--border);
+    margin-bottom:0;flex-wrap:wrap;gap:12px;
+  }
+  .brand{display:flex;align-items:baseline;gap:10px;}
+  .brand .mark{
+    font-family:var(--font-mono);font-weight:700;font-size:20px;letter-spacing:2px;
+    color:var(--text);
+  }
+  .brand .mark span{color:var(--accent-text);}
+  .brand .sub{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-faint);}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  nav.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px;}
+  nav.tabs button{
+    background:none;border:none;color:var(--text-faint);
+    font-family:var(--font-mono);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
+    padding:14px 18px 12px;cursor:pointer;border-bottom:2px solid transparent;
+    display:flex;align-items:center;gap:8px;
+  }
+  nav.tabs button .n{
+    font-size:10px;background:var(--card);color:var(--text-dim);border-radius:10px;
+    padding:1px 7px;
+  }
+  nav.tabs button:hover{color:var(--text-dim);}
+  nav.tabs button.active{color:var(--text);border-bottom-color:var(--accent);}
+  nav.tabs button.active .n{background:var(--accent-dim);color:var(--accent-text);}
+
+  section.view{display:none;}
+  section.view.active{display:block;}
+
+  /* ---------- buttons ---------- */
+  button{font-family:var(--font-body);}
+  .btn{
+    background:var(--card);border:1px solid var(--border);color:var(--text);
+    padding:9px 16px;border-radius:var(--radius);font-size:13px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+  }
+  .btn:hover{background:var(--card-hover);border-color:var(--text-faint);}
+  .btn:active{transform:scale(0.98);}
+  .btn.primary{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-text);}
+  .btn.primary:hover{background:var(--accent);color:#0E1518;}
+  .btn.ok{background:var(--ok-dim);border-color:var(--ok);color:var(--ok-text);}
+  .btn.ok:hover{background:var(--ok);color:#0E1518;}
+  .btn.nok{background:var(--nok-dim);border-color:var(--nok);color:var(--nok-text);}
+  .btn.nok:hover{background:var(--nok);color:#0E1518;}
+  .btn.ghost{background:transparent;border-color:var(--border);color:var(--text-dim);}
+  .btn.ghost:hover{background:var(--card);color:var(--text);}
+  .btn.danger-ghost{background:transparent;border-color:var(--border);color:var(--nok-text);}
+  .btn.danger-ghost:hover{background:var(--nok-dim);border-color:var(--nok);}
+  .btn.small{padding:5px 10px;font-size:12px;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn.block{width:100%;justify-content:center;}
+  .icon-btn{
+    background:none;border:1px solid var(--border);color:var(--text-faint);
+    width:30px;height:30px;border-radius:var(--radius);cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px;
+  }
+  .icon-btn:hover{color:var(--text);border-color:var(--text-faint);}
+  .drive-btn{display:inline-flex;align-items:center;gap:7px;}
+  .drive-dot{
+    width:8px;height:8px;border-radius:50%;flex-shrink:0;
+    background:var(--text-faint);transition:background .2s ease;
+  }
+  .drive-dot.is-connected{background:var(--ok);}
+  .drive-dot.is-syncing{background:var(--warn);animation:drive-pulse 1s ease-in-out infinite;}
+  .drive-dot.is-error{background:var(--nok);}
+  @keyframes drive-pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+
+  /* ---------- form basics ---------- */
+  label.field-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);margin:0 0 6px;}
+  input[type=text],input[type=number],textarea,select{
+    width:100%;background:var(--bg-alt);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;
+  }
+  textarea{resize:vertical;min-height:70px;}
+  input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{
+    outline:none;border-color:var(--accent);
+  }
+  .field{margin-bottom:16px;}
+  .check-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim);margin-bottom:10px;}
+  .check-row input{width:auto;}
+
+  /* ---------- cards / panels ---------- */
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:12px;}
+  .empty{
+    border:1px dashed var(--border);border-radius:10px;padding:40px 20px;text-align:center;
+    color:var(--text-faint);
+  }
+  .empty .t{color:var(--text-dim);font-size:15px;margin-bottom:6px;}
+
+  /* ---------- process list ---------- */
+  .proc-card{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;}
+  .proc-card h3{margin:0 0 4px;font-size:16px;font-weight:600;}
+  .proc-card p{margin:0 0 8px;color:var(--text-dim);font-size:13px;}
+  .proc-meta{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);letter-spacing:0.5px;}
+  .proc-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+
+  /* ---------- step editor rows ---------- */
+  .step-row{
+    display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;
+  }
+  .step-row .idx{
+    font-family:var(--font-mono);font-weight:700;color:var(--accent-text);font-size:13px;
+    background:var(--accent-dim);border-radius:4px;padding:3px 8px;flex-shrink:0;margin-top:2px;
+  }
+  .step-row .body{flex:1;min-width:0;}
+  .step-row .body h4{margin:0 0 3px;font-size:14px;}
+  .step-row .body p{margin:0;color:var(--text-dim);font-size:12.5px;}
+  .step-row .flags{display:flex;gap:6px;margin-top:6px;}
+  .flag{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--warn-text);background:var(--warn-dim);padding:2px 6px;border-radius:3px;}
+  .step-row .ops{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+
+  /* ---------- execution rail + runner ---------- */
+  .runner{display:flex;gap:24px;align-items:flex-start;}
+  .rail{width:210px;flex-shrink:0;position:sticky;top:20px;}
+  .rail-title{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);margin-bottom:14px;}
+  .rail-item{display:flex;gap:10px;position:relative;padding-bottom:22px;}
+  .rail-item:last-child{padding-bottom:0;}
+  .rail-line{
+    position:absolute;left:11px;top:24px;bottom:0;width:1px;background:var(--border);
+  }
+  .rail-item:last-child .rail-line{display:none;}
+  .rail-node{
+    width:23px;height:23px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-size:10px;font-weight:700;z-index:1;
+    background:var(--bg-alt);border:1px solid var(--border);color:var(--text-faint);
+  }
+  .rail-item.done .rail-node{background:var(--ok-dim);border-color:var(--ok);color:var(--ok-text);}
+  .rail-item.nok .rail-node{background:var(--nok-dim);border-color:var(--nok);color:var(--nok-text);}
+  .rail-item.current .rail-node{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-text);box-shadow:0 0 0 3px rgba(86,152,180,0.15);}
+  .rail-label{font-size:12.5px;color:var(--text-faint);padding-top:2px;}
+  .rail-item.current .rail-label{color:var(--text);}
+  .rail-item.done .rail-label{color:var(--text-dim);}
+
+  .runner-main{flex:1;min-width:0;}
+  .step-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;}
+  .step-card .eyebrow{
+    font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--accent-text);margin-bottom:8px;
+  }
+  .step-card h2{margin:0 0 14px;font-size:22px;font-weight:600;}
+  .step-card .desc{color:var(--text-dim);font-size:14.5px;line-height:1.7;margin-bottom:22px;white-space:pre-wrap;}
+  .divider{border-top:1px solid var(--border-soft);margin:22px 0;}
+
+  .help-box{
+    background:var(--warn-dim);border:1px solid var(--warn);border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:20px;
+  }
+  .help-box .eyebrow{color:var(--warn-text);}
+  .help-box p{margin:0;color:var(--text);font-size:13.5px;line-height:1.7;white-space:pre-wrap;}
+
+  .attempts-log{margin-bottom:20px;}
+  .attempts-log .entry{
+    display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border-soft);
+    font-size:12.5px;
+  }
+  .attempts-log .entry:last-child{border-bottom:none;}
+  .tag{
+    font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.5px;
+    padding:2px 7px;border-radius:3px;flex-shrink:0;margin-top:1px;
+  }
+  .tag.ok{background:var(--ok-dim);color:var(--ok-text);}
+  .tag.nok{background:var(--nok-dim);color:var(--nok-text);}
+  .entry-body{flex:1;color:var(--text-dim);}
+  .entry-time{color:var(--text-faint);font-family:var(--font-mono);font-size:11px;}
+
+  .runner-actions{display:flex;gap:10px;}
+  .runner-actions .btn{flex:1;padding:14px;font-size:14px;font-weight:600;}
+
+  .photo-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .photo-thumbs img{width:64px;height:64px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer;}
+
+  /* ---------- process picker ---------- */
+  .picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+  .picker-card{
+    background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;text-align:left;
+  }
+  .picker-card:hover{border-color:var(--accent);background:var(--card-hover);}
+  .picker-card h4{margin:0 0 6px;font-size:14.5px;}
+  .picker-card span{font-size:12px;color:var(--text-faint);font-family:var(--font-mono);}
+
+  /* ---------- history ---------- */
+  .hist-row{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:12px 16px;margin-bottom:8px;cursor:pointer;
+  }
+  .hist-row:hover{border-color:var(--text-faint);}
+  .hist-row .left h4{margin:0 0 3px;font-size:14px;}
+  .hist-row .left span{font-size:11.5px;color:var(--text-faint);font-family:var(--font-mono);}
+  .status-pill{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;padding:3px 9px;border-radius:20px;font-weight:600;}
+  .status-pill.en_cours{background:var(--accent-dim);color:var(--accent-text);}
+  .status-pill.termine{background:var(--ok-dim);color:var(--ok-text);}
+  .status-pill.abandonne{background:var(--nok-dim);color:var(--nok-text);}
+
+  /* ---------- synthesis / detail ---------- */
+  .synth-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .synth-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;text-align:center;min-width:90px;}
+  .stat .v{font-family:var(--font-mono);font-size:20px;font-weight:700;}
+  .stat .l{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;}
+  table.synth-table{width:100%;border-collapse:collapse;font-size:13px;}
+  table.synth-table th{
+    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);
+    padding:8px 10px;border-bottom:1px solid var(--border);
+  }
+  table.synth-table td{padding:10px;border-bottom:1px solid var(--border-soft);vertical-align:top;}
+  table.synth-table tr:last-child td{border-bottom:none;}
+
+  /* ---------- modal ---------- */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(8,10,12,0.72);z-index:100;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-overlay.active{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;padding:24px;}
+  .modal h3{margin:0 0 18px;font-size:17px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+  .img-modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(8,10,12,0.9);z-index:200;
+    align-items:center;justify-content:center;padding:30px;
+  }
+  .img-modal-overlay.active{display:flex;}
+  .img-modal-overlay img{max-width:100%;max-height:100%;border-radius:6px;}
+
+  .toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:300;}
+  .toast{
+    background:var(--card);border:1px solid var(--border);color:var(--text);padding:11px 16px;
+    border-radius:var(--radius);font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,0.3);
+    animation:toastin 0.2s ease;
+  }
+  .toast.ok{border-color:var(--ok);}
+  .toast.err{border-color:var(--nok);}
+  @keyframes toastin{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .file-drop{
+    border:1px dashed var(--border);border-radius:var(--radius);padding:14px;text-align:center;
+    color:var(--text-faint);font-size:12.5px;cursor:pointer;
+  }
+  .file-drop:hover{border-color:var(--accent);color:var(--text-dim);}
+
+  @media print{
+    nav.tabs,header.top,.no-print{display:none !important;}
+    body{background:#fff;color:#111;}
+    .panel,.card,.step-card{background:#fff;border-color:#ccc;}
+    .stat,.hist-row{background:#fff;}
+    #app{max-width:100%;}
+  }
+  @media (max-width:760px){
+    .runner{flex-direction:column;}
+    .rail{position:static;width:100%;}
+    .rail-item{padding-bottom:14px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <header class="top">
+    <div class="brand">
+      <div class="mark">PAS<span>·</span>À<span>·</span>PAS</div>
+      <div class="sub">Suivi de procédures</div>
+    </div>
+    <div class="top-actions no-print">
+      <button class="icon-btn" id="btnThemeToggle" title="Changer de thème">&#9789;</button>
+      <button class="btn ghost small drive-btn" id="btn-drive-connect" title="Connecter Google Drive pour synchroniser vos procédures">
+        <span id="drive-dot" class="drive-dot"></span> <span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button class="btn ghost small" id="btn-drive-force" title="Forcer l'envoi vers Drive maintenant">Forcer synchro</button>
+      <button class="btn ghost small" id="btnExport">Exporter JSON</button>
+      <button class="btn ghost small" id="btnImportTrigger">Importer JSON</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none;">
+    </div>
+  </header>
+
+  <nav class="tabs no-print">
+    <button data-tab="processus" class="active">Processus <span class="n" id="countProc">0</span></button>
+    <button data-tab="execution">Exécution <span class="n" id="countExec">0</span></button>
+    <button data-tab="historique">Historique <span class="n" id="countHist">0</span></button>
+  </nav>
+
+  <!-- ========== VUE PROCESSUS ========== -->
+  <section class="view active" id="view-processus">
+    <p style="color:var(--text-faint);font-size:12.5px;margin:0 0 16px;">Cet onglet sert à construire et modifier vos procédures. Pour les lancer, direction l'onglet <strong>Exécution</strong>.</p>
+    <div id="processusList"></div>
+    <button class="btn primary" id="btnNewProcess">+ Nouveau processus</button>
+  </section>
+
+  <!-- ========== VUE EXECUTION ========== -->
+  <section class="view" id="view-execution">
+    <div id="executionRoot"></div>
+  </section>
+
+  <!-- ========== VUE HISTORIQUE ========== -->
+  <section class="view" id="view-historique">
+    <div id="historiqueRoot"></div>
+  </section>
+
+</div>
+
+<!-- Modale édition de processus -->
+<div class="modal-overlay" id="modalProcess">
+  <div class="modal">
+    <h3 id="modalProcessTitle">Nouveau processus</h3>
+    <div class="field">
+      <label class="field-label">Nom du processus</label>
+      <input type="text" id="pfName" placeholder="Ex. Qualification vanne VN-204">
+    </div>
+    <div class="field">
+      <label class="field-label">Description (optionnel)</label>
+      <textarea id="pfDesc" placeholder="Contexte, périmètre, équipement concerné..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="pfCancel">Annuler</button>
+      <button class="btn primary" id="pfSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modale édition d'étape -->
+<div class="modal-overlay" id="modalStep">
+  <div class="modal">
+    <h3 id="modalStepTitle">Nouvelle étape</h3>
+    <div class="field">
+      <label class="field-label">Titre de l'étape</label>
+      <input type="text" id="sfTitle" placeholder="Ex. Vérifier l'étanchéité du raccord">
+    </div>
+    <div class="field">
+      <label class="field-label">Instructions</label>
+      <textarea id="sfDesc" placeholder="Ce que l'opérateur doit faire précisément..."></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">Aide en cas de NOK</label>
+      <textarea id="sfHelp" placeholder="Pistes de résolution si l'étape échoue..."></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">Photos de référence (optionnel)</label>
+      <div class="file-drop" id="sfPhotoTrigger">Cliquer pour ajouter une ou plusieurs photos</div>
+      <input type="file" accept="image/*" id="sfPhotoInput" multiple style="display:none;">
+      <div class="photo-thumbs" id="sfPhotoPreview"></div>
+    </div>
+    <div class="check-row"><input type="checkbox" id="sfReqNote"> Note obligatoire en cas de NOK</div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="sfCancel">Annuler</button>
+      <button class="btn primary" id="sfSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="img-modal-overlay" id="imgModal">
+  <img id="imgModalImg" src="">
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — variante multi-clés FIXES
+   Deux clés localStorage connues à l'avance : l'état (processus +
+   exécutions) et la préférence de thème.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'pasapas';
+  var ALL_KEYS = [
+    { id: 'state', storageKey: 'pasapas_state_v1' },
+    { id: 'theme', storageKey: 'pasapas_theme_v1' }
+  ];
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+  var PUSH_DEBOUNCE_MS = 1200;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+  var pushTimers = {};
+
+  function findKeyDef(storageKey) {
+    for (var i = 0; i < ALL_KEYS.length; i++) { if (ALL_KEYS[i].storageKey === storageKey) return ALL_KEYS[i]; }
+    return null;
+  }
+
+  function modifiedKeyFor(storageKey) { return LS_PREFIX + 'modified__' + storageKey; }
+  function localGet(storageKey) {
+    try {
+      var raw = localStorage.getItem(storageKey);
+      if (raw === null) return null;
+      var modified = parseInt(localStorage.getItem(modifiedKeyFor(storageKey)), 10) || 0;
+      return { value: raw, modified: modified };
+    } catch (e) { return null; }
+  }
+  function localSet(storageKey, value, modifiedOverride) {
+    try {
+      var modified = modifiedOverride;
+      if (!modified) {
+        var existing = localGet(storageKey);
+        modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      }
+      localStorage.setItem(storageKey, value);
+      localStorage.setItem(modifiedKeyFor(storageKey), String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = {
+      idle: 'Drive : non connecté',
+      connected: 'Drive : connecté',
+      ok: 'Drive : synchronisé',
+      sync: 'Drive : synchro…',
+      error: 'Drive : erreur de synchro'
+    };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) throw new Error('Drive API ' + res.status);
+      return res;
+    });
+  }
+
+  function driveFileName(id) { return 'storage__' + APP_NS + '__' + id + '.json'; }
+
+  function driveFindFile(id) {
+    var q = encodeURIComponent("name='" + driveFileName(id) + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      return (data.files && data.files[0]) || null;
+    });
+  }
+
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+
+  function driveCreateFile(id, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(id), parents: ['appDataFolder'] };
+    var body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' +
+      '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    });
+  }
+
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  }
+
+  function drivePushRecord(id, record) {
+    return driveFindFile(id).then(function (existing) {
+      return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(id, record);
+    });
+  }
+
+  function syncOneKey(keyDef, firstConnect) {
+    var local = localGet(keyDef.storageKey);
+    return driveFindFile(keyDef.id).then(function (existing) {
+      if (!existing) {
+        if (local) return drivePushRecord(keyDef.id, local).then(function () { return false; });
+        return false;
+      }
+      return driveGetRecord(existing.id).then(function (remote) {
+        if (!remote) return false;
+        if (firstConnect || !local || remote.modified > local.modified) {
+          var changed = !(local && local.value === remote.value);
+          localSet(keyDef.storageKey, remote.value, remote.modified);
+          return changed;
+        } else if (local.modified > remote.modified) {
+          return driveUpdateFile(existing.id, local).then(function () { return false; });
+        }
+        return false;
+      });
+    });
+  }
+
+  function syncAllFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    var chain = Promise.resolve();
+    var anyChange = false;
+    ALL_KEYS.forEach(function (keyDef) {
+      chain = chain.then(function () { return syncOneKey(keyDef, firstConnect); }).then(function (changed) {
+        if (changed) anyChange = true;
+      });
+    });
+    return chain.then(function () {
+      setSyncStatus('ok');
+      if (anyChange) {
+        setSyncStatus('sync');
+        if (typeof window.showToast === 'function') window.showToast('Données à jour reçues de Drive, actualisation…');
+        setTimeout(function () { location.reload(); }, 900);
+      }
+    }).catch(function (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync] Échec de la synchronisation :', e);
+    });
+  }
+
+  function scheduleDrivePush(storageKey) {
+    if (!hasValidToken()) return;
+    var keyDef = findKeyDef(storageKey);
+    if (!keyDef) return;
+    clearTimeout(pushTimers[storageKey]);
+    pushTimers[storageKey] = setTimeout(function () {
+      var local = localGet(storageKey);
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(keyDef.id, local).then(function () {
+        setSyncStatus('ok');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive pour "' + storageKey + '" :', e);
+      });
+    }, PUSH_DEBOUNCE_MS);
+  }
+  window.__driveTouch = function (storageKey) {
+    try {
+      localStorage.setItem(modifiedKeyFor(storageKey), String(Date.now()));
+    } catch (e) {}
+    scheduleDrivePush(storageKey);
+  };
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncAllFromDrive(isFirstConnect);
+  }
+
+  function describeError(e) {
+    if (e && e.message) return e.message;
+    try { return JSON.stringify(e); } catch (e2) { return String(e); }
+  }
+
+  function forceSyncPush() {
+    if (!hasValidToken()) {
+      alert('Pas encore connecté à Drive (ou session expirée). Clique d\'abord sur "Drive : non connecté", puis réessaie "Forcer synchro".');
+      return;
+    }
+    setSyncStatus('sync');
+    var report = [];
+    var chain = Promise.resolve();
+    ALL_KEYS.forEach(function (keyDef) {
+      chain = chain.then(function () {
+        var local = localGet(keyDef.storageKey);
+        if (!local) { report.push(keyDef.id + ' : rien en local'); return; }
+        return drivePushRecord(keyDef.id, local).then(function () {
+          report.push(keyDef.id + ' : OK');
+        }).catch(function (e) {
+          report.push(keyDef.id + ' : ERREUR - ' + describeError(e));
+        });
+      });
+    });
+    chain.then(function () {
+      var hasError = report.some(function (line) { return line.indexOf('ERREUR') !== -1; });
+      setSyncStatus(hasError ? 'error' : 'ok');
+      alert('Résultat de la synchro forcée :\n\n' + report.join('\n'));
+    });
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setTimeout(initGis, 300);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: onTokenReceived
+    });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', forceSyncPush);
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+    setInterval(function () {
+      if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }, SILENT_REFRESH_MS);
+  }
+  initGis();
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ STORAGE ============ */
+  var STORE_KEY = "pasapas_state_v1";
+  var state = loadState();
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { processes: [], executions: [] };
+  }
+  function saveState(){
+    try{
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      if(typeof window.__driveTouch === "function") window.__driveTouch(STORE_KEY);
+    }catch(e){
+      toast("Échec de l'enregistrement local (quota dépassé ?)", "err");
+    }
+  }
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+  function nowIso(){ return new Date().toISOString(); }
+  function fmtDateTime(iso){
+    if(!iso) return "";
+    var d = new Date(iso);
+    return d.toLocaleDateString('fr-FR') + " " + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  /* ============ THEME ============ */
+  var THEME_KEY = "pasapas_theme_v1";
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    var btn = document.getElementById('btnThemeToggle');
+    if(btn) btn.innerHTML = theme === 'light' ? '&#9789;' : '&#9788;';
+    try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
+    if(typeof window.__driveTouch === "function") window.__driveTouch(THEME_KEY);
+  }
+  (function initTheme(){
+    var saved = null;
+    try{ saved = localStorage.getItem(THEME_KEY); }catch(e){}
+    if(!saved){
+      saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    applyTheme(saved);
+  })();
+  document.getElementById('btnThemeToggle').addEventListener('click', function(){
+    var current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  });
+
+  /* ============ TOAST ============ */
+  function toast(msg, kind){
+    var wrap = document.getElementById('toastWrap');
+    var el = document.createElement('div');
+    el.className = 'toast' + (kind ? ' ' + kind : '');
+    el.textContent = msg;
+    wrap.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 3200);
+  }
+  window.showToast = toast; /* accessible au module drive-sync (chargé avant ce script) */
+
+  /* ============ TABS ============ */
+  var tabs = document.querySelectorAll('nav.tabs button');
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].addEventListener('click', function(){
+      setTab(this.getAttribute('data-tab'));
+    });
+  }
+  var currentTab = 'processus';
+  function setTab(name){
+    currentTab = name;
+    var allTabs = document.querySelectorAll('nav.tabs button');
+    for(var j=0;j<allTabs.length;j++){
+      allTabs[j].classList.toggle('active', allTabs[j].getAttribute('data-tab') === name);
+    }
+    var views = document.querySelectorAll('section.view');
+    for(var k=0;k<views.length;k++){
+      views[k].classList.toggle('active', views[k].id === 'view-' + name);
+    }
+    renderAll();
+  }
+
+  /* ============ IMAGE COMPRESSION ============ */
+  function compressImage(file, maxWidth, quality){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        img.onload = function(){
+          var w = img.width, h = img.height;
+          if(w > maxWidth){
+            h = Math.round(h * (maxWidth / w));
+            w = maxWidth;
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality || 0.72));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function openImgModal(src){
+    document.getElementById('imgModalImg').src = src;
+    document.getElementById('imgModal').classList.add('active');
+  }
+  document.getElementById('imgModal').addEventListener('click', function(){
+    this.classList.remove('active');
+  });
+
+  /* ============ RENDER: PROCESSUS ============ */
+  function renderProcessus(){
+    var root = document.getElementById('processusList');
+    if(state.processes.length === 0){
+      root.innerHTML = '<div class="empty"><div class="t">Aucun processus défini</div>Créez votre première procédure étape par étape pour commencer à apporter de la rigueur à vos opérations.</div>';
+      return;
+    }
+    var html = '';
+    for(var i=0;i<state.processes.length;i++){
+      var p = state.processes[i];
+      html += '<div class="panel">';
+      html += '  <div class="proc-card">';
+      html += '    <div>';
+      html += '      <h3>' + esc(p.name) + '</h3>';
+      if(p.description) html += '<p>' + esc(p.description) + '</p>';
+      html += '      <div class="proc-meta">' + p.steps.length + ' étape' + (p.steps.length>1?'s':'') + '</div>';
+      html += '    </div>';
+      html += '    <div class="proc-actions">';
+      html += '      <button class="btn small ghost" data-act="edit" data-id="' + p.id + '">Modifier</button>';
+      html += '      <button class="btn small ghost" data-act="dup" data-id="' + p.id + '">Dupliquer</button>';
+      html += '      <button class="btn small danger-ghost" data-act="del" data-id="' + p.id + '">Supprimer</button>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '  <div id="steps-' + p.id + '" style="margin-top:14px;display:none;"></div>';
+      html += '</div>';
+    }
+    root.innerHTML = html;
+
+    var btns = root.querySelectorAll('button[data-act]');
+    for(var b=0;b<btns.length;b++){
+      btns[b].addEventListener('click', function(){
+        var act = this.getAttribute('data-act');
+        var id = this.getAttribute('data-id');
+        if(act === 'run'){ startExecution(id); }
+        else if(act === 'edit'){ openProcessEditor(id); }
+        else if(act === 'dup'){ duplicateProcess(id); }
+        else if(act === 'del'){ deleteProcess(id); }
+      });
+    }
+  }
+
+  function esc(s){
+    if(s === undefined || s === null) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function findProcess(id){
+    for(var i=0;i<state.processes.length;i++){
+      if(state.processes[i].id === id) return state.processes[i];
+    }
+    return null;
+  }
+
+  function duplicateProcess(id){
+    var p = findProcess(id);
+    if(!p) return;
+    var copy = JSON.parse(JSON.stringify(p));
+    copy.id = uid();
+    copy.name = p.name + " (copie)";
+    copy.createdAt = nowIso();
+    for(var i=0;i<copy.steps.length;i++){ copy.steps[i].id = uid(); }
+    state.processes.push(copy);
+    saveState();
+    renderAll();
+    toast("Processus dupliqué");
+  }
+
+  function deleteProcess(id){
+    var p = findProcess(id);
+    if(!p) return;
+    if(!confirm('Supprimer le processus "' + p.name + '" ainsi que ses étapes ?\n(L\'historique des exécutions passées est conservé.)')) return;
+    state.processes = state.processes.filter(function(x){ return x.id !== id; });
+    saveState();
+    renderAll();
+    toast("Processus supprimé");
+  }
+
+  /* ============ PROCESS EDITOR MODAL ============ */
+  var editingProcessId = null;
+  document.getElementById('btnNewProcess').addEventListener('click', function(){
+    editingProcessId = null;
+    document.getElementById('modalProcessTitle').textContent = 'Nouveau processus';
+    document.getElementById('pfName').value = '';
+    document.getElementById('pfDesc').value = '';
+    document.getElementById('modalProcess').classList.add('active');
+  });
+  function openProcessEditor(id){
+    editingProcessId = id;
+    var p = findProcess(id);
+    document.getElementById('modalProcessTitle').textContent = 'Modifier le processus';
+    document.getElementById('pfName').value = p.name;
+    document.getElementById('pfDesc').value = p.description || '';
+    document.getElementById('modalProcess').classList.add('active');
+  }
+  document.getElementById('pfCancel').addEventListener('click', function(){
+    document.getElementById('modalProcess').classList.remove('active');
+  });
+  document.getElementById('pfSave').addEventListener('click', function(){
+    var name = document.getElementById('pfName').value.trim();
+    if(!name){ toast('Le nom est obligatoire', 'err'); return; }
+    var desc = document.getElementById('pfDesc').value.trim();
+    if(editingProcessId){
+      var p = findProcess(editingProcessId);
+      p.name = name; p.description = desc;
+    } else {
+      var np = { id: uid(), name: name, description: desc, createdAt: nowIso(), steps: [] };
+      state.processes.push(np);
+      editingProcessId = np.id;
+    }
+    saveState();
+    document.getElementById('modalProcess').classList.remove('active');
+    renderAll();
+    toggleStepsPanel(editingProcessId, true);
+    toast("Processus enregistré", "ok");
+  });
+
+  function toggleStepsPanel(procId, forceOpen){
+    var panel = document.getElementById('steps-' + procId);
+    if(!panel) return;
+    var open = forceOpen || panel.style.display === 'none';
+    panel.style.display = open ? 'block' : 'none';
+    if(open) renderStepsPanel(procId);
+  }
+
+  function renderStepsPanel(procId){
+    var p = findProcess(procId);
+    var panel = document.getElementById('steps-' + procId);
+    if(!p || !panel) return;
+    var html = '<div class="divider"></div>';
+    if(p.steps.length === 0){
+      html += '<div class="empty" style="padding:20px;">Aucune étape. Ajoutez la première étape de la procédure.</div>';
+    } else {
+      for(var i=0;i<p.steps.length;i++){
+        var s = p.steps[i];
+        html += '<div class="step-row">';
+        html += '  <div class="idx">' + (i+1) + '</div>';
+        html += '  <div class="body">';
+        html += '    <h4>' + esc(s.title) + '</h4>';
+        if(s.description) html += '<p>' + esc(s.description) + '</p>';
+        html += '    <div class="flags">';
+        if(s.requireNoteOnNok) html += '<span class="flag">Note requise si NOK</span>';
+        if(s.photos && s.photos.length) html += '<span class="flag">' + s.photos.length + ' photo' + (s.photos.length>1?'s':'') + '</span>';
+        html += '    </div>';
+        html += '  </div>';
+        html += '  <div class="ops">';
+        html += '    <button class="icon-btn" title="Monter" data-step-act="up" data-pid="' + procId + '" data-sid="' + s.id + '">&uarr;</button>';
+        html += '    <button class="icon-btn" title="Descendre" data-step-act="down" data-pid="' + procId + '" data-sid="' + s.id + '">&darr;</button>';
+        html += '    <button class="icon-btn" title="Modifier" data-step-act="edit" data-pid="' + procId + '" data-sid="' + s.id + '">&#9998;</button>';
+        html += '    <button class="icon-btn" title="Supprimer" data-step-act="del" data-pid="' + procId + '" data-sid="' + s.id + '">&times;</button>';
+        html += '  </div>';
+        html += '</div>';
+      }
+    }
+    html += '<button class="btn ghost small" data-step-act="add" data-pid="' + procId + '" style="margin-top:8px;">+ Ajouter une étape</button>';
+    html += '<button class="btn ghost small" data-step-act="collapse" data-pid="' + procId + '" style="margin-top:8px;margin-left:8px;">Réduire</button>';
+    panel.innerHTML = html;
+
+    var ops = panel.querySelectorAll('button[data-step-act]');
+    for(var o=0;o<ops.length;o++){
+      ops[o].addEventListener('click', function(){
+        var act = this.getAttribute('data-step-act');
+        var pid = this.getAttribute('data-pid');
+        var sid = this.getAttribute('data-sid');
+        handleStepAction(act, pid, sid);
+      });
+    }
+  }
+
+  function handleStepAction(act, pid, sid){
+    var p = findProcess(pid);
+    if(!p) return;
+    if(act === 'add'){ openStepEditor(pid, null); return; }
+    if(act === 'edit'){ openStepEditor(pid, sid); return; }
+    if(act === 'collapse'){ document.getElementById('steps-'+pid).style.display='none'; return; }
+    var idx = p.steps.findIndex(function(s){ return s.id === sid; });
+    if(idx === -1) return;
+    if(act === 'up' && idx > 0){
+      var tmp = p.steps[idx-1]; p.steps[idx-1] = p.steps[idx]; p.steps[idx] = tmp;
+      saveState(); renderStepsPanel(pid); renderProcessus(); toggleStepsPanel(pid,true);
+    } else if(act === 'down' && idx < p.steps.length-1){
+      var tmp2 = p.steps[idx+1]; p.steps[idx+1] = p.steps[idx]; p.steps[idx] = tmp2;
+      saveState(); renderStepsPanel(pid); renderProcessus(); toggleStepsPanel(pid,true);
+    } else if(act === 'del'){
+      if(!confirm('Supprimer cette étape ?')) return;
+      p.steps.splice(idx,1);
+      saveState(); renderProcessus(); toggleStepsPanel(pid,true);
+    }
+  }
+
+  // expand/collapse on card click (name area)
+  document.getElementById('processusList').addEventListener('click', function(e){
+    var card = e.target.closest('.proc-card');
+    if(card && !e.target.closest('button')){
+      var panel = card.parentElement.querySelector('[id^="steps-"]');
+      if(panel){
+        var id = panel.id.replace('steps-','');
+        toggleStepsPanel(id);
+      }
+    }
+  });
+
+  var editingStepId = null;
+  var editingStepProcId = null;
+  var editingStepPhotos = [];
+
+  function renderStepPhotoPreview(){
+    var prev = document.getElementById('sfPhotoPreview');
+    var html = '';
+    for(var i=0;i<editingStepPhotos.length;i++){
+      html += '<div style="position:relative;">';
+      html += '<img src="' + editingStepPhotos[i] + '" data-idx="' + i + '">';
+      html += '<button type="button" class="icon-btn" data-rmphoto="' + i + '" style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;background:var(--nok-dim);border-color:var(--nok);color:var(--nok-text);font-size:12px;">&times;</button>';
+      html += '</div>';
+    }
+    prev.innerHTML = html;
+    var imgs = prev.querySelectorAll('img');
+    for(var j=0;j<imgs.length;j++){
+      imgs[j].style.cursor='pointer';
+      imgs[j].addEventListener('click', function(){ openImgModal(this.src); });
+    }
+    var rm = prev.querySelectorAll('[data-rmphoto]');
+    for(var k=0;k<rm.length;k++){
+      rm[k].addEventListener('click', function(){
+        editingStepPhotos.splice(parseInt(this.getAttribute('data-rmphoto'),10), 1);
+        renderStepPhotoPreview();
+      });
+    }
+  }
+  document.getElementById('sfPhotoTrigger').addEventListener('click', function(){
+    document.getElementById('sfPhotoInput').click();
+  });
+  document.getElementById('sfPhotoInput').addEventListener('change', function(e){
+    var files = Array.prototype.slice.call(e.target.files || []);
+    if(!files.length) return;
+    var chain = Promise.resolve();
+    files.forEach(function(f){
+      chain = chain.then(function(){
+        return compressImage(f, 900, 0.72).then(function(dataUrl){
+          editingStepPhotos.push(dataUrl);
+          renderStepPhotoPreview();
+        });
+      });
+    });
+    chain.catch(function(){ toast('Impossible de charger une photo', 'err'); });
+    document.getElementById('sfPhotoInput').value = '';
+  });
+
+  function openStepEditor(pid, sid){
+    editingStepProcId = pid;
+    editingStepId = sid;
+    var titleEl = document.getElementById('modalStepTitle');
+    if(sid){
+      var p = findProcess(pid);
+      var s = p.steps.find(function(x){ return x.id === sid; });
+      titleEl.textContent = 'Modifier l\'étape';
+      document.getElementById('sfTitle').value = s.title;
+      document.getElementById('sfDesc').value = s.description || '';
+      document.getElementById('sfHelp').value = s.helpText || '';
+      document.getElementById('sfReqNote').checked = !!s.requireNoteOnNok;
+      editingStepPhotos = (s.photos || []).slice();
+    } else {
+      titleEl.textContent = 'Nouvelle étape';
+      document.getElementById('sfTitle').value = '';
+      document.getElementById('sfDesc').value = '';
+      document.getElementById('sfHelp').value = '';
+      document.getElementById('sfReqNote').checked = false;
+      editingStepPhotos = [];
+    }
+    renderStepPhotoPreview();
+    document.getElementById('modalStep').classList.add('active');
+  }
+  document.getElementById('sfCancel').addEventListener('click', function(){
+    document.getElementById('modalStep').classList.remove('active');
+  });
+  document.getElementById('sfSave').addEventListener('click', function(){
+    var title = document.getElementById('sfTitle').value.trim();
+    if(!title){ toast('Le titre est obligatoire', 'err'); return; }
+    var p = findProcess(editingStepProcId);
+    if(!p) return;
+    var data = {
+      title: title,
+      description: document.getElementById('sfDesc').value.trim(),
+      helpText: document.getElementById('sfHelp').value.trim(),
+      requireNoteOnNok: document.getElementById('sfReqNote').checked,
+      photos: editingStepPhotos.slice()
+    };
+    if(editingStepId){
+      var s = p.steps.find(function(x){ return x.id === editingStepId; });
+      Object.assign(s, data);
+    } else {
+      data.id = uid();
+      p.steps.push(data);
+    }
+    saveState();
+    document.getElementById('modalStep').classList.remove('active');
+    renderProcessus();
+    toggleStepsPanel(editingStepProcId, true);
+    toast("Étape enregistrée", "ok");
+  });
+
+  /* ============ EXECUTION ============ */
+  var runningExecId = null;
+
+  function activeExecutions(){
+    return state.executions.filter(function(e){ return e.status === 'en_cours'; });
+  }
+
+  function startExecution(procId){
+    var p = findProcess(procId);
+    if(!p || p.steps.length === 0){
+      toast('Ce processus ne contient aucune étape', 'err');
+      return;
+    }
+    var exec = {
+      id: uid(),
+      processId: p.id,
+      processName: p.name,
+      startedAt: nowIso(),
+      finishedAt: null,
+      status: 'en_cours',
+      currentStepIndex: 0,
+      log: [] // {stepId, stepTitle, result, timestamp, note, photos:[]}
+    };
+    state.executions.push(exec);
+    saveState();
+    runningExecId = exec.id;
+    setTab('execution');
+    renderExecution();
+  }
+
+  function resumeExecution(execId){
+    runningExecId = execId;
+    setTab('execution');
+  }
+
+  function renderExecution(){
+    var root = document.getElementById('executionRoot');
+    if(runningExecId){
+      renderRunner(root);
+      return;
+    }
+    var actives = activeExecutions();
+    var html = '';
+    if(actives.length){
+      html += '<div class="panel"><div class="proc-meta" style="margin-bottom:10px;">Exécutions en cours</div>';
+      for(var i=0;i<actives.length;i++){
+        var e = actives[i];
+        var p = findProcess(e.processId);
+        var total = p ? p.steps.length : 0;
+        html += '<div class="hist-row" data-resume="' + e.id + '">';
+        html += '  <div class="left"><h4>' + esc(e.processName) + '</h4><span>Démarré le ' + fmtDateTime(e.startedAt) + ' · étape ' + (e.currentStepIndex+1) + '/' + total + '</span></div>';
+        html += '  <span class="status-pill en_cours">En cours</span>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    html += '<div class="panel"><div class="proc-meta" style="margin-bottom:14px;">Démarrer une nouvelle exécution</div>';
+    if(state.processes.length === 0){
+      html += '<div class="empty">Aucun processus disponible. Créez-en un dans l\'onglet Processus.</div>';
+    } else {
+      html += '<div class="picker-grid">';
+      for(var j=0;j<state.processes.length;j++){
+        var pr = state.processes[j];
+        html += '<button class="picker-card" data-start="' + pr.id + '">';
+        html += '<h4>' + esc(pr.name) + '</h4>';
+        html += '<span>' + pr.steps.length + ' étape' + (pr.steps.length>1?'s':'') + '</span>';
+        html += '</button>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    root.innerHTML = html;
+
+    var resumeBtns = root.querySelectorAll('[data-resume]');
+    for(var r=0;r<resumeBtns.length;r++){
+      resumeBtns[r].addEventListener('click', function(){ resumeExecution(this.getAttribute('data-resume')); });
+    }
+    var startBtns = root.querySelectorAll('[data-start]');
+    for(var s=0;s<startBtns.length;s++){
+      startBtns[s].addEventListener('click', function(){ startExecution(this.getAttribute('data-start')); });
+    }
+  }
+
+  function findExec(id){
+    for(var i=0;i<state.executions.length;i++){
+      if(state.executions[i].id === id) return state.executions[i];
+    }
+    return null;
+  }
+
+  function renderRunner(root){
+    var exec = findExec(runningExecId);
+    if(!exec){ runningExecId = null; renderExecution(); return; }
+    var proc = findProcess(exec.processId);
+    if(!proc){
+      root.innerHTML = '<div class="empty">Le processus associé a été supprimé.</div>';
+      return;
+    }
+    var stepIdx = exec.currentStepIndex;
+    var isFinished = exec.status !== 'en_cours';
+    var step = proc.steps[stepIdx];
+
+    var html = '<div style="margin-bottom:14px;"><button class="btn ghost small no-print" id="btnBackToPicker">&larr; Retour</button></div>';
+    html += '<div class="runner">';
+
+    // rail
+    html += '<div class="rail no-print"><div class="rail-title">' + esc(proc.name) + '</div>';
+    for(var i=0;i<proc.steps.length;i++){
+      var cls = 'rail-item';
+      var mark = (i+1);
+      var stLog = exec.log.filter(function(l){ return l.stepId === proc.steps[i].id; });
+      var lastResult = stLog.length ? stLog[stLog.length-1].result : null;
+      if(i < stepIdx || (isFinished && lastResult)){
+        cls += lastResult === 'NOK' ? ' nok' : ' done';
+        mark = lastResult === 'NOK' ? '!' : '✓';
+      } else if(i === stepIdx && !isFinished){
+        cls += ' current';
+      }
+      html += '<div class="' + cls + '"><div class="rail-line"></div><div class="rail-node">' + mark + '</div><div class="rail-label">' + esc(proc.steps[i].title) + '</div></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="runner-main">';
+    if(isFinished){
+      html += renderSynthesisHtml(exec, proc);
+    } else {
+      html += '<div class="step-card">';
+      html += '<div class="eyebrow">Étape ' + (stepIdx+1) + ' / ' + proc.steps.length + '</div>';
+      html += '<h2>' + esc(step.title) + '</h2>';
+      if(step.description) html += '<div class="desc">' + esc(step.description) + '</div>';
+
+      if(step.photos && step.photos.length){
+        html += '<div class="photo-thumbs" id="runnerRefPhotos" style="margin-bottom:20px;">';
+        for(var ph=0; ph<step.photos.length; ph++){
+          html += '<img src="' + step.photos[ph] + '" data-refphoto="' + ph + '">';
+        }
+        html += '</div>';
+      }
+
+      var attempts = exec.log.filter(function(l){ return l.stepId === step.id; });
+      var lastWasNok = attempts.length && attempts[attempts.length-1].result === 'NOK';
+
+      if(attempts.length){
+        html += '<div class="attempts-log">';
+        for(var a=0;a<attempts.length;a++){
+          var at = attempts[a];
+          html += '<div class="entry"><span class="tag ' + (at.result==='OK'?'ok':'nok') + '">' + at.result + '</span>';
+          html += '<div class="entry-body">';
+          if(at.note) html += esc(at.note);
+          html += '<div class="entry-time">' + fmtDateTime(at.timestamp) + '</div>';
+          html += '</div></div>';
+        }
+        html += '</div>';
+      }
+
+      if(lastWasNok && step.helpText){
+        html += '<div class="help-box"><div class="eyebrow">Aide à la résolution</div><p>' + esc(step.helpText) + '</p></div>';
+      }
+
+      html += '<div class="field"><label class="field-label">Note (optionnelle' + (step.requireNoteOnNok?' — requise si NOK':'') + ')</label>';
+      html += '<textarea id="runnerNote" placeholder="Observation, mesure, référence de pièce..."></textarea></div>';
+
+      html += '<div class="divider"></div>';
+      html += '<div class="runner-actions">';
+      if(stepIdx > 0){
+        html += '<button class="btn ghost" id="btnStepPrev" style="flex:0;padding:14px 18px;">&larr; Étape précédente</button>';
+      }
+      html += '<button class="btn nok" id="btnStepNok">NOK — Problème rencontré</button>';
+      html += '<button class="btn ok" id="btnStepOk">OK — Étape validée</button>';
+      html += '</div>';
+
+      html += '<div style="margin-top:16px;"><button class="btn danger-ghost small no-print" id="btnAbandon">Abandonner l\'exécution</button></div>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+
+    root.innerHTML = html;
+
+    document.getElementById('btnBackToPicker').addEventListener('click', function(){
+      runningExecId = null;
+      renderExecution();
+    });
+
+    if(!isFinished){
+      var refImgs = root.querySelectorAll('[data-refphoto]');
+      for(var ri=0; ri<refImgs.length; ri++){
+        refImgs[ri].style.cursor='pointer';
+        refImgs[ri].addEventListener('click', function(){ openImgModal(this.src); });
+      }
+
+      document.getElementById('btnStepOk').addEventListener('click', function(){
+        var note = document.getElementById('runnerNote').value.trim();
+        recordAttempt(exec, proc, step, 'OK', note);
+      });
+      document.getElementById('btnStepNok').addEventListener('click', function(){
+        var note = document.getElementById('runnerNote').value.trim();
+        if(step.requireNoteOnNok && !note){
+          toast('Une note est requise pour déclarer cette étape NOK', 'err');
+          return;
+        }
+        recordAttempt(exec, proc, step, 'NOK', note);
+      });
+      var prevBtn = document.getElementById('btnStepPrev');
+      if(prevBtn){
+        prevBtn.addEventListener('click', function(){
+          exec.currentStepIndex = Math.max(0, exec.currentStepIndex - 1);
+          saveState();
+          renderRunner(document.getElementById('executionRoot'));
+        });
+      }
+      document.getElementById('btnAbandon').addEventListener('click', function(){
+        if(!confirm('Abandonner cette exécution ? Elle sera archivée dans l\'historique avec le statut "Abandonné".')) return;
+        exec.status = 'abandonne';
+        exec.finishedAt = nowIso();
+        saveState();
+        runningExecId = null;
+        renderAll();
+        toast('Exécution abandonnée');
+      });
+    } else {
+      var backBtn = document.getElementById('btnRunnerHistBack');
+      if(backBtn) backBtn.addEventListener('click', function(){ runningExecId = null; renderExecution(); });
+      var printBtn = document.getElementById('btnRunnerPrint');
+      if(printBtn) printBtn.addEventListener('click', function(){ window.print(); });
+      var reopenBtn = document.getElementById('btnReopenLastStep');
+      if(reopenBtn) reopenBtn.addEventListener('click', function(){
+        exec.status = 'en_cours';
+        exec.finishedAt = null;
+        exec.currentStepIndex = proc.steps.length - 1;
+        saveState();
+        renderAll();
+        renderRunner(document.getElementById('executionRoot'));
+        toast('Exécution rouverte sur la dernière étape');
+      });
+    }
+  }
+
+  function recordAttempt(exec, proc, step, result, note){
+    var entry = { stepId: step.id, stepTitle: step.title, result: result, timestamp: nowIso(), note: note || '' };
+    exec.log.push(entry);
+
+    if(result === 'OK'){
+      if(exec.currentStepIndex < proc.steps.length - 1){
+        exec.currentStepIndex += 1;
+      } else {
+        exec.status = 'termine';
+        exec.finishedAt = nowIso();
+      }
+    }
+    saveState();
+    renderExecution();
+    renderRunner(document.getElementById('executionRoot'));
+    updateCounts();
+  }
+
+  function renderSynthesisHtml(exec, proc){
+    var okCount = 0, nokCount = 0;
+    var byStep = {};
+    for(var i=0;i<exec.log.length;i++){
+      var l = exec.log[i];
+      if(l.result === 'OK') okCount++; else nokCount++;
+      if(!byStep[l.stepId]) byStep[l.stepId] = [];
+      byStep[l.stepId].push(l);
+    }
+    var html = '<div class="step-card">';
+    html += '<div class="synth-header"><div>';
+    html += '<div class="eyebrow">Synthèse d\'exécution</div>';
+    html += '<h2 style="margin-bottom:2px;">' + esc(exec.processName) + '</h2>';
+    html += '<div class="proc-meta">Du ' + fmtDateTime(exec.startedAt) + ' au ' + fmtDateTime(exec.finishedAt) + '</div>';
+    html += '</div>';
+    html += '<div class="no-print"><span class="status-pill ' + exec.status + '">' + statusLabel(exec.status) + '</span></div>';
+    html += '</div>';
+
+    html += '<div class="synth-stats">';
+    html += '<div class="stat"><div class="v">' + proc.steps.length + '</div><div class="l">Étapes</div></div>';
+    html += '<div class="stat"><div class="v" style="color:var(--ok-text);">' + okCount + '</div><div class="l">Validations OK</div></div>';
+    html += '<div class="stat"><div class="v" style="color:var(--nok-text);">' + nokCount + '</div><div class="l">Incidents NOK</div></div>';
+    html += '</div>';
+
+    html += '<table class="synth-table"><thead><tr><th>#</th><th>Étape</th><th>Résultat</th><th>Notes / horodatage</th></tr></thead><tbody>';
+    for(var s=0;s<proc.steps.length;s++){
+      var st = proc.steps[s];
+      var attempts = byStep[st.id] || [];
+      if(attempts.length === 0){
+        html += '<tr><td>' + (s+1) + '</td><td>' + esc(st.title) + '</td><td>—</td><td style="color:var(--text-faint);">Non atteinte</td></tr>';
+        continue;
+      }
+      for(var a=0;a<attempts.length;a++){
+        var at = attempts[a];
+        html += '<tr>';
+        html += '<td>' + (a===0 ? (s+1) : '') + '</td>';
+        html += '<td>' + (a===0 ? esc(st.title) : '<span style="color:var(--text-faint);">(nouvelle tentative)</span>') + '</td>';
+        html += '<td><span class="tag ' + (at.result==='OK'?'ok':'nok') + '">' + at.result + '</span></td>';
+        html += '<td>' + (at.note ? esc(at.note) + '<br>' : '') + '<span class="entry-time">' + fmtDateTime(at.timestamp) + '</span>';
+        if(at.photo) html += '<div class="photo-thumbs"><img src="' + at.photo + '" data-photo="' + s + '-' + a + '"></div>';
+        html += '</td></tr>';
+      }
+    }
+    html += '</tbody></table>';
+
+    html += '<div class="divider"></div>';
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;" class="no-print">';
+    html += '<button class="btn ghost" id="btnRunnerHistBack">&larr; Retour</button>';
+    html += '<button class="btn primary" id="btnRunnerPrint">Imprimer / PDF</button>';
+    if(exec.status === 'termine'){
+      html += '<button class="btn ghost" id="btnReopenLastStep">Revenir en arrière</button>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    setTimeout(function(){
+      var imgs = document.querySelectorAll('#executionRoot img[data-photo]');
+      for(var q=0;q<imgs.length;q++){
+        imgs[q].style.cursor='pointer';
+        imgs[q].addEventListener('click', function(){ openImgModal(this.src); });
+      }
+    }, 0);
+
+    return html;
+  }
+
+  function statusLabel(s){
+    if(s==='en_cours') return 'En cours';
+    if(s==='termine') return 'Terminé';
+    if(s==='abandonne') return 'Abandonné';
+    return s;
+  }
+
+  /* ============ HISTORIQUE ============ */
+  function renderHistorique(){
+    var root = document.getElementById('historiqueRoot');
+    var finished = state.executions.filter(function(e){ return e.status !== 'en_cours'; })
+      .sort(function(a,b){ return new Date(b.finishedAt||b.startedAt) - new Date(a.finishedAt||a.startedAt); });
+
+    if(historiqueDetailId){
+      var exec = findExec(historiqueDetailId);
+      var proc = findProcess(exec.processId);
+      var html = '<div style="margin-bottom:14px;"><button class="btn ghost small no-print" id="btnHistBack">&larr; Retour à l\'historique</button></div>';
+      if(!proc){
+        html += '<div class="empty">Le processus associé a été supprimé. Détail non disponible.</div>';
+      } else {
+        html += renderSynthesisHtml(exec, proc);
+      }
+      root.innerHTML = html;
+      var back = document.getElementById('btnHistBack');
+      if(back) back.addEventListener('click', function(){ historiqueDetailId = null; renderHistorique(); });
+      var printBtn2 = document.getElementById('btnRunnerPrint');
+      if(printBtn2) printBtn2.addEventListener('click', function(){ window.print(); });
+      var backBtn2 = document.getElementById('btnRunnerHistBack');
+      if(backBtn2) backBtn2.addEventListener('click', function(){ historiqueDetailId = null; renderHistorique(); });
+      var reopenBtn2 = document.getElementById('btnReopenLastStep');
+      if(reopenBtn2 && exec && proc) reopenBtn2.addEventListener('click', function(){
+        exec.status = 'en_cours';
+        exec.finishedAt = null;
+        exec.currentStepIndex = proc.steps.length - 1;
+        saveState();
+        historiqueDetailId = null;
+        runningExecId = exec.id;
+        setTab('execution');
+        toast('Exécution rouverte sur la dernière étape');
+      });
+      return;
+    }
+
+    if(finished.length === 0){
+      root.innerHTML = '<div class="empty"><div class="t">Aucune exécution archivée</div>Les processus terminés ou abandonnés apparaîtront ici.</div>';
+      return;
+    }
+    var html2 = '';
+    for(var i=0;i<finished.length;i++){
+      var e = finished[i];
+      var proc2 = findProcess(e.processId);
+      var stepCount = proc2 ? proc2.steps.length : '?';
+      var nokCount = e.log.filter(function(l){ return l.result === 'NOK'; }).length;
+      html2 += '<div class="hist-row" data-detail="' + e.id + '">';
+      html2 += '  <div class="left"><h4>' + esc(e.processName) + '</h4><span>' + fmtDateTime(e.finishedAt || e.startedAt) + ' · ' + stepCount + ' étapes' + (nokCount ? ' · ' + nokCount + ' incident' + (nokCount>1?'s':'') : '') + '</span></div>';
+      html2 += '  <div style="display:flex;align-items:center;gap:10px;">';
+      html2 += '    <span class="status-pill ' + e.status + '">' + statusLabel(e.status) + '</span>';
+      html2 += '    <button class="icon-btn no-print" title="Supprimer" data-delhist="' + e.id + '">&times;</button>';
+      html2 += '  </div>';
+      html2 += '</div>';
+    }
+    root.innerHTML = html2;
+
+    var rows = root.querySelectorAll('[data-detail]');
+    for(var r=0;r<rows.length;r++){
+      rows[r].addEventListener('click', function(e){
+        if(e.target.closest('[data-delhist]')) return;
+        historiqueDetailId = this.getAttribute('data-detail');
+        renderHistorique();
+      });
+    }
+    var delBtns = root.querySelectorAll('[data-delhist]');
+    for(var d=0;d<delBtns.length;d++){
+      delBtns[d].addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var id = this.getAttribute('data-delhist');
+        if(!confirm('Supprimer définitivement cette exécution de l\'historique ?')) return;
+        state.executions = state.executions.filter(function(x){ return x.id !== id; });
+        saveState();
+        renderAll();
+        toast('Exécution supprimée');
+      });
+    }
+  }
+  var historiqueDetailId = null;
+
+  /* ============ EXPORT / IMPORT JSON ============ */
+  document.getElementById('btnExport').addEventListener('click', function(){
+    var payload = JSON.stringify(state, null, 2);
+    var blob = new Blob([payload], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var d = new Date();
+    var stamp = d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate());
+    a.href = url;
+    a.download = stamp + '_PasAPas_export.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Export JSON téléchargé', 'ok');
+  });
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+
+  document.getElementById('btnImportTrigger').addEventListener('click', function(){
+    document.getElementById('fileImport').click();
+  });
+  document.getElementById('fileImport').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if(!f) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      try{
+        var data = JSON.parse(ev.target.result);
+        if(!data || !Array.isArray(data.processes) || !Array.isArray(data.executions)){
+          throw new Error('format invalide');
+        }
+        var mode = confirm('Fusionner avec les données existantes ?\nOK = fusionner (ajout des éléments nouveaux)\nAnnuler = remplacer tout') ? 'merge' : 'replace';
+        if(mode === 'replace'){
+          state = data;
+        } else {
+          var existingProcIds = {};
+          state.processes.forEach(function(p){ existingProcIds[p.id]=true; });
+          data.processes.forEach(function(p){ if(!existingProcIds[p.id]) state.processes.push(p); });
+          var existingExecIds = {};
+          state.executions.forEach(function(x){ existingExecIds[x.id]=true; });
+          data.executions.forEach(function(x){ if(!existingExecIds[x.id]) state.executions.push(x); });
+        }
+        saveState();
+        renderAll();
+        toast('Import réussi', 'ok');
+      }catch(err){
+        toast('Fichier JSON invalide', 'err');
+      }
+      document.getElementById('fileImport').value = '';
+    };
+    reader.readAsText(f);
+  });
+
+  /* ============ GLOBAL RENDER ============ */
+  function updateCounts(){
+    document.getElementById('countProc').textContent = state.processes.length;
+    document.getElementById('countExec').textContent = activeExecutions().length;
+    document.getElementById('countHist').textContent = state.executions.filter(function(e){ return e.status !== 'en_cours'; }).length;
+  }
+
+  function renderAll(){
+    updateCounts();
+    if(currentTab === 'processus') renderProcessus();
+    else if(currentTab === 'execution') renderExecution();
+    else if(currentTab === 'historique') renderHistorique();
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
