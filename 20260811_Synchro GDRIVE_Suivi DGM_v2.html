@@ -53,6 +53,25 @@ body {
 .save-status { font-size: 11.5px; color: var(--color-text-muted); margin-right: 6px; white-space: nowrap; }
 .save-status.saving { color: var(--color-warning); }
 .save-status.error { color: var(--color-danger); font-weight: 600; }
+
+.project-bar{
+  display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap;
+  background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius);
+  padding:12px 16px; margin:16px 0;
+}
+.project-bar .field{flex:1; min-width:200px;}
+.project-bar .field.doc-field{flex:2; min-width:280px; display:flex; gap:8px; align-items:flex-end;}
+.project-bar label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--color-text-muted); margin-bottom:4px;}
+.project-bar input[type=text], .project-bar select{
+  width:100%; border:1px solid var(--color-border); border-radius:6px; padding:7px 10px;
+  font-size:13px; font-family:inherit; color:var(--color-text); background:#fff;
+}
+.project-bar .btn-delete-doc{
+  border:1px solid var(--color-danger); color:var(--color-danger); background:#fff;
+  border-radius:6px; padding:7px 12px; font-size:12.5px; white-space:nowrap; cursor:pointer; flex:none;
+}
+.project-bar .btn-delete-doc:hover{background:var(--color-danger-bg);}
+.project-bar .btn-delete-doc:disabled{opacity:.4; cursor:not-allowed;}
 .drive-btn { display: inline-flex; align-items: center; gap: 6px; }
 .drive-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
@@ -276,6 +295,21 @@ select.status-open { background: var(--color-primary-light); border-color: var(-
       <button type="button" class="btn btn-icon" id="btn-new" title="Nouveau Change Control"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
     </div>
   </header>
+
+  <div class="project-bar">
+    <div class="field">
+      <label for="projectInput">Projet</label>
+      <input type="text" id="projectInput" list="projectDatalist" placeholder="Non classé (document libre)" autocomplete="off">
+      <datalist id="projectDatalist"></datalist>
+    </div>
+    <div class="field doc-field" style="flex-direction:column; align-items:stretch;">
+      <label for="docSelect">Change Control</label>
+      <div style="display:flex; gap:8px; align-items:stretch;">
+        <select id="docSelect" disabled style="flex:1;"><option value="">— choisissez un projet —</option></select>
+        <button type="button" id="btnDeleteDoc" class="btn-delete-doc" title="Supprimer ce Change Control (local + Drive)" disabled>🗑 Supprimer</button>
+      </div>
+    </div>
+  </div>
 
   <nav class="tab-nav" id="tab-nav">
     <button type="button" class="tab-btn active" data-tab="general">Général</button>
@@ -791,6 +825,24 @@ select.status-open { background: var(--color-primary-light); border-color: var(-
     scheduleDrivePush(docId);
   };
 
+  /* ---------- Suppression (locale déjà faite côté appelant ; ici : nettoyage
+     du marqueur "modified" + suppression du fichier Drive si connecté) ---------- */
+  window.__driveDelete = function (docId) {
+    try { localStorage.removeItem(modifiedKeyFor(docId)); } catch (e) {}
+    clearTimeout(pushTimers[docId]);
+    delete pushTimers[docId];
+    if (!hasValidToken()) return Promise.resolve({ driveDeleted: false, reason: 'not-connected' });
+    return driveListAllFiles().then(function (files) {
+      var existing = files.find(function (f) { return f.name === driveFileName(docId); });
+      if (!existing) return { driveDeleted: false, reason: 'not-found-remote' };
+      return driveFetch('https://www.googleapis.com/drive/v3/files/' + existing.id, { method: 'DELETE' })
+        .then(function () { return { driveDeleted: true }; });
+    }).catch(function (e) {
+      console.error('[DriveSync] Échec de la suppression sur Drive :', e);
+      return { driveDeleted: false, reason: 'error' };
+    });
+  };
+
   function onTokenReceived(resp) {
     if (resp.error) { setSyncStatus('error'); return; }
     var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
@@ -1006,7 +1058,7 @@ function createBlankDocument() {
       actionStatusOptions: ['Open', 'In Progress', 'Completed', 'Cancelled'],
       subjectsToEvaluateOptions: ['Product Quality', 'Regulatory / Registration', 'Validation status', 'Equipment / Facility', 'SOP / Documentation', 'Personnel Training', 'Safety / Environment (HSE)', 'Supplier / Subcontractor', 'Computerized system / Data integrity', 'Stability', 'Supply chain / Logistics']
     },
-    general: { title: '' },
+    general: { title: '', project: '' },
     changeDescription: {
       briefDescription: '', description: '', originOfChange: '',
       originDetails: '', changeCategory: '', currentSituation: '',
@@ -1038,6 +1090,7 @@ function normalizeDocument(doc) {
 
   doc.general = doc.general || {};
   if (typeof doc.general.title !== 'string') doc.general.title = '';
+  if (typeof doc.general.project !== 'string') doc.general.project = '';
 
   doc.changeDescription = doc.changeDescription || {};
   for (var k in blank.changeDescription) {
@@ -1834,10 +1887,144 @@ function handleJsonFileInputChange(e) {
     appData = normalizeDocument(parsed);
     renderAll();
     persistToLocalStorage();
+    refreshProjectDatalist();
+    document.getElementById('projectInput').value = appData.general.project || '';
+    refreshDocSelectOptions(appData.general.project || '', appData.general.project ? (STORAGE_PREFIX + appData.meta.documentId) : '');
     showToast('Donnees importees avec succes.', 'success');
   };
   reader.onerror = function () { showToast('Erreur de lecture du fichier.', 'error'); };
   reader.readAsText(file);
+}
+
+/* ============ Projet / sélection de document ============ */
+function listKnownProjects() {
+  var names = {};
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf(STORAGE_PREFIX) === 0) {
+        try {
+          var d = JSON.parse(localStorage.getItem(k));
+          if (d.general && d.general.project) names[d.general.project] = true;
+        } catch (e) {}
+      }
+    }
+  } catch (e) {}
+  return Object.keys(names).sort(function (a, b) { return a.localeCompare(b); });
+}
+function listProjectDocuments(projectName) {
+  var out = [];
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf(STORAGE_PREFIX) === 0) {
+        try {
+          var d = JSON.parse(localStorage.getItem(k));
+          if (d.general && d.general.project === projectName) {
+            out.push({ key: k, title: d.general.title || '(sans titre)', modified: (d.meta && d.meta.lastModified) || '' });
+          }
+        } catch (e) {}
+      }
+    }
+  } catch (e) {}
+  out.sort(function (a, b) { return (b.modified || '').localeCompare(a.modified || ''); });
+  return out;
+}
+function refreshProjectDatalist() {
+  var dl = document.getElementById('projectDatalist');
+  if (!dl) return;
+  dl.innerHTML = listKnownProjects().map(function (p) { return '<option value="' + escapeHtml(p) + '">'; }).join('');
+}
+function refreshDocSelectOptions(projectName, selectValue) {
+  var sel = document.getElementById('docSelect');
+  var delBtn = document.getElementById('btnDeleteDoc');
+  if (!projectName) {
+    sel.disabled = true;
+    sel.innerHTML = '<option value="">— choisissez un projet —</option>';
+    delBtn.disabled = true;
+    return;
+  }
+  var docs = listProjectDocuments(projectName);
+  var opts = ['<option value="__new__">+ Nouveau Change Control (vierge)</option>'];
+  docs.forEach(function (d) {
+    var label = d.title + (d.modified ? ' — ' + formatDateTimeDisplay(d.modified) : '');
+    opts.push('<option value="' + d.key + '">' + escapeHtml(label) + '</option>');
+  });
+  sel.innerHTML = opts.join('');
+  sel.disabled = false;
+  var currentKey = STORAGE_PREFIX + appData.meta.documentId;
+  sel.value = selectValue || (appData.general.project === projectName ? currentKey : '__new__');
+  delBtn.disabled = !sel.value || sel.value === '__new__';
+}
+function onProjectInputChange() {
+  var val = document.getElementById('projectInput').value.trim();
+  refreshDocSelectOptions(val);
+}
+function onDocSelectChange() {
+  var sel = document.getElementById('docSelect');
+  var val = sel.value;
+  var project = document.getElementById('projectInput').value.trim();
+  document.getElementById('btnDeleteDoc').disabled = !val || val === '__new__';
+  if (!val) return;
+  if (val === '__new__') {
+    if (appData.general.project === project) return;
+    if (!window.confirm('Classer le Change Control actuel dans le projet « ' + project + ' » ?')) {
+      refreshDocSelectOptions(project);
+      return;
+    }
+    appData.general.project = project;
+    persistToLocalStorage();
+    refreshProjectDatalist();
+    refreshDocSelectOptions(project, STORAGE_PREFIX + appData.meta.documentId);
+    showToast('Classé dans « ' + project + ' »', 'success');
+  } else {
+    if (!window.confirm('Charger ce Change Control ? Les modifications non enregistrées de la vue actuelle seront perdues.')) {
+      refreshDocSelectOptions(project);
+      return;
+    }
+    try {
+      var parsed = JSON.parse(localStorage.getItem(val));
+      appData = normalizeDocument(parsed);
+      renderAll();
+      switchTab('general');
+      document.getElementById('projectInput').value = appData.general.project || project;
+      refreshDocSelectOptions(appData.general.project || project, val);
+    } catch (e) {
+      window.alert('Impossible de charger ce Change Control.');
+    }
+  }
+}
+function deleteCurrentSelectedDoc() {
+  var sel = document.getElementById('docSelect');
+  var key = sel.value;
+  if (!key || key === '__new__') return;
+  var project = document.getElementById('projectInput').value.trim();
+  var canDeleteRemote = (typeof window.__driveDelete === 'function');
+  var msg = 'Supprimer definitivement ce Change Control ?\n\nCette action est irreversible et le supprime localement' +
+    (canDeleteRemote ? ', ainsi que sur Google Drive si vous etes connecte.' : '. (Non connecte a Drive : si un exemplaire y existe deja, il faudra le supprimer manuellement, sinon il pourrait reapparaitre a la prochaine synchro.)');
+  if (!window.confirm(msg)) return;
+
+  var docId = key.slice(STORAGE_PREFIX.length);
+  var wasActive = (appData.meta.documentId === docId);
+  try { localStorage.removeItem(key); } catch (e) {}
+
+  var deleteP = canDeleteRemote ? window.__driveDelete(docId) : Promise.resolve({ driveDeleted: false, reason: 'not-connected' });
+  deleteP.then(function (result) {
+    if (result && result.driveDeleted) showToast('Supprime (local + Drive)', 'success');
+    else if (result && result.reason === 'not-connected') showToast('Supprime localement (non connecte a Drive)', 'info');
+    else showToast('Supprime localement', 'info');
+  }).catch(function () {
+    showToast('Supprime localement — echec de la suppression sur Drive', 'error');
+  });
+
+  refreshProjectDatalist();
+  if (wasActive) {
+    appData = createBlankDocument();
+    appData.general.project = project;
+    renderAll();
+    persistToLocalStorage();
+  }
+  refreshDocSelectOptions(project, '__new__');
 }
 
 function handleNewDocument() {
@@ -1846,6 +2033,8 @@ function handleNewDocument() {
   renderAll();
   persistToLocalStorage();
   switchTab('general');
+  document.getElementById('projectInput').value = '';
+  refreshDocSelectOptions('');
   showToast('Nouveau Change Control cree.', 'success');
 }
 
@@ -1884,9 +2073,17 @@ function init() {
   document.getElementById('btn-add-note').addEventListener('click', handleAddNote);
   document.getElementById('hidden-file-input').addEventListener('change', handleJsonFileInputChange);
   document.getElementById('hidden-attachment-input').addEventListener('change', handleAttachmentInputChange);
+  document.getElementById('projectInput').addEventListener('change', onProjectInputChange);
+  document.getElementById('docSelect').addEventListener('change', onDocSelectChange);
+  document.getElementById('btnDeleteDoc').addEventListener('click', deleteCurrentSelectedDoc);
   window.addEventListener('afterprint', function () { document.body.classList.remove('printing-all'); });
 
   renderAll();
+  refreshProjectDatalist();
+  if (appData.general.project) {
+    document.getElementById('projectInput').value = appData.general.project;
+    refreshDocSelectOptions(appData.general.project, STORAGE_PREFIX + appData.meta.documentId);
+  }
 }
 
 init();
