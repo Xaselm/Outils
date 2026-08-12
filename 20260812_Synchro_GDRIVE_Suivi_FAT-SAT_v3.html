@@ -1,0 +1,3220 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi FAT / SAT</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --ink:#1c2733; --paper:#f4f6f5; --surface:#ffffff; --steel:#5b7086; --steel-soft:#8fa0b0;
+  --border:#dde3e7; --signal:#0e7c86; --signal-dark:#0a5f67; --signal-soft:rgba(14,124,134,.12);
+  --ok:#1a8f52; --ok-bg:#e5f5eb; --nok:#c0362c; --nok-bg:#fbe9e7; --na:#7c8792; --na-bg:#eceef0;
+  --bloquante:#b3261e; --bloquante-bg:#fbe9e7; --nonbloquante:#b8720a; --nonbloquante-bg:#fdf1de;
+  --qi:#2563eb; --qi-bg:#e8eefd; --qo:#7c3aed; --qo-bg:#f1eafd; --qp:#be185d; --qp-bg:#fbe7f0;
+  --radius:10px; --radius-sm:6px;
+  --shadow:0 1px 2px rgba(28,39,51,.06),0 4px 14px rgba(28,39,51,.05);
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Consolas,monospace;
+}
+html[data-theme="dark"]{
+  --ink:#e6eaed; --paper:#12181d; --surface:#1a2128; --steel:#93a4b3; --steel-soft:#5f7383;
+  --border:#2b343c; --signal:#37b3bd; --signal-dark:#63cad2; --signal-soft:rgba(55,179,189,.15);
+  --ok:#3ecb7d; --ok-bg:#123321; --nok:#e2685d; --nok-bg:#3a1c1a; --na:#93a4b3; --na-bg:#232b32;
+  --bloquante:#e2685d; --bloquante-bg:#3a1c1a; --nonbloquante:#e0a94a; --nonbloquante-bg:#372a10;
+  --qi:#6690f2; --qi-bg:#1a2440; --qo:#a780f5; --qo-bg:#2a1f42; --qp:#e2578f; --qp-bg:#3a1a2a;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans);line-height:1.45;padding-bottom:60px;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea,select{font-family:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 9px;font-size:14px;}
+textarea{resize:vertical;min-height:44px;width:100%;line-height:1.4;}
+a{color:var(--signal);}
+
+/* ---- Topbar ---- */
+.load-warning{display:none;align-items:center;justify-content:space-between;gap:14px;background:#fef3c7;color:#7c4a03;border-bottom:2px solid #d97706;padding:11px 20px;font-size:13.5px;line-height:1.4;}
+.load-warning.show{display:flex;}
+html[data-theme="dark"] .load-warning{background:#3d2c0a;color:#f0c674;border-bottom-color:#b8720a;}
+.load-warning-close{background:none;border:none;color:inherit;font-size:20px;cursor:pointer;line-height:1;padding:0 4px;flex-shrink:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px 14px;}
+.topbar-row1{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+.brand{display:flex;flex-direction:column;gap:2px;}
+.brand-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--signal);font-weight:700;text-transform:uppercase;}
+.project-title-input{font-size:22px;font-weight:700;border:none;background:transparent;padding:2px 0;min-width:260px;color:var(--ink);letter-spacing:-.01em;}
+.project-title-input:focus{outline:none;border-bottom:1.5px solid var(--signal);}
+.project-meta-row{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.doc-picker-row{display:flex; gap:8px; align-items:center; margin-top:6px;}
+.doc-picker-row select{
+  font-family:inherit; font-size:12.5px; padding:5px 8px; border-radius:6px;
+  border:1px solid var(--border); background:var(--bg-alt); color:var(--text); max-width:280px;
+}
+.doc-picker-row .icon-btn:disabled{opacity:.35; cursor:not-allowed;}
+.project-meta-row label{font-size:12px;color:var(--steel);display:flex;align-items:center;gap:6px;}
+.project-meta-row input{font-size:13px;padding:5px 8px;}
+.topbar-actions{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.icon-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;color:var(--steel);}
+.icon-btn:hover{border-color:var(--signal);color:var(--signal);}
+.icon-btn:disabled{opacity:.32;cursor:not-allowed;}
+.icon-btn:disabled:hover{border-color:var(--border);color:var(--steel);}
+.drive-btn{display:inline-flex;align-items:center;gap:7px;padding:0 12px;height:36px;}
+.drive-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  background:var(--steel-soft);transition:background .2s ease;
+}
+.drive-dot.is-connected{background:var(--ok);}
+.drive-dot.is-syncing{background:var(--nonbloquante);animation:drive-pulse 1s ease-in-out infinite;}
+.drive-dot.is-error{background:var(--nok);}
+@keyframes drive-pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+.btn-primary{background:var(--signal);color:#fff;border:1px solid var(--signal);border-radius:var(--radius-sm);padding:0 16px;height:36px;display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px;white-space:nowrap;}
+.version-badge{font-family:var(--font-mono);font-size:11px;color:var(--steel);align-self:center;}
+.version-cancel-btn{background:none;border:1px solid var(--border);border-radius:5px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:var(--steel);align-self:center;padding:0;}
+.version-cancel-btn:hover{border-color:var(--nok);color:var(--nok);}
+.version-badge:empty{display:none;}
+.btn-primary:hover{background:var(--signal-dark);}
+.btn-secondary{background:var(--surface);color:var(--steel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 14px;height:36px;display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px;white-space:nowrap;}
+.btn-secondary:hover{border-color:var(--nok);color:var(--nok);}
+.btn-danger-outline{background:transparent;border:1px solid var(--nok);color:var(--nok);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:600;}
+.btn-danger-outline:hover{background:var(--nok-bg);}
+
+/* ---- Stepper + Reserves tab ---- */
+.nav-row{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;flex-wrap:wrap;gap:10px;}
+.phase-stepper{display:flex;align-items:center;gap:0;}
+.stepper-node{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 18px;color:var(--steel);}
+.stepper-dot{width:13px;height:13px;border-radius:50%;border:2.5px solid var(--border);background:var(--surface);transition:all .15s ease;}
+.stepper-node[data-status="progress"] .stepper-dot{border-color:var(--nonbloquante);background:var(--nonbloquante-bg);}
+.stepper-node[data-status="complete"] .stepper-dot{border-color:var(--ok);background:var(--ok);}
+.stepper-node[data-status="blocked"] .stepper-dot{border-color:var(--nok);background:var(--nok);}
+.stepper-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;font-weight:600;text-transform:uppercase;}
+.stepper-node.active .stepper-label{color:var(--signal);}
+.stepper-node.active .stepper-dot{box-shadow:0 0 0 4px var(--signal-soft);}
+.stepper-line{width:36px;height:2px;background:var(--border);margin-bottom:22px;}
+.tab-hidden{display:none !important;}
+.actions-tab-btn{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--steel);display:inline-flex;align-items:center;gap:6px;}
+.actions-tab-btn.active{border-color:var(--signal);color:var(--signal);background:var(--signal-soft);}
+.count-badge{background:var(--nok);color:#fff;border-radius:10px;font-size:11px;font-family:var(--font-mono);padding:1px 6px;min-width:16px;text-align:center;}
+.count-badge:empty{display:none;}
+
+/* ---- Legend ---- */
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:9px 20px;font-size:12px;color:var(--steel);background:var(--paper);border-bottom:1px solid var(--border);}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.legend-swatch{width:9px;height:9px;border-radius:2px;display:inline-block;}
+.qualstage-filter-bar{display:flex;align-items:center;gap:8px;padding:9px 20px;background:var(--paper);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.qualstage-filter-label{font-size:12px;color:var(--steel);font-weight:600;margin-right:2px;}
+.qs-filter-pill{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--steel);}
+.qs-filter-pill.active{background:var(--signal-soft);border-color:var(--signal);color:var(--signal-dark);}
+
+/* ---- Main / panels ---- */
+main{max-width:900px;margin:0 auto;padding:20px;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ---- Sessions ---- */
+.session-subnav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.session-chip{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--steel);font-family:var(--font-mono);}
+.session-chip.active{border-color:var(--signal);color:var(--signal-dark);background:var(--signal-soft);}
+.session-chip-add{border-style:dashed;color:var(--signal);font-family:var(--font-sans);}
+.session-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.session-label-input{font-size:16px;font-weight:700;border:none;background:transparent;padding:2px 3px;min-width:110px;color:var(--ink);}
+.session-label-input:focus{outline:none;border-bottom:1.5px solid var(--signal);}
+.session-date-label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--steel);}
+.session-conclusion{display:flex;align-items:center;gap:8px;}
+.session-conclusion-label{font-size:12px;color:var(--steel);font-weight:600;}
+.conclusion-pill{position:relative;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;border:1.5px solid var(--border);font-size:12px;font-weight:700;color:var(--steel);background:var(--surface);user-select:none;}
+.conclusion-pill input{position:absolute;opacity:0;width:0;height:0;}
+.conclusion-pill-acceptee.active{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);}
+.conclusion-pill-non-acceptee.active{background:var(--nok-bg);border-color:var(--nok);color:var(--nok);}
+.chip-conclusion{font-weight:700;}
+.chip-conclusion-ok{color:var(--ok);}
+.chip-conclusion-nok{color:var(--nok);}
+
+.panel-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.panel-summary{font-size:13px;color:var(--steel);}
+.panel-summary .sum-ok{color:var(--ok);font-weight:700;}
+.panel-summary .sum-nok{color:var(--nok);font-weight:700;}
+.panel-summary .sum-na{color:var(--na);font-weight:700;}
+.btn-add-test{background:var(--surface);border:1.5px dashed var(--signal);color:var(--signal-dark);border-radius:var(--radius-sm);padding:8px 14px;font-weight:600;font-size:13px;}
+.btn-add-test:hover{background:var(--signal-soft);}
+.toolbar-actions-right{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-copy-phase{background:var(--surface);border:1px solid var(--border);color:var(--steel);border-radius:var(--radius-sm);padding:8px 14px;font-weight:600;font-size:12.5px;}
+.btn-copy-phase:hover{border-color:var(--signal);color:var(--signal-dark);}
+.empty-state{text-align:center;color:var(--steel);padding:34px 16px;font-size:14px;border:1.5px dashed var(--border);border-radius:var(--radius);}
+
+/* ---- Test card ---- */
+.test-card{border:1px solid var(--border);border-left:5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;background:var(--surface);box-shadow:var(--shadow);}
+.test-card.result-ok{border-left-color:var(--ok);}
+.test-card.result-nok{border-left-color:var(--nok);background-color:var(--nok-bg);}
+.test-card.result-na{border-left-color:var(--na);opacity:.88;}
+.test-card.action-resolved.result-nok{background-color:var(--surface);border-left-color:var(--ok);}
+@keyframes flashHighlight{0%,100%{box-shadow:var(--shadow);}50%{box-shadow:0 0 0 5px var(--signal-soft);}}
+.test-card.flash-highlight{animation:flashHighlight 1.5s ease;}
+.test-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.test-number{font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--signal-dark);background:var(--signal-soft);padding:3px 9px;border-radius:5px;letter-spacing:.02em;}
+.ref-input{flex:1;min-width:140px;font-size:12.5px;color:var(--steel);border-style:dashed;}
+.row-actions{display:flex;gap:4px;margin-left:auto;}
+.btn-icon{background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--steel);}
+.btn-icon:hover{border-color:var(--signal);color:var(--signal);}
+.btn-icon.btn-delete:hover,.btn-icon.session-delete-btn:hover{border-color:var(--nok);color:var(--nok);}
+.btn-icon.btn-copy-forward:hover{border-color:var(--signal);color:var(--signal-dark);}
+.test-history{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 10px;}
+.test-history-label{font-size:11px;color:var(--steel);font-weight:600;}
+.test-history-chip{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:2px 8px;border-radius:10px;background:var(--na-bg);color:var(--na);}
+.test-history-chip.test-history-ok{background:var(--ok-bg);color:var(--ok);}
+.test-history-chip.test-history-nok{background:var(--nok-bg);color:var(--nok);}
+.test-history-chip.test-history-na{background:var(--na-bg);color:var(--na);}
+.test-history-chip.test-history-none{background:var(--na-bg);color:var(--steel);}
+.description-textarea{margin-bottom:12px;}
+.resolved-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--ok);background:var(--ok-bg);padding:3px 10px;border-radius:12px;margin-bottom:10px;}
+
+.result-selector,.reserve-type-selector{display:flex;gap:8px;flex-wrap:wrap;}
+.result-pill,.reserve-pill{position:relative;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);font-size:12.5px;font-weight:700;color:var(--steel);background:var(--surface);user-select:none;}
+.result-pill input,.reserve-pill input{position:absolute;opacity:0;width:0;height:0;}
+.result-pill .pill-icon{display:inline-flex;}
+.result-pill-ok.active{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);}
+.result-pill-nok.active{background:var(--nok-bg);border-color:var(--nok);color:var(--nok);}
+.result-pill-na.active{background:var(--na-bg);border-color:var(--na);color:var(--na);}
+.qualstage-selector{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.qualstage-pill{position:relative;display:inline-flex;align-items:center;padding:4px 11px;border-radius:14px;border:1.5px solid var(--border);font-size:11.5px;font-weight:700;color:var(--steel);background:var(--surface);user-select:none;}
+.qualstage-pill input{position:absolute;opacity:0;width:0;height:0;}
+.qualstage-pill-qi.active{background:var(--qi-bg);border-color:var(--qi);color:var(--qi);}
+.qualstage-pill-qo.active{background:var(--qo-bg);border-color:var(--qo);color:var(--qo);}
+.qualstage-pill-qp.active{background:var(--qp-bg);border-color:var(--qp);color:var(--qp);}
+.qualstage-clear{background:none;border:none;color:var(--steel-soft);width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
+.qualstage-clear:hover{color:var(--nok);}
+.qualstage-tag{font-family:var(--font-mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.qualstage-tag-qi{background:var(--qi-bg);color:var(--qi);}
+.qualstage-tag-qo{background:var(--qo-bg);color:var(--qo);}
+.qualstage-tag-qp{background:var(--qp-bg);color:var(--qp);}
+.reserve-pill-bloquante.active{background:var(--bloquante-bg);border-color:var(--bloquante);color:var(--bloquante);}
+.reserve-pill-nonbloquante.active{background:var(--nonbloquante-bg);border-color:var(--nonbloquante);color:var(--nonbloquante);}
+
+.reserve-panel{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);}
+.reserve-nudge{font-size:12px;color:var(--nonbloquante);margin:8px 0 0;font-weight:600;}
+.reserve-text-textarea{margin-top:10px;}
+.comment-textarea{margin-top:12px;font-size:13px;color:var(--steel);}
+
+.reason-chip-selector{margin-top:12px;}
+.reason-chip-label{font-size:11.5px;font-weight:700;color:var(--steel);margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em;}
+.reason-chip-empty{font-size:12px;color:var(--steel);margin:0;}
+.reason-chip{position:relative;display:inline-flex;align-items:center;padding:5px 12px;border-radius:14px;border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--steel);background:var(--surface);margin:0 6px 6px 0;user-select:none;}
+.reason-chip input{position:absolute;opacity:0;width:0;height:0;}
+.reason-chip.active{background:var(--bloquante-bg);border-color:var(--bloquante);color:var(--bloquante);}
+
+.reason-tags-display{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px;}
+.reason-tag{font-size:11px;font-weight:600;padding:2px 9px;border-radius:10px;background:var(--bloquante-bg);color:var(--bloquante);}
+
+.photo-section{margin-top:14px;}
+.photo-gallery{display:flex;flex-wrap:wrap;gap:8px;}
+.photo-thumb{position:relative;width:64px;height:64px;border-radius:7px;overflow:hidden;border:1px solid var(--border);background:var(--paper);}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;}
+.photo-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(20,20,25,.62);color:#fff;border:none;display:inline-flex;align-items:center;justify-content:center;padding:0;}
+.photo-add-tile{width:64px;height:64px;border-radius:7px;border:1.5px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--steel);font-size:10.5px;cursor:pointer;text-align:center;}
+.photo-add-tile:hover{border-color:var(--signal);color:var(--signal);}
+.photo-limit-hint{font-size:11px;color:var(--steel-soft);margin:6px 0 0;}
+.photo-file-input{position:absolute;opacity:0;width:0;height:0;}
+
+/* ---- Overview (stats) ---- */
+.overview-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;box-shadow:var(--shadow);}
+.overview-date{font-family:var(--font-mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--steel);margin-bottom:14px;}
+.overview-stats{display:flex;gap:28px;flex-wrap:wrap;}
+.stat-group{flex:1;min-width:220px;}
+.stat-label{font-size:12.5px;font-weight:700;margin-bottom:7px;color:var(--ink);}
+.stat-bar{display:flex;height:9px;border-radius:5px;overflow:hidden;background:var(--border);margin-bottom:7px;}
+.stat-bar-seg{height:100%;}
+.seg-ok{background:var(--ok);}
+.seg-nok{background:var(--nok);}
+.seg-na{background:var(--na);}
+.seg-solde{background:var(--ok);}
+.seg-bloq{background:var(--bloquante);}
+.seg-nonbloq{background:var(--nonbloquante);}
+.stat-legend-line{font-size:12px;color:var(--steel);}
+
+/* ---- Reserves list ---- */
+.actions-summary{font-size:13px;color:var(--steel);margin-bottom:16px;}
+.actions-summary .sum-bloq{color:var(--bloquante);font-weight:700;}
+.actions-summary .sum-nonbloq{color:var(--nonbloquante);font-weight:700;}
+.actions-summary .sum-solde{color:var(--ok);font-weight:700;}
+.action-card{border:1px solid var(--border);border-left:5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;background:var(--surface);box-shadow:var(--shadow);}
+.action-card.severity-bloquante{border-left-color:var(--bloquante);}
+.action-card.severity-nonbloquante{border-left-color:var(--nonbloquante);}
+.action-card.status-soldee{opacity:.82;}
+.action-card-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.reserve-id-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.03em;padding:3px 8px;border-radius:5px;background:var(--signal-soft);color:var(--signal-dark);}
+.phase-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.05em;padding:3px 8px;border-radius:5px;background:var(--na-bg);color:var(--steel);text-transform:uppercase;}
+.test-num{font-family:var(--font-mono);font-size:12px;color:var(--steel);}
+.badge-bloquante,.badge-nonbloquante{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:12px;}
+.badge-bloquante{background:var(--bloquante-bg);color:var(--bloquante);}
+.badge-nonbloquante{background:var(--nonbloquante-bg);color:var(--nonbloquante);}
+.badge-bloquante .swatch,.badge-nonbloquante .swatch{width:7px;height:7px;border-radius:2px;margin-right:5px;display:inline-block;}
+.badge-bloquante .swatch{background:var(--bloquante);}
+.badge-nonbloquante .swatch{background:var(--nonbloquante);}
+.status-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;background:var(--na-bg);color:var(--steel);}
+.status-tag-ouverte{background:var(--nok-bg);color:var(--nok);}
+.status-tag-en-cours{background:var(--nonbloquante-bg);color:var(--nonbloquante);}
+.status-tag-soldee{background:var(--ok-bg);color:var(--ok);}
+.goto-test-btn{margin-left:auto;background:none;border:none;color:var(--signal);font-size:12.5px;font-weight:600;padding:2px 4px;}
+.goto-test-btn:hover{text-decoration:underline;}
+.action-description{margin:0 0 6px;font-size:14px;}
+.action-reserve-text{margin:0 0 10px;font-size:13.5px;color:var(--steel);background:var(--paper);padding:8px 10px;border-radius:7px;}
+.action-tracking{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);}
+.tracking-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+.tracking-row label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--steel);font-weight:600;}
+.responsable-field{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--steel);font-weight:600;}
+.responsable-field-label{font-size:11.5px;color:var(--steel);font-weight:600;}
+.responsable-check{display:flex !important;flex-direction:row !important;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--ink);}
+.responsable-check input{width:auto;}
+.tracking-row select,.tracking-row input{font-size:13px;}
+.log-list{margin-bottom:8px;}
+.log-entry{display:flex;gap:10px;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border);}
+.log-entry:last-child{border-bottom:none;}
+.log-date{font-family:var(--font-mono);color:var(--steel-soft);white-space:nowrap;}
+.log-text{color:var(--ink);}
+.log-add-row{display:flex;gap:8px;}
+.log-add-row .log-input{flex:1;}
+.log-add-btn{background:var(--signal);color:#fff;border:none;border-radius:var(--radius-sm);padding:0 14px;font-size:12.5px;font-weight:600;}
+.log-add-btn:hover{background:var(--signal-dark);}
+
+details.archive-details{margin-top:22px;}
+details.archive-details summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--steel);padding:8px 0;list-style:none;}
+details.archive-details summary::-webkit-details-marker{display:none;}
+details.archive-details summary:before{content:"\25B8";display:inline-block;margin-right:6px;transition:transform .15s ease;}
+details.archive-details[open] summary:before{transform:rotate(90deg);}
+
+/* ---- Modals ---- */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,20,25,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--surface);border-radius:var(--radius);padding:22px;max-width:420px;width:100%;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.25);position:relative;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin:-22px -22px 14px;padding:18px 22px 14px;position:sticky;top:-22px;background:var(--surface);border-bottom:1px solid var(--border);z-index:1;}
+.modal-header h2{font-size:16px;margin:0;}
+.modal-close{background:none;border:none;color:var(--steel);width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;}
+.checkbox-row{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:16px;}
+.checkbox-row input{width:auto;}
+.theme-group{margin:0;}
+.theme-group summary{cursor:pointer;list-style:none;}
+.theme-group summary::-webkit-details-marker{display:none;}
+.theme-group-header{display:flex;align-items:baseline;gap:10px;margin:22px 0 12px;padding-bottom:6px;border-bottom:1.5px solid var(--border);flex-wrap:wrap;}
+.theme-group:first-child .theme-group-header{margin-top:0;}
+.theme-group-header:before{content:"\25BE";display:inline-block;color:var(--steel);transition:transform .15s ease;font-size:11px;}
+.theme-group:not([open]) .theme-group-header:before{transform:rotate(-90deg);}
+.theme-group-name{font-size:13.5px;font-weight:700;color:var(--signal-dark);text-transform:uppercase;letter-spacing:.03em;}
+.theme-group-count{font-size:12px;color:var(--steel);}
+.theme-group-body{padding-top:2px;}
+.theme-select{font-size:12.5px;padding:5px 8px;max-width:160px;flex-shrink:0;}
+.move-phase-select{font-size:11.5px;padding:4px 6px;max-width:120px;flex-shrink:0;color:var(--steel);}
+.btn-add-test-bottom{margin-top:6px;width:100%;justify-content:center;}
+
+.reasons-manager{border-top:1px solid var(--border);padding-top:14px;}
+.reasons-manager-label{font-size:12.5px;font-weight:700;margin-bottom:9px;color:var(--ink);}
+.reasons-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.reason-row{display:flex;gap:6px;align-items:center;}
+.phase-row{display:flex;gap:8px;align-items:center;}
+.phase-row .phase-included-input{width:auto;flex-shrink:0;}
+.phase-row .phase-label-input{flex:1;font-size:13px;}
+.phase-builtin-label{flex:1;font-size:13px;padding:7px 9px;color:var(--steel);}
+.phase-row-actions{display:flex;gap:4px;flex-shrink:0;}
+#finalAcceptanceSelect{width:100%;margin-top:4px;}
+.reason-row .reason-label-input{flex:1;font-size:13px;}
+.reason-empty-hint{font-size:12.5px;color:var(--steel);margin:0 0 10px;}
+.reason-add-row{display:flex;gap:6px;}
+.reason-add-row input{flex:1;}
+.reason-add-row button{background:var(--signal);color:#fff;border:none;border-radius:var(--radius-sm);padding:0 13px;font-size:12.5px;font-weight:600;}
+.reason-add-row button:hover{background:var(--signal-dark);}
+.backup-buttons-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+.backup-buttons-row .btn-secondary{cursor:pointer;font-size:13px;}
+.backup-import-label input[type="file"]{position:absolute;opacity:0;width:0;height:0;}
+
+.modal-box-lightbox{max-width:min(88vw,720px);background:transparent;box-shadow:none;padding:0;display:flex;align-items:center;gap:10px;}
+.modal-box-lightbox img{max-width:100%;max-height:78vh;border-radius:8px;display:block;background:#000;}
+.modal-box-lightbox .modal-close{position:absolute;top:-40px;right:0;color:#fff;background:rgba(0,0,0,.35);}
+.lightbox-prev,.lightbox-next{background:rgba(20,20,25,.5);color:#fff;border:none;border-radius:50%;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lightbox-counter{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);color:#fff;font-family:var(--font-mono);font-size:12px;}
+
+/* ---- Toast ---- */
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,12px);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .2s ease;z-index:200;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+/* ---- Print synthesis overlay ---- */
+.print-overlay{position:fixed;inset:0;background:var(--paper);z-index:300;display:none;overflow-y:auto;}
+.print-overlay.show{display:block;}
+.print-overlay-bar{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;gap:10px;z-index:2;}
+.print-overlay-bar #printCloseBtn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:600;color:var(--steel);}
+.print-page-number-hint{max-width:920px;margin:14px auto 0;padding:10px 16px;background:var(--nonbloquante-bg);color:var(--ink);border-radius:var(--radius-sm);font-size:12.5px;line-height:1.4;}
+.print-content{max-width:920px;margin:0 auto;padding:28px 24px 70px;color:var(--ink);}
+.print-header h1{font-size:22px;margin:0 0 6px;}
+.print-meta{font-size:12.5px;color:var(--steel);margin:2px 0;}
+.print-phase-title{font-size:16px;font-weight:700;margin:26px 0 6px;padding-bottom:6px;border-bottom:2px solid var(--ink);}
+.print-session-title{font-size:13.5px;font-weight:700;color:var(--signal-dark);margin:14px 0 6px;}
+.print-conclusion-acceptee{color:var(--ok);}
+.print-conclusion-non-acceptee{color:var(--nok);}
+.print-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;}
+.print-table th,.print-table td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top;}
+.print-table th{background:var(--paper);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.02em;}
+.print-table tr{page-break-inside:avoid;}
+.print-result-ok{color:var(--ok);font-weight:700;}
+.print-result-nok{color:var(--nok);font-weight:700;}
+.print-result-na{color:var(--na);}
+.print-empty{color:var(--steel);font-size:13px;margin:10px 0 24px;}
+.print-milestones-table td{vertical-align:top;}
+.print-milestone-entry{font-size:11px;margin-bottom:3px;}
+.print-milestone-date{font-family:var(--font-mono);color:var(--steel);white-space:nowrap;margin-right:6px;}
+.print-comment-inline{font-size:10px;font-style:italic;color:var(--steel);}
+
+.print-annex-toggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--steel);white-space:nowrap;}
+.print-annex-toggle input{width:auto;}
+.print-annex-title{page-break-before:always;}
+.print-annex-item{page-break-inside:avoid;margin-bottom:18px;}
+.print-annex-header{font-size:12px;margin-bottom:6px;}
+.print-annex-num{font-family:var(--font-mono);font-weight:700;color:var(--signal-dark);}
+.print-annex-desc{color:var(--ink);}
+.print-annex-photos{display:flex;gap:8px;flex-wrap:wrap;}
+.print-annex-photo{width:170px;height:170px;object-fit:cover;border-radius:6px;border:1px solid var(--border);}
+.print-final-acceptance-badge{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.03em;background:var(--signal-soft);color:var(--signal-dark);padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+.print-final-acceptance-row{background:var(--signal-soft);}
+.print-version-table{font-size:11.5px;}
+.print-signature-table th,.print-signature-table td{vertical-align:top;}
+.print-sign-cell{min-width:150px;}
+.print-sign-line{font-size:11.5px;color:var(--steel);}
+.print-sign-blank{height:40px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+
+/* ---- Print ---- */
+@media print{
+  @page{
+    margin:16mm 14mm 18mm 14mm;
+    @bottom-center{ content:"Page " counter(page) " / " counter(pages); font-size:9pt; color:#666; }
+  }
+  body.print-overlay-active .topbar,
+  body.print-overlay-active .nav-row,
+  body.print-overlay-active .legend,
+  body.print-overlay-active main,
+  body.print-overlay-active .modal-overlay:not(#printOverlay),
+  body.print-overlay-active .toast{display:none !important;}
+  .print-overlay-bar,.print-page-number-hint{display:none !important;}
+  .print-overlay{position:static;overflow:visible;}
+  .topbar,.nav-row,.legend,.btn-add-test,.row-actions,.photo-add-tile,.modal-overlay,.log-add-row,.goto-test-btn,.toast,.session-chip-add{display:none !important;}
+  .tab-panel{display:block !important;page-break-after:always;}
+  .test-card,.action-card,.overview-block{box-shadow:none;border:1px solid #999;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+
+/* ---- Responsive ---- */
+@media (max-width:640px){
+  .topbar-row1{flex-direction:column;}
+  .nav-row{flex-direction:column;align-items:stretch;}
+  .phase-stepper{justify-content:center;}
+  .tracking-row{flex-direction:column;gap:8px;}
+  .test-header{gap:6px;}
+  .row-actions{margin-left:0;width:100%;justify-content:flex-end;}
+  .overview-stats{flex-direction:column;gap:16px;}
+}
+</style>
+</head>
+<body>
+
+<div class="load-warning" id="loadWarning">
+  <span>&#9888; Les données intégrées dans ce fichier n'ont pas pu être chargées correctement (fichier corrompu, tronqué, ou modifié). Le formulaire a démarré vide par précaution — vérifiez si vous avez une autre copie de ce fichier ou une sauvegarde JSON avant de continuer.</span>
+  <button type="button" class="load-warning-close" id="loadWarningClose" title="Fermer">&times;</button>
+</div>
+
+<header class="topbar">
+  <div class="topbar-row1">
+    <div class="brand">
+      <span class="brand-eyebrow">Suivi de qualification</span>
+      <input type="text" id="projectName" class="project-title-input" placeholder="Nom du projet / équipement">
+      <div class="doc-picker-row">
+        <select id="docSelect" title="Basculer vers un autre suivi FAT/SAT enregistré">
+          <option value="fatsat-state">Suivi actuel (non classé)</option>
+        </select>
+        <button type="button" id="btnClassifyDoc" class="icon-btn" title="Créer un suivi classé sous le nom de projet actuel">＋</button>
+        <button type="button" id="btnDeleteDoc" class="icon-btn" title="Supprimer ce suivi (local + Drive)" disabled>🗑</button>
+      </div>
+      <div class="project-meta-row">
+        <label>Client <input type="text" id="projectClient" placeholder="optionnel"></label>
+        <label>Code GMAO <input type="text" id="projectGmao" placeholder="optionnel"></label>
+        <label>Fournisseur <input type="text" id="projectSupplier" placeholder="optionnel"></label>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" class="icon-btn" id="themeToggle" title="Thème clair / sombre"></button>
+      <button type="button" class="btn-secondary drive-btn" id="btn-drive-connect" title="Connecter Google Drive pour synchroniser ce projet">
+        <span id="drive-dot" class="drive-dot"></span> <span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button type="button" class="icon-btn" id="btn-drive-force" title="Forcer l'envoi vers Drive maintenant">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 12a9 9 0 1 1-2.64-6.36" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="21 3 21 9 15 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="undoBtn" title="Annuler (Ctrl+Z)">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="redoBtn" title="Rétablir (Ctrl+Y)">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M15 7l5 5-5 5M20 12H9a5 5 0 0 0 0 10h2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="settingsBtn" title="Réglages">
+        <svg viewBox="0 0 24 24" width="16" height="16"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></g><circle cx="9" cy="7" r="2.3" fill="currentColor"/><circle cx="15" cy="12" r="2.3" fill="currentColor"/><circle cx="7" cy="17" r="2.3" fill="currentColor"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="printTriggerBtn" title="Synthèse imprimable / PDF">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2M6 14h12v7H6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" class="btn-secondary" id="newProjectBtn" title="Réinitialiser le projet">
+        <svg viewBox="0 0 24 24" width="15" height="15"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Nouveau Projet
+      </button>
+      <button type="button" class="btn-primary" id="exportBtn" title="Télécharger un fichier autonome avec les données (n'affecte pas la version)">
+        <svg viewBox="0 0 24 24" width="15" height="15"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Télécharger
+      </button>
+      <button type="button" class="btn-secondary" id="officialSendBtn" title="Marquer cet envoi comme officiel : crée une nouvelle version et l'enregistre dans l'historique des réserves">
+        <svg viewBox="0 0 24 24" width="15" height="15"><path d="M4 4l16 8-16 8 4-8-4-8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        Envoi officiel
+      </button>
+      <span class="version-badge" id="versionBadge" title="Version actuelle du document"></span>
+      <button type="button" class="version-cancel-btn" id="versionCancelBtn" title="Annuler le dernier envoi officiel (repasse à la version précédente)">
+        <svg viewBox="0 0 24 24" width="13" height="13"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 0 1 0 10h-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="nav-row">
+  <div class="phase-stepper" id="phaseStepper"></div>
+  <button type="button" class="actions-tab-btn" data-tab="actions" id="actionsTabBtn">Liste de réserves <span class="count-badge" id="actionsTabCount"></span></button>
+</nav>
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--ok)"></span> OK</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--nok)"></span> Non OK</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--na)"></span> N/A</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--bloquante)"></span> Réserve bloquante</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--nonbloquante)"></span> Réserve non bloquante</span>
+</div>
+
+<div class="qualstage-filter-bar">
+  <span class="qualstage-filter-label">Filtrer par qualification :</span>
+  <button type="button" class="qs-filter-pill active" data-qs="all">Tous</button>
+  <button type="button" class="qs-filter-pill" data-qs="qi">QI</button>
+  <button type="button" class="qs-filter-pill" data-qs="qo">QO</button>
+  <button type="button" class="qs-filter-pill" data-qs="qp">QP</button>
+</div>
+
+<main>
+  <div id="phasePanelsHost"></div>
+
+  <section class="tab-panel" data-panel="actions">
+    <div class="overview-block">
+      <div class="overview-date" id="overviewDate"></div>
+      <div class="overview-stats">
+        <div class="stat-group">
+          <div class="stat-label">Tests réalisés (toutes phases)</div>
+          <div class="stat-bar" id="testsStatBar"></div>
+          <div class="stat-legend-line" id="testsStatLine"></div>
+        </div>
+        <div class="stat-group">
+          <div class="stat-label">Avancement des réserves</div>
+          <div class="stat-bar" id="reservesStatBar"></div>
+          <div class="stat-legend-line" id="reservesStatLine"></div>
+        </div>
+      </div>
+    </div>
+    <div class="actions-summary" id="actionsSummary"></div>
+    <div id="actionsOpenList"></div>
+    <details class="archive-details" id="actionsArchive">
+      <summary>Réserves soldées (<span id="archiveCount">0</span>)</summary>
+      <div id="actionsArchiveList"></div>
+    </details>
+  </section>
+</main>
+
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-header"><h2>Réglages</h2><button type="button" class="modal-close"></button></div>
+    <div class="reasons-manager">
+      <div class="reasons-manager-label">Phases du projet (ordre = ordre d'affichage)</div>
+      <p class="reason-empty-hint">Décochez une phase pour la masquer (ex. FAT si tout se fait directement en SAT). Les données existantes sont conservées.</p>
+      <div class="reasons-list" id="phasesList"></div>
+      <div class="reason-add-row">
+        <input type="text" id="newPhaseInput" placeholder="Nouvelle phase (ex : Réception)...">
+        <button type="button" id="addPhaseBtn">Ajouter</button>
+      </div>
+      <p class="reason-empty-hint" style="margin-top:10px;">Phase qui conditionne la réception définitive de l'équipement</p>
+      <select id="finalAcceptanceSelect"></select>
+    </div>
+    <div class="reasons-manager">
+      <div class="reasons-manager-label">Raisons de blocage possibles</div>
+      <div class="reasons-list" id="reasonsList"></div>
+      <div class="reason-add-row">
+        <input type="text" id="newReasonInput" placeholder="Nouvelle raison...">
+        <button type="button" id="addReasonBtn">Ajouter</button>
+      </div>
+    </div>
+    <div class="reasons-manager">
+      <div class="reasons-manager-label">Thèmes de test (pour regroupement)</div>
+      <div class="reasons-list" id="themesList"></div>
+      <div class="reason-add-row">
+        <input type="text" id="newThemeInput" placeholder="Nouveau thème...">
+        <button type="button" id="addThemeBtn">Ajouter</button>
+      </div>
+    </div>
+    <div class="reasons-manager">
+      <div class="reasons-manager-label">Sauvegarde / restauration</div>
+      <p class="reason-empty-hint">En complément du fichier HTML « Télécharger », vous pouvez exporter uniquement les données au format JSON (plus léger), et les réimporter dans ce même outil en cas de besoin.</p>
+      <div class="backup-buttons-row">
+        <button type="button" class="btn-secondary" id="exportJsonBtn">Exporter en JSON</button>
+        <label class="btn-secondary backup-import-label" id="importJsonLabel">
+          Importer un JSON
+          <input type="file" accept="application/json,.json" id="importJsonInput">
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="lightboxModal">
+  <div class="modal-box modal-box-lightbox">
+    <button type="button" class="modal-close"></button>
+    <button type="button" class="lightbox-prev"></button>
+    <img id="lightboxImg" src="" alt="Photo agrandie">
+    <button type="button" class="lightbox-next"></button>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
+  </div>
+</div>
+
+<div class="print-overlay" id="printOverlay">
+  <div class="print-overlay-bar">
+    <button type="button" id="printCloseBtn">&#8592; Retour</button>
+    <label class="print-annex-toggle"><input type="checkbox" id="printAnnexToggle" checked> Inclure l'annexe photos</label>
+    <button type="button" id="printNowBtn" class="btn-primary">Imprimer / Enregistrer en PDF</button>
+  </div>
+  <p class="print-page-number-hint">💡 Pour garantir la numérotation des pages (utile en cas d'impression multi-pages), pensez à cocher <strong>« En-têtes et pieds de page »</strong> dans « Plus de paramètres » de la boîte de dialogue d'impression.</p>
+  <div class="print-content" id="printContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="application/json" id="app-data">{"meta":{"projectName":"","client":"","gmaoCode":"","supplier":"","version":0},"theme":"light","sessions":{"prefat":[{"id":"s-prefat-1","label":"Session 1","date":"","tests":[]}],"fat":[{"id":"s-fat-1","label":"Session 1","date":"","tests":[]}],"sat":[{"id":"s-sat-1","label":"Session 1","date":"","tests":[]}]}}</script>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — remplace window.storage
+   Ce fichier utilisait DÉJÀ window.storage.get/set sans aucun fallback
+   localStorage : hors de Claude.ai, window.storage est undefined et
+   rien n'était donc jamais persisté (l'app retombait systématiquement
+   sur l'état vierge embarqué à chaque rechargement). Ce module fournit
+   un vrai window.storage (cache IndexedDB + synchro Drive), identique
+   au module de référence (Ludothèque / Pointage / Suivi d'Actions).
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'fatsat';
+  var LS_PREFIX = 'gdsync__' + APP_NS + '__';
+  var CONNECTED_FLAG = LS_PREFIX + 'connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  /* ---------- Cache local (IndexedDB — les photos base64 des tests
+     peuvent dépasser largement la limite ~5 Mo de localStorage) ---------- */
+  var DB_NAME = 'gdsync_' + APP_NS;
+  var DB_STORE = 'kv';
+  var dbPromise = null;
+
+  function openDb() {
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise(function (resolve, reject) {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE, { keyPath: 'key' });
+      };
+      req.onsuccess = function (e) { resolve(e.target.result); };
+      req.onerror = function (e) { reject(e.target.error); };
+    });
+    return dbPromise;
+  }
+
+  function idbGet(key) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).get(key);
+        req.onsuccess = function () {
+          resolve(req.result ? { value: req.result.value, modified: req.result.modified } : null);
+        };
+        req.onerror = function () { reject(req.error); };
+      });
+    }).catch(function () { return null; });
+  }
+
+  function idbSet(key, value, modifiedOverride) {
+    return idbGet(key).then(function (existing) {
+      var modified = modifiedOverride;
+      if (!modified) {
+        modified = (existing && existing.value === value) ? existing.modified : Date.now();
+      }
+      return openDb().then(function (db) {
+        return new Promise(function (resolve) {
+          var tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).put({ key: key, value: value, modified: modified });
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = function () { resolve(false); };
+        });
+      });
+    }).catch(function () { return false; });
+  }
+
+  function idbDelete(key) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve) {
+        var tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).delete(key);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(false); };
+      });
+    }).catch(function () { return false; });
+  }
+
+  function idbListAllKeys() {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve) {
+        var out = [];
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).openCursor();
+        req.onsuccess = function (e) {
+          var cursor = e.target.result;
+          if (cursor) { out.push(cursor.key); cursor.continue(); }
+          else resolve(out);
+        };
+        req.onerror = function () { resolve(out); };
+      });
+    }).catch(function () { return []; });
+  }
+
+  /* ---------- Statut visuel ---------- */
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = {
+      idle: 'Drive : non connecté',
+      connected: 'Drive : connecté',
+      ok: 'Drive : synchronisé',
+      sync: 'Drive : synchro…',
+      error: 'Drive : erreur de synchro'
+    };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  /* ---------- Appels API Drive ---------- */
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) {
+      if (!res.ok) throw new Error('Drive API ' + res.status);
+      return res;
+    });
+  }
+
+  function driveFileName(key) { return 'storage__' + APP_NS + '__' + key + '.json'; }
+
+  function driveFindFile(key) {
+    var q = encodeURIComponent("name='" + driveFileName(key) + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      return (data.files && data.files[0]) || null;
+    });
+  }
+
+  /* Liste tous les fichiers de cette app sur Drive (découverte dynamique,
+     pour retrouver un suivi créé ou classé sur un autre appareil). */
+  function driveListAllFiles() {
+    var q = encodeURIComponent("name contains 'storage__" + APP_NS + "__' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)&pageSize=1000';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return data.files || []; });
+  }
+  function keyFromFileName(name) {
+    var prefix = 'storage__' + APP_NS + '__';
+    if (name.indexOf(prefix) !== 0 || name.slice(-5) !== '.json') return null;
+    return name.slice(prefix.length, -5);
+  }
+
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+
+  function driveCreateFile(key, record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(key), parents: ['appDataFolder'] };
+    var body =
+      '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' +
+      '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    });
+  }
+
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  }
+
+  function drivePushRecord(key, record, knownFileId) {
+    if (knownFileId) return driveUpdateFile(knownFileId, record);
+    return driveFindFile(key).then(function (existing) {
+      return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(key, record);
+    });
+  }
+
+  /* ---------- Synchro bidirectionnelle (dernier modifié gagne), découverte dynamique ---------- */
+  async function syncOneKey(key, firstConnect, knownFile) {
+    var local = await idbGet(key);
+    var existing = (knownFile !== undefined) ? knownFile : await driveFindFile(key);
+    if (!existing) {
+      if (local) await drivePushRecord(key, local);
+      return false;
+    }
+    var remote = await driveGetRecord(existing.id);
+    if (!remote) return false;
+
+    if (firstConnect || !local || remote.modified > local.modified) {
+      var changed = !(local && local.value === remote.value);
+      await idbSet(key, remote.value, remote.modified);
+      return changed;
+    } else if (local.modified > remote.modified) {
+      await driveUpdateFile(existing.id, local);
+    }
+    return false;
+  }
+
+  async function syncAllFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var activeKeyBefore = (typeof window.__fatsatActiveKey === 'function') ? window.__fatsatActiveKey() : null;
+      var activeChanged = false;
+
+      var driveFiles = await driveListAllFiles();
+      var remoteKeys = driveFiles.map(function (f) { return keyFromFileName(f.name); }).filter(Boolean);
+      var localKeys = await idbListAllKeys();
+      var allKeys = localKeys.concat(remoteKeys).filter(function (k, i, arr) { return arr.indexOf(k) === i && k.indexOf('gdsync__') !== 0; });
+      if (allKeys.indexOf('fatsat-state') === -1) allKeys.push('fatsat-state'); /* clé historique toujours synchronisée */
+
+      var anyActiveChange = false;
+      for (var i = 0; i < allKeys.length; i++) {
+        var fileEntry = driveFiles.filter(function (f) { return f.name === driveFileName(allKeys[i]); })[0] || null;
+        var changed = await syncOneKey(allKeys[i], firstConnect, fileEntry);
+        if (changed && allKeys[i] === activeKeyBefore) anyActiveChange = true;
+      }
+      setSyncStatus('ok');
+      if (anyActiveChange) {
+        setSyncStatus('sync');
+        if (typeof window.showToast === 'function') window.showToast('Suivi à jour reçu de Drive, actualisation…');
+        setTimeout(function () { location.reload(); }, 900);
+      } else if (typeof window.__fatsatRefreshDocSelect === 'function') {
+        window.__fatsatRefreshDocSelect();
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync] Échec de la synchronisation :', e);
+    }
+  }
+
+  /* ---------- Auth Google ---------- */
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncAllFromDrive(isFirstConnect);
+  }
+
+  function describeError(e) {
+    if (e && e.message) return e.message;
+    try { return JSON.stringify(e); } catch (e2) { return String(e); }
+  }
+
+  async function forceSyncPush() {
+    if (!hasValidToken()) {
+      alert('Pas encore connecté à Drive (ou session expirée). Clique d\'abord sur "Drive : non connecté", puis réessaie "Forcer synchro".');
+      return;
+    }
+    setSyncStatus('sync');
+    var keys = await idbListAllKeys();
+    keys = keys.filter(function (k) { return k.indexOf('gdsync__') !== 0; });
+    if (keys.indexOf('fatsat-state') === -1) keys.push('fatsat-state');
+    var report = [];
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var local = await idbGet(key);
+      if (!local) { report.push(key + ' : rien en local'); continue; }
+      try {
+        await drivePushRecord(key, local);
+        report.push(key + ' : OK (' + Math.round(local.value.length / 1024) + ' Ko)');
+      } catch (e) {
+        report.push(key + ' : ERREUR - ' + describeError(e));
+      }
+    }
+    var hasError = report.some(function (line) { return line.indexOf('ERREUR') !== -1; });
+    setSyncStatus(hasError ? 'error' : 'ok');
+    alert('Résultat de la synchro forcée :\n\n' + report.join('\n'));
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) {
+      setTimeout(initGis, 300);
+      return;
+    }
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: onTokenReceived
+    });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', forceSyncPush);
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+    setInterval(function () {
+      if (localStorage.getItem(CONNECTED_FLAG) === '1') {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  /* ---------- API window.storage (même contrat que l'API Artifacts) ---------- */
+  window.storage = {
+    get: async function (key) {
+      var rec = await idbGet(key);
+      return rec ? { key: key, value: rec.value, shared: false } : null;
+    },
+    set: async function (key, value) {
+      var ok = await idbSet(key, value);
+      if (!ok) return null;
+      if (hasValidToken()) {
+        setSyncStatus('sync');
+        idbGet(key).then(function (rec) { return drivePushRecord(key, rec); }).then(function () {
+          setSyncStatus('ok');
+        }).catch(function (e) {
+          setSyncStatus('error');
+          console.error('[DriveSync] Échec de la sauvegarde vers Drive pour "' + key + '" :', e);
+        });
+      }
+      return { key: key, value: value, shared: false };
+    },
+    delete: async function (key) {
+      var ok = await idbDelete(key);
+      return ok ? { key: key, deleted: true, shared: false } : null;
+    },
+    list: async function () {
+      var keys = await idbListAllKeys();
+      return { keys: keys.filter(function (k) { return k.indexOf('gdsync__') !== 0; }), shared: false };
+    }
+  };
+
+  /* ---------- Suppression explicite sur Drive (le retrait local se fait
+     via window.storage.delete() côté appelant) ---------- */
+  window.__driveDelete = function (key) {
+    if (!hasValidToken()) return Promise.resolve({ driveDeleted: false, reason: 'not-connected' });
+    return driveFindFile(key).then(function (existing) {
+      if (!existing) return { driveDeleted: false, reason: 'not-found-remote' };
+      return driveFetch('https://www.googleapis.com/drive/v3/files/' + existing.id, { method: 'DELETE' })
+        .then(function () { return { driveDeleted: true }; });
+    }).catch(function (e) {
+      console.error('[DriveSync] Échec de la suppression sur Drive :', e);
+      return { driveDeleted: false, reason: 'error' };
+    });
+  };
+})();
+</script>
+
+<script>
+(function(){
+'use strict';
+
+var PRISTINE_HTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+var ICON = {
+  check:'<svg viewBox="0 0 20 20" width="13" height="13"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  cross:'<svg viewBox="0 0 20 20" width="13" height="13"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>',
+  minus:'<svg viewBox="0 0 20 20" width="13" height="13"><path d="M4 10h12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" width="17" height="17"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  duplicate:'<svg viewBox="0 0 24 24" width="14" height="14"><rect x="8" y="8" width="12" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 15V5a1 1 0 0 1 1-1h10" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>',
+  copyforward:'<svg viewBox="0 0 24 24" width="14" height="14"><rect x="2" y="6" width="10" height="12" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 12h7M18 8.5l3.2 3.5-3.2 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  up:'<svg viewBox="0 0 20 20" width="13" height="13"><path d="M5 12l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  down:'<svg viewBox="0 0 20 20" width="13" height="13"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  right:'<svg viewBox="0 0 20 20" width="14" height="14"><path d="M8 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  close:'<svg viewBox="0 0 20 20" width="15" height="15"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" width="15" height="15"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M19.4 4.6l-2.1 2.1M6.7 17.3l-2.1 2.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  moon:'<svg viewBox="0 0 24 24" width="15" height="15"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" fill="currentColor"/></svg>'
+};
+function icon(name){ return ICON[name] || ''; }
+
+function getPhaseIds(){ return state.phases.map(function(p){ return p.id; }); }
+function findPhaseDef(id){
+  for (var i=0;i<state.phases.length;i++){ if (state.phases[i].id === id) return state.phases[i]; }
+  return null;
+}
+function getNextPhase(phase){
+  var ids = getPhaseIds().filter(function(p){ var def = findPhaseDef(p); return def && def.included; });
+  var idx = ids.indexOf(phase);
+  if (idx === -1 || idx === ids.length - 1) return null;
+  return ids[idx + 1];
+}
+var MAX_PHOTOS = 5;
+
+/* ---------------- state ---------------- */
+var state = null;
+var dirty = false;
+var loadFailed = false;
+var activeTab = 'fat';
+var activeSessionByPhase = { prefat:null, fat:null, sat:null };
+var qualStageFilter = 'all';
+var lightboxState = { phase:null, sessionId:null, id:null, photoIndex:0 };
+var toastTimer = null;
+var historyStack = [];
+var historyIndex = -1;
+var HISTORY_LIMIT = 20;
+var printIncludePhotoAnnex = true;
+
+function generateId(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,9); }
+
+function esc(str){
+  if (str === null || typeof str === 'undefined') return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function pad3(n){ return (n < 10 ? '00' : (n < 100 ? '0' : '')) + n; }
+function assignReserveIdIfNeeded(test){
+  if (!test.action.reserveId){
+    test.action.reserveId = 'RES-' + pad3(state.nextReserveId);
+    state.nextReserveId++;
+  }
+}
+function formatDateTime(d){
+  return pad2(d.getDate()) + '/' + pad2(d.getMonth()+1) + '/' + d.getFullYear() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function formatDateDisplay(iso){
+  if (!iso) return '';
+  var parts = iso.split('-');
+  if (parts.length !== 3) return iso;
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
+function formatTodayDisplay(){
+  var d = new Date();
+  return pad2(d.getDate()) + '/' + pad2(d.getMonth()+1) + '/' + d.getFullYear();
+}
+function phaseLabel(phase){
+  var def = findPhaseDef(phase);
+  return def ? def.label : phase;
+}
+function phaseCode(phase){
+  var def = findPhaseDef(phase);
+  return def ? def.code : phase;
+}
+function statusLabel(s){
+  if (s === 'ouverte') return 'Ouverte';
+  if (s === 'en-cours') return 'En cours';
+  if (s === 'soldee') return 'Soldée';
+  return s;
+}
+function formatResponsableLabel(action){
+  var parts = [];
+  if (action.responsableFournisseur) parts.push(state.meta.supplier ? ('Fournisseur (' + state.meta.supplier + ')') : 'Fournisseur');
+  if (action.responsableDelpharm) parts.push('Delpharm Reims');
+  return parts.length ? parts.join(', ') : '—';
+}
+function pct(n, total){ return total ? Math.round(n / total * 100) : 0; }
+function debounce(fn, wait){
+  var timer = null;
+  return function(){
+    var args = arguments, ctx = this;
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(function(){ fn.apply(ctx, args); }, wait);
+  };
+}
+
+function defaultAction(){ return { status:'ouverte', reserveId:null, responsableFournisseur:false, responsableDelpharm:false, echeance:'', log:[], dateCloture:'' }; }
+function defaultTest(){
+  return { id:generateId(), ref:'', description:'', themeId:null, qualStage:null, comment:'', result:null, reserveType:null, reserveText:'', reserveReasons:[], photos:[], action:defaultAction(), history:[] };
+}
+function defaultSession(n){
+  return { id:generateId(), label:'Session ' + n, date:'', conclusion:null, tests:[] };
+}
+function defaultBlockingReasons(){
+  return [
+    { id:generateId(), label:'Sécurité' },
+    { id:generateId(), label:'Documentation manquante' },
+    { id:generateId(), label:'Non-conformité fonctionnelle' },
+    { id:generateId(), label:'Qualité / finition' }
+  ];
+}
+function defaultThemes(){
+  return [
+    { id:generateId(), label:'Documentation' },
+    { id:generateId(), label:'Automatisme' },
+    { id:generateId(), label:'Mécanique' },
+    { id:generateId(), label:'Électrique' }
+  ];
+}
+function defaultPhases(){
+  return [
+    { id:'prefat', code:'PF', label:'PRE-FAT', builtin:true, included:true },
+    { id:'fat', code:'FAT', label:'FAT', builtin:true, included:true },
+    { id:'sat', code:'SAT', label:'SAT', builtin:true, included:true }
+  ];
+}
+function defaultState(){
+  return {
+    meta:{ projectName:'', client:'', gmaoCode:'', supplier:'', version:0, finalAcceptancePhaseId:'sat' },
+    theme:'light',
+    blockingReasons:defaultBlockingReasons(),
+    themes:defaultThemes(),
+    versionHistory:[],
+    nextReserveId:1,
+    phases:defaultPhases(),
+    sessions:{ prefat:[defaultSession(1)], fat:[defaultSession(1)], sat:[defaultSession(1)] }
+  };
+}
+
+function normalizeTest(t){
+  var nt = defaultTest();
+  nt.id = t.id || generateId();
+  nt.ref = t.ref || '';
+  nt.description = t.description || '';
+  nt.themeId = t.themeId || null;
+  nt.qualStage = (t.qualStage === 'qi' || t.qualStage === 'qo' || t.qualStage === 'qp') ? t.qualStage : null;
+  nt.comment = t.comment || '';
+  nt.result = (t.result === 'ok' || t.result === 'nok' || t.result === 'na') ? t.result : null;
+  nt.reserveType = (t.reserveType === 'bloquante' || t.reserveType === 'non-bloquante') ? t.reserveType : null;
+  nt.reserveText = t.reserveText || '';
+  nt.reserveReasons = Array.isArray(t.reserveReasons) ? t.reserveReasons.slice() : [];
+  nt.photos = Array.isArray(t.photos) ? t.photos.map(function(p){ return { id:p.id || generateId(), dataUrl:p.dataUrl }; }) : [];
+  var a = t.action || {};
+  nt.action = {
+    status:(a.status === 'en-cours' || a.status === 'soldee') ? a.status : 'ouverte',
+    reserveId:a.reserveId || null,
+    responsableFournisseur: !!a.responsableFournisseur,
+    responsableDelpharm: !!a.responsableDelpharm,
+    echeance:a.echeance || '',
+    log:Array.isArray(a.log) ? a.log.slice() : [],
+    dateCloture:a.dateCloture || ''
+  };
+  nt.history = Array.isArray(t.history) ? t.history.map(function(h){
+    return {
+      phase: h.phase || '',
+      result: (h.result === 'ok' || h.result === 'nok' || h.result === 'na') ? h.result : null
+    };
+  }) : [];
+  return nt;
+}
+
+function normalizeState(raw){
+  var base = defaultState();
+  if (!raw || typeof raw !== 'object') return base;
+  base.meta.projectName = (raw.meta && raw.meta.projectName) || '';
+  base.meta.client = (raw.meta && raw.meta.client) || '';
+  base.meta.gmaoCode = (raw.meta && raw.meta.gmaoCode) || '';
+  base.meta.supplier = (raw.meta && raw.meta.supplier) || '';
+  base.meta.version = (raw.meta && raw.meta.version) || 0;
+  base.meta.finalAcceptancePhaseId = (raw.meta && raw.meta.finalAcceptancePhaseId) || null;
+  base.nextReserveId = (typeof raw.nextReserveId === 'number' && raw.nextReserveId > 0) ? raw.nextReserveId : 1;
+  base.theme = raw.theme === 'dark' ? 'dark' : 'light';
+  if (Array.isArray(raw.blockingReasons)){
+    base.blockingReasons = raw.blockingReasons.map(function(r){
+      return { id:r.id || generateId(), label:r.label || '' };
+    });
+  }
+  /* sinon : champ absent (ancien format) -> on garde les raisons par defaut deja dans base */
+  if (Array.isArray(raw.themes)){
+    base.themes = raw.themes.map(function(th){
+      return { id:th.id || generateId(), label:th.label || '' };
+    });
+  }
+  /* sinon : champ absent (ancien format) -> on garde les themes par defaut deja dans base */
+  if (Array.isArray(raw.versionHistory)){
+    base.versionHistory = raw.versionHistory.map(function(v){
+      return {
+        version:v.version || 0, date:v.date || '', totalReserves:v.totalReserves || 0,
+        soldees:v.soldees || 0, bloquantesOuvertes:v.bloquantesOuvertes || 0, nonBloquantesOuvertes:v.nonBloquantesOuvertes || 0
+      };
+    });
+  }
+  var legacyIncludePreFat = raw.meta && typeof raw.meta.includePreFat !== 'undefined' ? !!raw.meta.includePreFat : null;
+  if (Array.isArray(raw.phases) && raw.phases.length){
+    base.phases = raw.phases.map(function(p){
+      var inc = typeof p.included !== 'undefined' ? !!p.included : true;
+      if (p.id === 'prefat' && typeof p.included === 'undefined' && legacyIncludePreFat !== null) inc = legacyIncludePreFat;
+      return { id:p.id || generateId(), code:p.code || (p.id||'PH').slice(0,4).toUpperCase(), label:p.label || p.id || 'Phase', builtin:!!p.builtin, included:inc };
+    });
+  } else if (legacyIncludePreFat !== null){
+    /* tres ancien format (avant meme la liste de phases) : on applique la migration sur les phases par defaut */
+    base.phases.forEach(function(p){ if (p.id === 'prefat') p.included = legacyIncludePreFat; });
+  }
+  /* sinon : champ absent (ancien format) -> on garde les 3 phases par defaut deja dans base */
+  base.sessions = {};
+  base.phases.forEach(function(phaseDef){
+    var phase = phaseDef.id;
+    if (raw.sessions && Array.isArray(raw.sessions[phase]) && raw.sessions[phase].length){
+      base.sessions[phase] = raw.sessions[phase].map(function(s, i){
+        return {
+          id: s.id || generateId(),
+          label: s.label || ('Session ' + (i+1)),
+          date: s.date || '',
+          conclusion: (s.conclusion === 'acceptee' || s.conclusion === 'non-acceptee') ? s.conclusion : null,
+          tests: Array.isArray(s.tests) ? s.tests.map(normalizeTest) : []
+        };
+      });
+    } else if (raw.tests && Array.isArray(raw.tests[phase])){
+      /* ancien format (avant les sessions multiples) : migration vers une session unique */
+      var oldDate = (raw.meta && raw.meta.date) || '';
+      base.sessions[phase] = [{ id:generateId(), label:'Session 1', date:oldDate, conclusion:null, tests:raw.tests[phase].map(normalizeTest) }];
+    } else {
+      base.sessions[phase] = [defaultSession(1)];
+    }
+  });
+
+  /* rattrapage : toute reserve deja NON OK sans identifiant (donnees anterieures a cette fonctionnalite) en recoit un */
+  base.phases.forEach(function(phaseDef){
+    var phase = phaseDef.id;
+    base.sessions[phase].forEach(function(session){
+      session.tests.forEach(function(t){
+        if (t.result === 'nok' && !t.action.reserveId){
+          t.action.reserveId = 'RES-' + pad3(base.nextReserveId);
+          base.nextReserveId++;
+        }
+      });
+    });
+  });
+  return base;
+}
+
+function parseEmbeddedState(){
+  var scriptEl = document.getElementById('app-data');
+  if (!scriptEl){ loadFailed = true; return defaultState(); }
+  var raw = scriptEl.textContent || scriptEl.innerText || '';
+  try{ return normalizeState(JSON.parse(raw)); }
+  catch(e){ loadFailed = true; return defaultState(); }
+}
+
+/* ---------------- persistence ---------------- */
+function hasWindowStorage(){
+  return typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function';
+}
+var CURRENT_DOC_KEY = 'fatsat-state';
+window.__fatsatActiveKey = function(){ return CURRENT_DOC_KEY; };
+function slugifyKey(s){
+  return (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'sans-nom';
+}
+var persistStateDebounced = debounce(function(){
+  if (!hasWindowStorage()) return;
+  try{ window.storage.set(CURRENT_DOC_KEY, JSON.stringify(state), false).catch(function(){}); }
+  catch(e){}
+  if (CURRENT_DOC_KEY !== 'fatsat-state'){
+    try{ localStorage.setItem('fatsat_last_active_key', CURRENT_DOC_KEY); }catch(e){}
+  }
+}, 900);
+function captureHistorySnapshot(){
+  var snap = JSON.stringify(state);
+  if (historyIndex >= 0 && historyStack[historyIndex] === snap) return;
+  historyStack = historyStack.slice(0, historyIndex + 1);
+  historyStack.push(snap);
+  if (historyStack.length > HISTORY_LIMIT) historyStack.shift();
+  historyIndex = historyStack.length - 1;
+  updateUndoRedoButtons();
+}
+var captureHistorySnapshotDebounced = debounce(captureHistorySnapshot, 800);
+function markDirty(){
+  dirty = true;
+  persistStateDebounced();
+  captureHistorySnapshotDebounced();
+}
+function updateUndoRedoButtons(){
+  var undoBtn = document.getElementById('undoBtn');
+  var redoBtn = document.getElementById('redoBtn');
+  if (undoBtn) undoBtn.disabled = historyIndex <= 0;
+  if (redoBtn) redoBtn.disabled = historyIndex >= historyStack.length - 1;
+}
+function restoreFromHistory(){
+  var raw;
+  try{ raw = JSON.parse(historyStack[historyIndex]); }
+  catch(e){ return; }
+  state = normalizeState(raw);
+  getPhaseIds().forEach(function(phase){ activeSessionByPhase[phase] = null; });
+  dirty = true;
+  persistStateDebounced();
+  renderAll();
+  updateUndoRedoButtons();
+}
+function undo(){
+  if (historyIndex <= 0){ showToast('Rien à annuler'); return; }
+  historyIndex--;
+  restoreFromHistory();
+  showToast('Modification annulée');
+}
+function redo(){
+  if (historyIndex >= historyStack.length - 1){ showToast('Rien à rétablir'); return; }
+  historyIndex++;
+  restoreFromHistory();
+  showToast('Modification rétablie');
+}
+
+/* ---------------- lookups ---------------- */
+function findSession(phase, sessionId){
+  var arr = state.sessions[phase] || [];
+  for (var i=0;i<arr.length;i++){ if (arr[i].id === sessionId) return arr[i]; }
+  return null;
+}
+function findSessionIndex(phase, sessionId){
+  var arr = state.sessions[phase] || [];
+  for (var i=0;i<arr.length;i++){ if (arr[i].id === sessionId) return i; }
+  return -1;
+}
+function findTest(phase, sessionId, testId){
+  var session = findSession(phase, sessionId);
+  if (!session) return null;
+  for (var i=0;i<session.tests.length;i++){ if (session.tests[i].id === testId) return session.tests[i]; }
+  return null;
+}
+function findTestIndexArr(arr, id){
+  for (var i=0;i<arr.length;i++){ if (arr[i].id === id) return i; }
+  return -1;
+}
+function findBlockingReason(id){
+  for (var i=0;i<state.blockingReasons.length;i++){ if (state.blockingReasons[i].id === id) return state.blockingReasons[i]; }
+  return null;
+}
+function findTheme(id){
+  for (var i=0;i<state.themes.length;i++){ if (state.themes[i].id === id) return state.themes[i]; }
+  return null;
+}
+function groupByTheme(items, getThemeId){
+  var groups = [];
+  state.themes.forEach(function(th){
+    var matching = items.filter(function(it){ return getThemeId(it) === th.id; });
+    if (matching.length) groups.push({ theme:th, items:matching });
+  });
+  var untagged = items.filter(function(it){ var tid = getThemeId(it); return !tid || !findTheme(tid); });
+  if (untagged.length) groups.push({ theme:null, items:untagged });
+  return groups;
+}
+function computeDisplayIndices(tests){
+  var groups = groupByTheme(tests, function(t){ return t.themeId; });
+  var map = {}, counter = 0;
+  groups.forEach(function(g){ g.items.forEach(function(t){ map[t.id] = counter++; }); });
+  return map;
+}
+function getAllNokTests(){
+  var out = [];
+  getPhaseIds().forEach(function(phase){
+    state.sessions[phase].forEach(function(session, sIdx){
+      var dispMap = computeDisplayIndices(session.tests);
+      session.tests.forEach(function(test, tIdx){
+        if (test.result === 'nok') out.push({ test:test, phase:phase, session:session, sessionIndex:sIdx, testIndex:tIdx, displayIndex:dispMap[test.id] });
+      });
+    });
+  });
+  return out;
+}
+function severityRank(t){
+  if (t === 'bloquante') return 0;
+  if (t === 'non-bloquante') return 1;
+  return 2;
+}
+function qualStageRank(s){
+  if (s === 'qi') return 0;
+  if (s === 'qo') return 1;
+  if (s === 'qp') return 2;
+  return 3;
+}
+function phaseStatus(phase){
+  var anyTests = false, hasOpenNok = false, allDone = true, anyRejected = false;
+  state.sessions[phase].forEach(function(session){
+    if (session.conclusion === 'non-acceptee') anyRejected = true;
+    session.tests.forEach(function(t){
+      anyTests = true;
+      if (t.result === 'nok' && t.action.status !== 'soldee') hasOpenNok = true;
+      if (!t.result) allDone = false;
+    });
+  });
+  if (!anyTests && !anyRejected) return 'empty';
+  if (hasOpenNok || anyRejected) return 'blocked';
+  if (allDone) return 'complete';
+  return 'progress';
+}
+function computeGlobalTestStats(){
+  var ok=0, nok=0, na=0, none=0, total=0;
+  getPhaseIds().forEach(function(phase){
+    state.sessions[phase].forEach(function(session){
+      session.tests.forEach(function(t){
+        total++;
+        if (t.result === 'ok') ok++;
+        else if (t.result === 'nok') nok++;
+        else if (t.result === 'na') na++;
+        else none++;
+      });
+    });
+  });
+  return { total:total, ok:ok, nok:nok, na:na, none:none };
+}
+function computeReservesProgress(){
+  var entries = getAllNokTests();
+  var total = entries.length, soldee=0, bloqOuverte=0, nonbloqOuverte=0;
+  entries.forEach(function(e){
+    if (e.test.action.status === 'soldee') soldee++;
+    else if (e.test.reserveType === 'bloquante') bloqOuverte++;
+    else if (e.test.reserveType === 'non-bloquante') nonbloqOuverte++;
+  });
+  return { total:total, soldee:soldee, bloqOuverte:bloqOuverte, nonbloqOuverte:nonbloqOuverte };
+}
+
+/* ---------------- toast ---------------- */
+function showToast(msg){
+  var el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+}
+window.showToast = showToast; /* accessible au module drive-sync (chargé avant ce script) */
+
+/* ---------------- rendering: tests ---------------- */
+function renderResultPill(test, phase, sessionId, value, label, iconName){
+  var checked = test.result === value ? ' checked' : '';
+  var activeClass = test.result === value ? ' active' : '';
+  return '<label class="result-pill result-pill-' + value + activeClass + '">' +
+    '<input type="radio" class="result-radio" name="result-' + test.id + '" value="' + value + '" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '"' + checked + '>' +
+    '<span class="pill-icon">' + icon(iconName) + '</span><span>' + label + '</span></label>';
+}
+function renderReservePill(test, phase, sessionId, value, label){
+  var checked = test.reserveType === value ? ' checked' : '';
+  var activeClass = test.reserveType === value ? ' active' : '';
+  var cls = value === 'bloquante' ? 'reserve-pill-bloquante' : 'reserve-pill-nonbloquante';
+  return '<label class="reserve-pill ' + cls + activeClass + '">' +
+    '<input type="radio" class="reserve-type-radio" name="reservetype-' + test.id + '" value="' + value + '" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '"' + checked + '>' +
+    '<span>' + label + '</span></label>';
+}
+function renderReasonChips(test, phase, sessionId){
+  var html = '<div class="reason-chip-selector"><div class="reason-chip-label">Raison(s) du blocage</div>';
+  if (!state.blockingReasons.length){
+    html += '<p class="reason-chip-empty">Aucune raison configurée — ajoutez-en dans les réglages.</p>';
+  }else{
+    state.blockingReasons.forEach(function(r){
+      var active = (test.reserveReasons || []).indexOf(r.id) !== -1;
+      html += '<label class="reason-chip' + (active ? ' active' : '') + '">' +
+        '<input type="checkbox" class="reason-chip-checkbox" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" data-reason-id="' + r.id + '"' + (active ? ' checked' : '') + '>' +
+        '<span>' + esc(r.label) + '</span></label>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+function renderPhotoSection(test, phase, sessionId, readonly){
+  var html = '<div class="photo-section"><div class="photo-gallery">';
+  for (var i=0;i<test.photos.length;i++){
+    var p = test.photos[i];
+    html += '<div class="photo-thumb" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" data-photo-id="' + p.id + '">' +
+      '<img src="' + p.dataUrl + '" alt="Photo du test">';
+    if (!readonly){
+      html += '<button type="button" class="photo-remove" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" data-photo-id="' + p.id + '" title="Supprimer">' + icon('close') + '</button>';
+    }
+    html += '</div>';
+  }
+  if (!readonly && test.photos.length < MAX_PHOTOS){
+    html += '<label class="photo-add-tile" title="Ajouter une photo">' +
+      '<input type="file" accept="image/*" multiple class="photo-file-input" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '">' +
+      icon('camera') + '<span>Photo</span></label>';
+  }
+  html += '</div>';
+  if (!readonly) html += '<p class="photo-limit-hint">' + test.photos.length + ' / ' + MAX_PHOTOS + ' photo(s)</p>';
+  html += '</div>';
+  return html;
+}
+function renderThemeSelect(test, phase, sessionId){
+  var html = '<select class="theme-select" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '">';
+  html += '<option value="">Sans thème</option>';
+  state.themes.forEach(function(th){
+    html += '<option value="' + th.id + '"' + (test.themeId === th.id ? ' selected' : '') + '>' + esc(th.label) + '</option>';
+  });
+  html += '</select>';
+  return html;
+}
+function renderQualStagePills(test, phase, sessionId){
+  var html = '<div class="qualstage-selector">';
+  ['qi','qo','qp'].forEach(function(stage){
+    var active = test.qualStage === stage ? ' active' : '';
+    html += '<label class="qualstage-pill qualstage-pill-' + stage + active + '">' +
+      '<input type="radio" class="qualstage-radio" name="qualstage-' + test.id + '" value="' + stage + '" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '"' + (test.qualStage===stage?' checked':'') + '>' +
+      '<span>' + stage.toUpperCase() + '</span></label>';
+  });
+  if (test.qualStage){
+    html += '<button type="button" class="qualstage-clear" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" title="Retirer la classification QI/QO/QP">' + icon('close') + '</button>';
+  }
+  html += '</div>';
+  return html;
+}
+function renderMovePhaseSelect(test, phase, sessionId){
+  var otherPhases = getPhaseIds().filter(function(p){ var def = findPhaseDef(p); return p !== phase && def && def.included; });
+  var html = '<select class="move-phase-select" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" title="Déplacer ce test vers une autre phase">';
+  html += '<option value="">Déplacer vers…</option>';
+  otherPhases.forEach(function(p){
+    html += '<option value="' + p + '">' + phaseLabel(p) + '</option>';
+  });
+  html += '</select>';
+  return html;
+}
+function renderThemeGroupTests(theme, tests, phase, sessionId, sessionNumber, displayIndex){
+  var label = theme ? theme.label : 'Sans thème';
+  var ok=0, nok=0, na=0;
+  tests.forEach(function(t){
+    if (t.result === 'ok') ok++; else if (t.result === 'nok') nok++; else if (t.result === 'na') na++;
+  });
+  var html = '<details class="theme-group" open><summary class="theme-group-header"><span class="theme-group-name">' + esc(label) + '</span>';
+  html += '<span class="theme-group-count">' + tests.length + ' test(s)';
+  if (ok || nok || na){
+    html += ' &middot; <span class="sum-ok">' + ok + ' OK</span> &middot; <span class="sum-nok">' + nok + ' NON OK</span> &middot; <span class="sum-na">' + na + ' N/A</span>';
+  }
+  html += '</span></summary><div class="theme-group-body">';
+  tests.forEach(function(t){ html += renderTestCard(t, phase, sessionId, sessionNumber, displayIndex[t.id]); });
+  html += '</div></details>';
+  return html;
+}
+function renderThemeGroupReserves(theme, entries){
+  var label = theme ? theme.label : 'Sans thème';
+  var bloq=0, nonbloq=0;
+  entries.forEach(function(e){
+    if (e.test.reserveType === 'bloquante') bloq++; else if (e.test.reserveType === 'non-bloquante') nonbloq++;
+  });
+  var html = '<details class="theme-group" open><summary class="theme-group-header"><span class="theme-group-name">' + esc(label) + '</span>';
+  html += '<span class="theme-group-count">' + entries.length + ' réserve(s)';
+  if (bloq) html += ' &middot; <span class="sum-bloq">' + bloq + ' bloquante(s)</span>';
+  if (nonbloq) html += ' &middot; <span class="sum-nonbloq">' + nonbloq + ' non bloquante(s)</span>';
+  html += '</span></summary><div class="theme-group-body">';
+  entries.forEach(function(e){ html += renderActionCard(e); });
+  html += '</div></details>';
+  return html;
+}
+function renderTestHistory(test){
+  if (!test.history || !test.history.length) return '';
+  var html = '<div class="test-history">';
+  html += '<span class="test-history-label">Historique</span>';
+  test.history.forEach(function(h){
+    var lbl = h.result === 'ok' ? 'OK' : h.result === 'nok' ? 'NON OK' : h.result === 'na' ? 'N/A' : 'Non testé';
+    var cls = 'test-history-chip test-history-' + (h.result || 'none');
+    html += '<span class="' + cls + '">' + esc(phaseLabel(h.phase)) + ' : ' + lbl + '</span>';
+  });
+  html += '</div>';
+  return html;
+}
+function renderTestCard(test, phase, sessionId, sessionNumber, idx){
+  var num = phaseCode(phase) + sessionNumber + '-' + pad2(idx+1);
+  var resultClass = test.result ? ('result-' + test.result) : 'result-none';
+  var resolved = (test.result === 'nok' && test.action.status === 'soldee');
+  if (resolved) resultClass += ' action-resolved';
+  var html = '<div class="test-card ' + resultClass + '" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '">';
+  html += '<div class="test-header">';
+  html += '<span class="test-number">' + num + '</span>';
+  html += renderThemeSelect(test, phase, sessionId);
+  html += '<input type="text" class="ref-input" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" placeholder="Réf. protocole (optionnel)" value="' + esc(test.ref) + '">';
+  html += '<div class="row-actions">';
+  html += renderMovePhaseSelect(test, phase, sessionId);
+  var nextPhaseForCopy = getNextPhase(phase);
+  if (nextPhaseForCopy){
+    html += '<button type="button" class="btn-icon btn-copy-forward" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" title="Copier ce test vers ' + esc(phaseLabel(nextPhaseForCopy)) + '">' + icon('copyforward') + '</button>';
+  }
+  html += '<button type="button" class="btn-icon btn-move-up" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" title="Monter">' + icon('up') + '</button>';
+  html += '<button type="button" class="btn-icon btn-move-down" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" title="Descendre">' + icon('down') + '</button>';
+  html += '<button type="button" class="btn-icon btn-duplicate" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" title="Dupliquer">' + icon('duplicate') + '</button>';
+  html += '<button type="button" class="btn-icon btn-delete" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" title="Supprimer">' + icon('trash') + '</button>';
+  html += '</div></div>';
+  html += renderTestHistory(test);
+  html += renderQualStagePills(test, phase, sessionId);
+  html += '<textarea class="description-textarea" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" placeholder="Description du test à effectuer...">' + esc(test.description) + '</textarea>';
+  html += '<div class="result-selector">';
+  html += renderResultPill(test, phase, sessionId, 'ok', 'OK', 'check');
+  html += renderResultPill(test, phase, sessionId, 'nok', 'NON OK', 'cross');
+  html += renderResultPill(test, phase, sessionId, 'na', 'N/A', 'minus');
+  html += '</div>';
+  if (test.result === 'nok'){
+    html += '<div class="reserve-panel">';
+    if (resolved){
+      html += '<span class="resolved-badge">' + icon('check') + ' Réserve soldée' + (test.action.dateCloture ? (' le ' + esc(test.action.dateCloture)) : '') + '</span><br>';
+    }
+    html += '<div class="reserve-type-selector">';
+    html += renderReservePill(test, phase, sessionId, 'bloquante', 'Bloquante');
+    html += renderReservePill(test, phase, sessionId, 'non-bloquante', 'Non bloquante');
+    html += '</div>';
+    if (!test.reserveType){
+      html += '<p class="reserve-nudge">Merci de préciser si la réserve est bloquante ou non bloquante.</p>';
+    }
+    if (test.reserveType === 'bloquante'){
+      html += renderReasonChips(test, phase, sessionId);
+    }
+    html += '<textarea class="reserve-text-textarea" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" placeholder="Décrire la réserve (optionnel)...">' + esc(test.reserveText) + '</textarea>';
+    html += '</div>';
+  }
+  html += renderPhotoSection(test, phase, sessionId, false);
+  html += '<textarea class="comment-textarea" data-phase="' + phase + '" data-session="' + sessionId + '" data-id="' + test.id + '" placeholder="Commentaire (optionnel)...">' + esc(test.comment) + '</textarea>';
+  html += '</div>';
+  return html;
+}
+function autoGrow(ta){
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+function renderSessionSummary(panel, phase, sessionId){
+  var el = panel.querySelector('.panel-summary');
+  if (!el) return;
+  var session = findSession(phase, sessionId);
+  if (!session){ el.innerHTML = ''; return; }
+  var tests = session.tests;
+  var ok=0, nok=0, na=0, none=0;
+  for (var i=0;i<tests.length;i++){
+    if (tests[i].result === 'ok') ok++;
+    else if (tests[i].result === 'nok') nok++;
+    else if (tests[i].result === 'na') na++;
+    else none++;
+  }
+  var total = tests.length;
+  var txt = total + ' test(s)';
+  if (total){
+    txt += ' &middot; <span class="sum-ok">' + ok + ' OK (' + pct(ok,total) + '%)</span>' +
+      ' &middot; <span class="sum-nok">' + nok + ' NON OK (' + pct(nok,total) + '%)</span>' +
+      ' &middot; <span class="sum-na">' + na + ' N/A (' + pct(na,total) + '%)</span>';
+    if (none) txt += ' &middot; ' + none + ' en attente';
+  }
+  el.innerHTML = txt;
+}
+function renderSessionSubnav(panel, phase){
+  var container = panel.querySelector('.session-subnav');
+  var sessions = state.sessions[phase];
+  var activeId = activeSessionByPhase[phase];
+  var html = '';
+  sessions.forEach(function(s){
+    var activeCls = s.id === activeId ? ' active' : '';
+    var conclusionTag = '';
+    if (s.conclusion === 'acceptee') conclusionTag = ' <span class="chip-conclusion chip-conclusion-ok">&#10003;</span>';
+    else if (s.conclusion === 'non-acceptee') conclusionTag = ' <span class="chip-conclusion chip-conclusion-nok">&#10005;</span>';
+    html += '<button type="button" class="session-chip' + activeCls + '" data-phase="' + phase + '" data-session="' + s.id + '">' +
+      esc(s.label) + (s.date ? (' &middot; ' + esc(formatDateDisplay(s.date))) : '') + conclusionTag + '</button>';
+  });
+  html += '<button type="button" class="session-chip session-chip-add" data-phase="' + phase + '">+ Nouvelle session</button>';
+  container.innerHTML = html;
+}
+function renderSessionHeader(panel, phase){
+  var container = panel.querySelector('.session-header');
+  var session = findSession(phase, activeSessionByPhase[phase]);
+  if (!session){ container.innerHTML = ''; return; }
+  var sessions = state.sessions[phase];
+  var html = '<input type="text" class="session-label-input" data-phase="' + phase + '" data-session="' + session.id + '" value="' + esc(session.label) + '">';
+  html += '<label class="session-date-label">Date <input type="date" class="session-date-input" data-phase="' + phase + '" data-session="' + session.id + '" value="' + esc(session.date) + '"></label>';
+  html += '<div class="session-conclusion">';
+  html += '<span class="session-conclusion-label">Conclusion :</span>';
+  html += renderConclusionPill(session, phase, 'acceptee', 'Acceptée', 'check');
+  html += renderConclusionPill(session, phase, 'non-acceptee', 'Non acceptée', 'cross');
+  html += '</div>';
+  if (sessions.length > 1){
+    html += '<button type="button" class="btn-icon session-delete-btn" data-phase="' + phase + '" data-session="' + session.id + '" title="Supprimer cette session">' + icon('trash') + '</button>';
+  }
+  container.innerHTML = html;
+}
+function renderConclusionPill(session, phase, value, label, iconName){
+  var active = session.conclusion === value ? ' active' : '';
+  return '<label class="conclusion-pill conclusion-pill-' + value + active + '">' +
+    '<input type="radio" class="session-conclusion-radio" name="conclusion-' + session.id + '" value="' + value + '" data-phase="' + phase + '" data-session="' + session.id + '"' + (session.conclusion===value?' checked':'') + '>' +
+    '<span class="pill-icon">' + icon(iconName) + '</span><span>' + label + '</span></label>';
+}
+function ensureActiveSession(phase){
+  var sessions = state.sessions[phase];
+  var current = activeSessionByPhase[phase];
+  if (!current || !findSession(phase, current)){
+    activeSessionByPhase[phase] = sessions.length ? sessions[sessions.length - 1].id : null;
+  }
+}
+function buildPhasePanelSkeleton(phaseDef){
+  var phaseIds = getPhaseIds();
+  var idx = phaseIds.indexOf(phaseDef.id);
+  var html = '<section class="tab-panel" data-panel="' + phaseDef.id + '">';
+  html += '<div class="session-subnav"></div><div class="session-header"></div>';
+  html += '<div class="panel-toolbar"><div class="panel-summary"></div><div class="toolbar-actions-right">';
+  var prevPhase = null;
+  for (var i = idx - 1; i >= 0; i--){
+    var candidateDef = findPhaseDef(phaseIds[i]);
+    if (candidateDef && candidateDef.included){ prevPhase = phaseIds[i]; break; }
+  }
+  if (prevPhase){
+    html += '<button type="button" class="btn-copy-phase" data-source="' + prevPhase + '" data-target="' + phaseDef.id + '">Copier les tests de ' + esc(phaseLabel(prevPhase)) + '</button>';
+  }
+  html += '<button type="button" class="btn-add-test" data-phase="' + phaseDef.id + '">+ Ajouter un test</button>';
+  html += '</div></div><div class="test-list"></div></section>';
+  return html;
+}
+function renderPhasePanelsHost(){
+  var host = document.getElementById('phasePanelsHost');
+  if (!host) return;
+  var html = '';
+  state.phases.forEach(function(p){ html += buildPhasePanelSkeleton(p); });
+  host.innerHTML = html;
+}
+function rebuildPhasePanels(){
+  renderPhasePanelsHost();
+  renderTabsVisibility();
+  getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+  switchTab(activeTab);
+}
+function renderPhaseTab(phase){
+  var panel = document.querySelector('.tab-panel[data-panel="' + phase + '"]');
+  if (!panel) return;
+  ensureActiveSession(phase);
+  renderSessionSubnav(panel, phase);
+  renderSessionHeader(panel, phase);
+  var sessionId = activeSessionByPhase[phase];
+  var sessionIndex = findSessionIndex(phase, sessionId);
+  var session = findSession(phase, sessionId);
+  var container = panel.querySelector('.test-list');
+  if (!session){
+    container.innerHTML = '<p class="empty-state">Aucune session pour le moment.</p>';
+  } else if (!session.tests.length){
+    container.innerHTML = '<p class="empty-state">Aucun test pour le moment dans cette session. Cliquez sur « + Ajouter un test » pour commencer.</p>';
+  }else{
+    var sortedTests = session.tests.slice().sort(function(a,b){ return qualStageRank(a.qualStage) - qualStageRank(b.qualStage); });
+    var groups = groupByTheme(sortedTests, function(t){ return t.themeId; });
+    var displayIndex = {}, counter = 0;
+    groups.forEach(function(g){ g.items.forEach(function(t){ displayIndex[t.id] = counter++; }); });
+    var visibleGroups = groups.map(function(g){
+      return { theme:g.theme, items:g.items.filter(function(t){ return qualStageFilter === 'all' || t.qualStage === qualStageFilter; }) };
+    }).filter(function(g){ return g.items.length; });
+    var html = '';
+    if (!visibleGroups.length){
+      html = '<p class="empty-state">Aucun test ne correspond au filtre ' + esc(qualStageFilter.toUpperCase()) + ' dans cette session.</p>';
+    }else{
+      visibleGroups.forEach(function(g){
+        html += renderThemeGroupTests(g.theme, g.items, phase, sessionId, sessionIndex+1, displayIndex);
+      });
+    }
+    html += '<button type="button" class="btn-add-test btn-add-test-bottom" data-phase="' + phase + '">+ Ajouter un test</button>';
+    container.innerHTML = html;
+    var tas = container.querySelectorAll('textarea');
+    for (var j=0;j<tas.length;j++) autoGrow(tas[j]);
+  }
+  renderSessionSummary(panel, phase, sessionId);
+}
+
+/* ---------------- rendering: reserves / overview ---------------- */
+function renderActionCard(entry){
+  var test = entry.test, phase = entry.phase, session = entry.session;
+  var sessionNumber = findSessionIndex(phase, session.id) + 1;
+  var num = phaseCode(phase) + sessionNumber + '-' + pad2(entry.displayIndex+1);
+  var sevClass = test.reserveType === 'bloquante' ? 'severity-bloquante' : (test.reserveType === 'non-bloquante' ? 'severity-nonbloquante' : '');
+  var html = '<div class="action-card ' + sevClass + ' status-' + test.action.status + '">';
+  html += '<div class="action-card-header">';
+  if (test.action.reserveId) html += '<span class="reserve-id-badge">' + esc(test.action.reserveId) + '</span>';
+  html += '<span class="phase-badge">' + phaseLabel(phase) + '</span>';
+  if (test.qualStage) html += '<span class="qualstage-tag qualstage-tag-' + test.qualStage + '">' + test.qualStage.toUpperCase() + '</span>';
+  html += '<span class="test-num">' + num + (session.date ? (' &middot; ' + esc(formatDateDisplay(session.date))) : '') + '</span>';
+  if (test.reserveType){
+    var bcls = test.reserveType === 'bloquante' ? 'badge-bloquante' : 'badge-nonbloquante';
+    var blabel = test.reserveType === 'bloquante' ? 'Bloquante' : 'Non bloquante';
+    html += '<span class="' + bcls + '"><span class="swatch"></span>' + blabel + '</span>';
+  }
+  html += '<span class="status-tag status-tag-' + test.action.status + '">' + statusLabel(test.action.status) + '</span>';
+  html += '<button type="button" class="goto-test-btn" data-phase="' + phase + '" data-session="' + session.id + '" data-id="' + test.id + '">Aller au test ' + icon('right') + '</button>';
+  html += '</div>';
+  if (test.description) html += '<p class="action-description">' + esc(test.description) + '</p>';
+  if (test.reserveType === 'bloquante' && test.reserveReasons && test.reserveReasons.length){
+    html += '<div class="reason-tags-display">';
+    test.reserveReasons.forEach(function(rid){
+      var reason = findBlockingReason(rid);
+      if (reason) html += '<span class="reason-tag">' + esc(reason.label) + '</span>';
+    });
+    html += '</div>';
+  }
+  if (test.reserveText) html += '<p class="action-reserve-text">' + esc(test.reserveText) + '</p>';
+  if (test.comment) html += '<p class="action-reserve-text">&#128172; ' + esc(test.comment) + '</p>';
+  if (test.photos.length) html += renderPhotoSection(test, phase, session.id, true);
+  html += '<div class="action-tracking">';
+  html += '<div class="tracking-row">';
+  html += '<label>Statut<select class="action-status-select" data-phase="' + phase + '" data-session="' + session.id + '" data-id="' + test.id + '">' +
+    '<option value="ouverte"' + (test.action.status==='ouverte'?' selected':'') + '>Ouverte</option>' +
+    '<option value="en-cours"' + (test.action.status==='en-cours'?' selected':'') + '>En cours</option>' +
+    '<option value="soldee"' + (test.action.status==='soldee'?' selected':'') + '>Soldée</option>' +
+    '</select></label>';
+  html += '<label>Échéance<input type="date" class="action-echeance-input" data-phase="' + phase + '" data-session="' + session.id + '" data-id="' + test.id + '" value="' + esc(test.action.echeance) + '"></label>';
+  html += '<div class="responsable-field"><span class="responsable-field-label">Responsable</span>';
+  var fournisseurLabel = state.meta.supplier ? ('Fournisseur (' + esc(state.meta.supplier) + ')') : 'Fournisseur';
+  html += '<label class="responsable-check"><input type="checkbox" class="responsable-fournisseur-check" data-phase="' + phase + '" data-session="' + session.id + '" data-id="' + test.id + '"' + (test.action.responsableFournisseur?' checked':'') + '> ' + fournisseurLabel + '</label>';
+  html += '<label class="responsable-check"><input type="checkbox" class="responsable-delpharm-check" data-phase="' + phase + '" data-session="' + session.id + '" data-id="' + test.id + '"' + (test.action.responsableDelpharm?' checked':'') + '> Delpharm Reims</label>';
+  html += '</div>';
+  html += '</div>';
+  if (test.action.log.length){
+    html += '<div class="log-list">';
+    for (var i=0;i<test.action.log.length;i++){
+      html += '<div class="log-entry"><span class="log-date">' + esc(test.action.log[i].date) + '</span><span class="log-text">' + esc(test.action.log[i].text) + '</span></div>';
+    }
+    html += '</div>';
+  }
+  html += '<div class="log-add-row"><input type="text" class="log-input" placeholder="Ajouter une note de suivi...">' +
+    '<button type="button" class="log-add-btn" data-phase="' + phase + '" data-session="' + session.id + '" data-id="' + test.id + '">Ajouter</button></div>';
+  html += '</div></div>';
+  return html;
+}
+function renderOverview(){
+  var dateEl = document.getElementById('overviewDate');
+  if (dateEl) dateEl.textContent = 'Avancement au ' + formatTodayDisplay();
+
+  var ts = computeGlobalTestStats();
+  var bar1 = document.getElementById('testsStatBar');
+  if (bar1){
+    bar1.innerHTML = ts.total ?
+      ('<div class="stat-bar-seg seg-ok" style="width:' + pct(ts.ok,ts.total) + '%"></div>' +
+       '<div class="stat-bar-seg seg-nok" style="width:' + pct(ts.nok,ts.total) + '%"></div>' +
+       '<div class="stat-bar-seg seg-na" style="width:' + pct(ts.na,ts.total) + '%"></div>') : '';
+  }
+  var line1 = document.getElementById('testsStatLine');
+  if (line1){
+    line1.textContent = ts.total ?
+      (pct(ts.ok,ts.total) + '% OK \u00b7 ' + pct(ts.nok,ts.total) + '% NON OK \u00b7 ' + pct(ts.na,ts.total) + '% N/A (' + ts.total + ' test(s) au total)') :
+      'Aucun test enregistré pour le moment.';
+  }
+
+  var rp = computeReservesProgress();
+  var bar2 = document.getElementById('reservesStatBar');
+  if (bar2){
+    bar2.innerHTML = rp.total ?
+      ('<div class="stat-bar-seg seg-solde" style="width:' + pct(rp.soldee,rp.total) + '%"></div>' +
+       '<div class="stat-bar-seg seg-bloq" style="width:' + pct(rp.bloqOuverte,rp.total) + '%"></div>' +
+       '<div class="stat-bar-seg seg-nonbloq" style="width:' + pct(rp.nonbloqOuverte,rp.total) + '%"></div>') : '';
+  }
+  var line2 = document.getElementById('reservesStatLine');
+  if (line2){
+    line2.textContent = rp.total ?
+      (pct(rp.soldee,rp.total) + '% soldées (' + rp.soldee + '/' + rp.total + ') \u00b7 ' + rp.bloqOuverte + ' bloquante(s) ouverte(s) \u00b7 ' + rp.nonbloqOuverte + ' non bloquante(s) ouverte(s)') :
+      'Aucune réserve à ce jour.';
+  }
+}
+function renderActions(){
+  var entries = getAllNokTests();
+  if (qualStageFilter !== 'all'){
+    entries = entries.filter(function(e){ return e.test.qualStage === qualStageFilter; });
+  }
+  var open = [], closed = [];
+  entries.forEach(function(e){ if (e.test.action.status === 'soldee') closed.push(e); else open.push(e); });
+  open.sort(function(a,b){ return severityRank(a.test.reserveType) - severityRank(b.test.reserveType); });
+
+  var bloqCount=0, nonbloqCount=0;
+  open.forEach(function(e){
+    if (e.test.reserveType === 'bloquante') bloqCount++;
+    else if (e.test.reserveType === 'non-bloquante') nonbloqCount++;
+  });
+  var summaryEl = document.getElementById('actionsSummary');
+  if (summaryEl){
+    summaryEl.innerHTML = '<span class="sum-bloq">' + bloqCount + ' bloquante(s) ouverte(s)</span> &middot; ' +
+      '<span class="sum-nonbloq">' + nonbloqCount + ' non bloquante(s) ouverte(s)</span> &middot; ' +
+      '<span class="sum-solde">' + closed.length + ' soldée(s)</span>';
+  }
+  var openContainer = document.getElementById('actionsOpenList');
+  if (openContainer){
+    if (!open.length){
+      var emptyMsg = qualStageFilter === 'all' ? 'Aucune réserve ouverte pour le moment.' : ('Aucune réserve ouverte pour le filtre ' + qualStageFilter.toUpperCase() + '.');
+      openContainer.innerHTML = '<p class="empty-state">' + esc(emptyMsg) + '</p>';
+    }else{
+      var h = '';
+      var openGroups = groupByTheme(open, function(e){ return e.test.themeId; });
+      openGroups.forEach(function(g){
+        h += renderThemeGroupReserves(g.theme, g.items);
+      });
+      openContainer.innerHTML = h;
+    }
+  }
+  var closedContainer = document.getElementById('actionsArchiveList');
+  if (closedContainer){
+    var h2 = '';
+    var closedGroups = groupByTheme(closed, function(e){ return e.test.themeId; });
+    closedGroups.forEach(function(g){
+      h2 += renderThemeGroupReserves(g.theme, g.items);
+    });
+    closedContainer.innerHTML = h2;
+  }
+  var archiveCountEl = document.getElementById('archiveCount');
+  if (archiveCountEl) archiveCountEl.textContent = closed.length;
+  var tabCountEl = document.getElementById('actionsTabCount');
+  if (tabCountEl) tabCountEl.textContent = open.length > 0 ? open.length : '';
+
+  renderOverview();
+  renderStepper();
+}
+function renderStepper(){
+  var container = document.getElementById('phaseStepper');
+  if (!container) return;
+  var visiblePhases = [];
+  getPhaseIds().forEach(function(phase){
+    var def = findPhaseDef(phase);
+    if (!def || !def.included) return;
+    visiblePhases.push(phase);
+  });
+  var html = '';
+  visiblePhases.forEach(function(phase, i){
+    var st = phaseStatus(phase);
+    var activeClass = activeTab === phase ? ' active' : '';
+    html += '<button type="button" class="stepper-node' + activeClass + '" data-tab="' + phase + '" data-status="' + st + '">' +
+      '<span class="stepper-dot"></span><span class="stepper-label">' + phaseLabel(phase) + '</span></button>';
+    if (i < visiblePhases.length - 1) html += '<span class="stepper-line"></span>';
+  });
+  container.innerHTML = html;
+}
+function renderTabsVisibility(){
+  getPhaseIds().forEach(function(phase){
+    var def = findPhaseDef(phase);
+    var panel = document.querySelector('.tab-panel[data-panel="' + phase + '"]');
+    if (!panel) return;
+    if (!def || !def.included) panel.classList.add('tab-hidden');
+    else panel.classList.remove('tab-hidden');
+  });
+  var activeDef = findPhaseDef(activeTab);
+  if (activeTab !== 'actions' && (!activeDef || !activeDef.included)){
+    var firstIncluded = state.phases.filter(function(p){ return p.included; })[0];
+    activeTab = firstIncluded ? firstIncluded.id : 'actions';
+  }
+}
+function switchTab(tab){
+  activeTab = tab;
+  var panels = document.querySelectorAll('.tab-panel');
+  for (var i=0;i<panels.length;i++){
+    if (panels[i].getAttribute('data-panel') === tab) panels[i].classList.add('active');
+    else panels[i].classList.remove('active');
+  }
+  var actionsBtn = document.getElementById('actionsTabBtn');
+  if (actionsBtn){
+    if (tab === 'actions') actionsBtn.classList.add('active'); else actionsBtn.classList.remove('active');
+  }
+  renderStepper();
+}
+function renderAll(){
+  document.getElementById('projectName').value = state.meta.projectName || '';
+  document.getElementById('projectClient').value = state.meta.client || '';
+  document.getElementById('projectGmao').value = state.meta.gmaoCode || '';
+  document.getElementById('projectSupplier').value = state.meta.supplier || '';
+  document.documentElement.setAttribute('data-theme', state.theme || 'light');
+  updateThemeIcon();
+  updateVersionBadge();
+  updateUndoRedoButtons();
+  renderPhasePanelsHost();
+  renderTabsVisibility();
+  renderReasonsList();
+  renderThemesList();
+  renderPhasesList();
+  renderFinalAcceptanceSelect();
+  getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+  renderActions();
+  switchTab(activeTab);
+}
+function updateVersionBadge(){
+  var el = document.getElementById('versionBadge');
+  if (el) el.textContent = state.meta.version > 0 ? ('v' + state.meta.version) : '';
+  var cancelBtn = document.getElementById('versionCancelBtn');
+  if (cancelBtn) cancelBtn.style.display = state.versionHistory.length ? '' : 'none';
+}
+
+/* ---------------- mutations: tests ---------------- */
+function addTest(phase, sessionId){
+  var session = findSession(phase, sessionId);
+  if (!session) return;
+  var t = defaultTest();
+  session.tests.push(t);
+  markDirty();
+  renderPhaseTab(phase);
+  renderActions();
+  var card = document.querySelector('.tab-panel[data-panel="' + phase + '"] .test-card[data-id="' + t.id + '"]');
+  if (card){
+    var ta = card.querySelector('.description-textarea');
+    if (ta) ta.focus();
+    if (card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+}
+function removeTest(phase, sessionId, id){
+  var session = findSession(phase, sessionId);
+  if (!session) return;
+  var idx = findTestIndexArr(session.tests, id);
+  if (idx === -1) return;
+  session.tests.splice(idx, 1);
+  markDirty();
+  renderPhaseTab(phase);
+  renderActions();
+  showToast('Test supprimé');
+}
+function duplicateTest(phase, sessionId, id){
+  var session = findSession(phase, sessionId);
+  if (!session) return;
+  var idx = findTestIndexArr(session.tests, id);
+  if (idx === -1) return;
+  var orig = session.tests[idx];
+  var copy = defaultTest();
+  copy.ref = orig.ref;
+  copy.description = orig.description;
+  copy.themeId = orig.themeId;
+  copy.qualStage = orig.qualStage;
+  session.tests.splice(idx + 1, 0, copy);
+  markDirty();
+  renderPhaseTab(phase);
+  renderActions();
+  showToast('Test dupliqué');
+}
+function moveTest(phase, sessionId, id, dir){
+  var session = findSession(phase, sessionId);
+  if (!session) return;
+  var arr = session.tests;
+  var idx = findTestIndexArr(arr, id);
+  if (idx === -1) return;
+  var themeId = arr[idx].themeId;
+  var qualStage = arr[idx].qualStage;
+  var searchIdx = idx + dir;
+  while (searchIdx >= 0 && searchIdx < arr.length && (arr[searchIdx].themeId !== themeId || arr[searchIdx].qualStage !== qualStage)){
+    searchIdx += dir;
+  }
+  if (searchIdx < 0 || searchIdx >= arr.length) return;
+  var tmp = arr[idx]; arr[idx] = arr[searchIdx]; arr[searchIdx] = tmp;
+  markDirty();
+  renderPhaseTab(phase);
+  renderActions();
+}
+function removePhoto(phase, sessionId, id, photoId){
+  var test = findTest(phase, sessionId, id);
+  if (!test) return;
+  test.photos = test.photos.filter(function(p){ return p.id !== photoId; });
+  markDirty();
+  renderPhaseTab(phase);
+  renderActions();
+}
+function addLogEntry(phase, sessionId, id, text){
+  var test = findTest(phase, sessionId, id);
+  if (!test) return;
+  test.action.log.push({ date:formatDateTime(new Date()), text:text });
+  markDirty();
+  renderActions();
+}
+function copyTestsFromPhase(sourcePhase, targetPhase){
+  var sourceSessions = state.sessions[sourcePhase];
+  if (!sourceSessions.length || !sourceSessions[sourceSessions.length - 1].tests.length){
+    showToast('Aucun test à copier depuis ' + phaseLabel(sourcePhase));
+    return;
+  }
+  var sourceSession = sourceSessions[sourceSessions.length - 1];
+  if (!window.confirm('Copier les ' + sourceSession.tests.length + ' test(s) de ' + phaseLabel(sourcePhase) + ' (' + sourceSession.label + ') vers la session active de ' + phaseLabel(targetPhase) + ' ?')) return;
+  ensureActiveSession(targetPhase);
+  var targetSession = findSession(targetPhase, activeSessionByPhase[targetPhase]);
+  if (!targetSession) return;
+  sourceSession.tests.forEach(function(t){
+    var copy = defaultTest();
+    copy.ref = t.ref;
+    copy.description = t.description;
+    copy.themeId = t.themeId;
+    copy.qualStage = t.qualStage;
+    copy.history = (Array.isArray(t.history) ? t.history.slice() : []).concat([{ phase:sourcePhase, result:t.result }]);
+    targetSession.tests.push(copy);
+  });
+  markDirty();
+  renderPhaseTab(targetPhase);
+  renderActions();
+  showToast(sourceSession.tests.length + ' test(s) copié(s) depuis ' + phaseLabel(sourcePhase));
+}
+function copyTestForward(phase, sessionId, testId){
+  var nextPhase = getNextPhase(phase);
+  if (!nextPhase){ showToast('Aucune phase suivante disponible'); return; }
+  var test = findTest(phase, sessionId, testId);
+  if (!test) return;
+  ensureActiveSession(nextPhase);
+  var targetSession = findSession(nextPhase, activeSessionByPhase[nextPhase]);
+  if (!targetSession) return;
+  var copy = defaultTest();
+  copy.ref = test.ref;
+  copy.description = test.description;
+  copy.themeId = test.themeId;
+  copy.qualStage = test.qualStage;
+  copy.history = (Array.isArray(test.history) ? test.history.slice() : []).concat([{ phase:phase, result:test.result }]);
+  targetSession.tests.push(copy);
+  markDirty();
+  renderPhaseTab(nextPhase);
+  renderActions();
+  showToast('Test copié vers ' + phaseLabel(nextPhase));
+}
+function moveTestToPhase(fromPhase, fromSessionId, testId, toPhase){
+  var fromSession = findSession(fromPhase, fromSessionId);
+  if (!fromSession) return;
+  var idx = findTestIndexArr(fromSession.tests, testId);
+  if (idx === -1) return;
+  var test = fromSession.tests[idx];
+  var toSessions = state.sessions[toPhase];
+  if (!toSessions.length) return;
+  var targetSession = toSessions[toSessions.length - 1];
+  fromSession.tests.splice(idx, 1);
+  targetSession.tests.push(test);
+  activeSessionByPhase[toPhase] = targetSession.id;
+  markDirty();
+  renderPhaseTab(fromPhase);
+  renderPhaseTab(toPhase);
+  renderActions();
+  showToast('Test déplacé vers ' + phaseLabel(toPhase));
+}
+function gotoTest(phase, sessionId, id){
+  activeSessionByPhase[phase] = sessionId;
+  switchTab(phase);
+  renderPhaseTab(phase);
+  setTimeout(function(){
+    var card = document.querySelector('.test-card[data-phase="' + phase + '"][data-session="' + sessionId + '"][data-id="' + id + '"]');
+    if (card){
+      if (card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'center' });
+      card.classList.add('flash-highlight');
+      setTimeout(function(){ card.classList.remove('flash-highlight'); }, 1600);
+    }
+  }, 60);
+}
+
+/* ---------------- mutations: sessions ---------------- */
+function addSession(phase){
+  var sessions = state.sessions[phase];
+  var s = defaultSession(sessions.length + 1);
+  var previousSession = sessions.length ? sessions[sessions.length - 1] : null;
+  if (previousSession){
+    var nokTests = previousSession.tests.filter(function(t){ return t.result === 'nok'; });
+    if (nokTests.length){
+      s.tests = nokTests.map(function(t){
+        var copy = defaultTest();
+        copy.ref = t.ref;
+        copy.description = t.description;
+        copy.themeId = t.themeId;
+        copy.qualStage = t.qualStage;
+        return copy;
+      });
+    }
+  }
+  sessions.push(s);
+  activeSessionByPhase[phase] = s.id;
+  markDirty();
+  renderPhaseTab(phase);
+  renderActions();
+  if (s.tests.length){
+    showToast(s.tests.length + ' test(s) NON OK repris de la session précédente');
+  }else{
+    showToast('Nouvelle session créée');
+  }
+}
+function removeSession(phase, sessionId){
+  var sessions = state.sessions[phase];
+  if (sessions.length <= 1){ showToast('Impossible de supprimer la dernière session'); return; }
+  if (!window.confirm('Supprimer cette session et tous ses tests ? Cette action est irréversible.')) return;
+  var idx = findSessionIndex(phase, sessionId);
+  if (idx === -1) return;
+  sessions.splice(idx, 1);
+  if (activeSessionByPhase[phase] === sessionId) activeSessionByPhase[phase] = null;
+  markDirty();
+  renderPhaseTab(phase);
+  renderActions();
+  showToast('Session supprimée');
+}
+
+/* ---------------- blocking reasons management ---------------- */
+function renderReasonsList(){
+  var container = document.getElementById('reasonsList');
+  if (!container) return;
+  if (!state.blockingReasons.length){
+    container.innerHTML = '<p class="reason-empty-hint">Aucune raison définie pour le moment.</p>';
+    return;
+  }
+  var html = '';
+  state.blockingReasons.forEach(function(r){
+    html += '<div class="reason-row">' +
+      '<input type="text" class="reason-label-input" data-reason-id="' + r.id + '" value="' + esc(r.label) + '">' +
+      '<button type="button" class="btn-icon reason-delete-btn" data-reason-id="' + r.id + '" title="Supprimer cette raison">' + icon('trash') + '</button>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+}
+function addBlockingReason(label){
+  var trimmed = (label || '').trim();
+  if (!trimmed) return;
+  state.blockingReasons.push({ id:generateId(), label:trimmed });
+  markDirty();
+  renderReasonsList();
+}
+function deleteBlockingReason(reasonId){
+  if (!window.confirm('Supprimer cette raison ? Elle sera retirée des réserves qui l\'utilisent.')) return;
+  state.blockingReasons = state.blockingReasons.filter(function(r){ return r.id !== reasonId; });
+  getPhaseIds().forEach(function(phase){
+    state.sessions[phase].forEach(function(session){
+      session.tests.forEach(function(t){
+        if (t.reserveReasons && t.reserveReasons.length){
+          t.reserveReasons = t.reserveReasons.filter(function(id){ return id !== reasonId; });
+        }
+      });
+    });
+  });
+  markDirty();
+  renderReasonsList();
+  getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+  renderActions();
+}
+
+/* ---------------- themes management ---------------- */
+function renderThemesList(){
+  var container = document.getElementById('themesList');
+  if (!container) return;
+  if (!state.themes.length){
+    container.innerHTML = '<p class="reason-empty-hint">Aucun thème défini pour le moment.</p>';
+    return;
+  }
+  var html = '';
+  state.themes.forEach(function(th, idx){
+    html += '<div class="reason-row">' +
+      '<input type="text" class="theme-label-input" data-theme-id="' + th.id + '" value="' + esc(th.label) + '">' +
+      '<button type="button" class="btn-icon theme-move-up" data-theme-id="' + th.id + '" title="Monter"' + (idx===0?' disabled':'') + '>' + icon('up') + '</button>' +
+      '<button type="button" class="btn-icon theme-move-down" data-theme-id="' + th.id + '" title="Descendre"' + (idx===state.themes.length-1?' disabled':'') + '>' + icon('down') + '</button>' +
+      '<button type="button" class="btn-icon theme-delete-btn" data-theme-id="' + th.id + '" title="Supprimer ce thème">' + icon('trash') + '</button>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+}
+function moveTheme(themeId, dir){
+  var idx = -1;
+  for (var i=0;i<state.themes.length;i++){ if (state.themes[i].id === themeId){ idx = i; break; } }
+  if (idx === -1) return;
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.themes.length) return;
+  var tmp = state.themes[idx]; state.themes[idx] = state.themes[newIdx]; state.themes[newIdx] = tmp;
+  markDirty();
+  renderThemesList();
+  getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+  renderActions();
+}
+function addTheme(label){
+  var trimmed = (label || '').trim();
+  if (!trimmed) return;
+  state.themes.push({ id:generateId(), label:trimmed });
+  markDirty();
+  renderThemesList();
+}
+function deleteTheme(themeId){
+  if (!window.confirm('Supprimer ce thème ? Les tests qui l\'utilisent redeviendront "Sans thème".')) return;
+  state.themes = state.themes.filter(function(th){ return th.id !== themeId; });
+  getPhaseIds().forEach(function(phase){
+    state.sessions[phase].forEach(function(session){
+      session.tests.forEach(function(t){
+        if (t.themeId === themeId) t.themeId = null;
+      });
+    });
+  });
+  markDirty();
+  renderThemesList();
+  getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+  renderActions();
+}
+
+/* ---------------- phases management ---------------- */
+function renderPhasesList(){
+  var container = document.getElementById('phasesList');
+  if (!container) return;
+  var html = '';
+  state.phases.forEach(function(p, idx){
+    html += '<div class="phase-row">';
+    html += '<input type="checkbox" class="phase-included-input" data-phase-id="' + p.id + '" title="Inclure cette phase"' + (p.included ? ' checked' : '') + '>';
+    if (p.builtin){
+      html += '<span class="phase-builtin-label">' + esc(p.label) + '</span>';
+    }else{
+      html += '<input type="text" class="phase-label-input" data-phase-id="' + p.id + '" value="' + esc(p.label) + '">';
+    }
+    html += '<div class="phase-row-actions">';
+    html += '<button type="button" class="btn-icon phase-move-up" data-phase-id="' + p.id + '" title="Monter"' + (idx===0?' disabled':'') + '>' + icon('up') + '</button>';
+    html += '<button type="button" class="btn-icon phase-move-down" data-phase-id="' + p.id + '" title="Descendre"' + (idx===state.phases.length-1?' disabled':'') + '>' + icon('down') + '</button>';
+    if (!p.builtin){
+      html += '<button type="button" class="btn-icon phase-delete-btn" data-phase-id="' + p.id + '" title="Supprimer">' + icon('trash') + '</button>';
+    }
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+function renderFinalAcceptanceSelect(){
+  var container = document.getElementById('finalAcceptanceSelect');
+  if (!container) return;
+  var html = '<option value="">Non défini</option>';
+  state.phases.forEach(function(p){
+    html += '<option value="' + p.id + '"' + (state.meta.finalAcceptancePhaseId === p.id ? ' selected' : '') + '>' + esc(p.label) + '</option>';
+  });
+  container.innerHTML = html;
+}
+function addPhase(label){
+  var trimmed = (label || '').trim();
+  if (!trimmed) return;
+  var code = trimmed.replace(/[^a-zA-Z0-9]/g,'').slice(0,4).toUpperCase() || ('PH' + (state.phases.length+1));
+  var id = 'phase-' + generateId();
+  state.phases.push({ id:id, code:code, label:trimmed, builtin:false, included:true });
+  state.sessions[id] = [defaultSession(1)];
+  activeSessionByPhase[id] = null;
+  markDirty();
+  renderPhasesList();
+  renderFinalAcceptanceSelect();
+  rebuildPhasePanels();
+  renderActions();
+  showToast('Phase « ' + trimmed + ' » ajoutée');
+}
+function deletePhase(phaseId){
+  var def = findPhaseDef(phaseId);
+  if (!def || def.builtin) return;
+  if (!window.confirm('Supprimer la phase « ' + def.label + ' » et tous ses tests ? Cette action est irréversible.')) return;
+  state.phases = state.phases.filter(function(p){ return p.id !== phaseId; });
+  delete state.sessions[phaseId];
+  delete activeSessionByPhase[phaseId];
+  if (state.meta.finalAcceptancePhaseId === phaseId) state.meta.finalAcceptancePhaseId = null;
+  if (activeTab === phaseId) activeTab = 'fat';
+  markDirty();
+  renderPhasesList();
+  renderFinalAcceptanceSelect();
+  rebuildPhasePanels();
+  renderActions();
+  showToast('Phase supprimée');
+}
+function movePhase(phaseId, dir){
+  var idx = -1;
+  for (var i=0;i<state.phases.length;i++){ if (state.phases[i].id === phaseId){ idx = i; break; } }
+  if (idx === -1) return;
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.phases.length) return;
+  var tmp = state.phases[idx]; state.phases[idx] = state.phases[newIdx]; state.phases[newIdx] = tmp;
+  markDirty();
+  renderPhasesList();
+  rebuildPhasePanels();
+}
+
+/* ---------------- misc actions ---------------- */
+function toggleTheme(){
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', state.theme);
+  updateThemeIcon();
+  markDirty();
+}
+function updateThemeIcon(){
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = state.theme === 'dark' ? icon('sun') : icon('moon');
+}
+function openModal(id){ var el = document.getElementById(id); if (el) el.classList.add('show'); }
+function closeAllModals(){
+  var overlays = document.querySelectorAll('.modal-overlay');
+  for (var i=0;i<overlays.length;i++) overlays[i].classList.remove('show');
+}
+function resetProject(){
+  if (window.confirm('Réinitialiser le projet ? Toutes les données actuelles seront perdues (téléchargez une sauvegarde avant si besoin).')){
+    var keepTheme = state.theme;
+    state = defaultState();
+    state.theme = keepTheme;
+    CURRENT_DOC_KEY = 'fatsat-state';
+    try{ localStorage.removeItem('fatsat_last_active_key'); }catch(e){}
+    dirty = false;
+    activeTab = 'fat';
+    activeSessionByPhase = { prefat:null, fat:null, sat:null };
+    renderAll();
+    captureHistorySnapshot();
+    closeAllModals();
+    refreshDocSelect();
+    showToast('Nouveau projet créé');
+  }
+}
+
+/* ---------------- photos ---------------- */
+function resizeImageFile(file, callback){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var maxDim = 1280;
+      var w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim){
+        if (w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = function(){ callback(null); };
+    img.src = e.target.result;
+  };
+  reader.onerror = function(){ callback(null); };
+  reader.readAsDataURL(file);
+}
+function handlePhotoFilesSelected(files, phase, sessionId, testId){
+  var test = findTest(phase, sessionId, testId);
+  if (!test) return;
+  var availableSlots = MAX_PHOTOS - test.photos.length;
+  if (availableSlots <= 0){ showToast('Limite de ' + MAX_PHOTOS + ' photos par test atteinte'); return; }
+  var filesToProcess = Array.prototype.slice.call(files, 0, availableSlots);
+  var skipped = files.length - filesToProcess.length;
+  var remaining = filesToProcess.length;
+  if (!remaining) return;
+  var newPhotos = [];
+  for (var i=0;i<filesToProcess.length;i++){
+    (function(file){
+      resizeImageFile(file, function(dataUrl){
+        if (dataUrl) newPhotos.push({ id:generateId(), dataUrl:dataUrl });
+        remaining--;
+        if (remaining === 0){
+          test.photos = test.photos.concat(newPhotos);
+          markDirty();
+          renderPhaseTab(phase);
+          renderActions();
+          var msg = newPhotos.length > 1 ? (newPhotos.length + ' photos ajoutées') : 'Photo ajoutée';
+          if (skipped > 0) msg += ' — ' + skipped + ' ignorée(s) (limite de ' + MAX_PHOTOS + ')';
+          showToast(msg);
+        }
+      });
+    })(filesToProcess[i]);
+  }
+}
+
+/* ---------------- lightbox ---------------- */
+function openLightbox(phase, sessionId, id, photoId){
+  var test = findTest(phase, sessionId, id);
+  if (!test) return;
+  var idx = -1;
+  for (var i=0;i<test.photos.length;i++){ if (test.photos[i].id === photoId){ idx = i; break; } }
+  if (idx === -1) return;
+  lightboxState = { phase:phase, sessionId:sessionId, id:id, photoIndex:idx };
+  renderLightbox();
+  openModal('lightboxModal');
+}
+function renderLightbox(){
+  var test = findTest(lightboxState.phase, lightboxState.sessionId, lightboxState.id);
+  if (!test) return;
+  var img = document.getElementById('lightboxImg');
+  if (img) img.src = test.photos[lightboxState.photoIndex].dataUrl;
+  var counter = document.getElementById('lightboxCounter');
+  if (counter) counter.textContent = (lightboxState.photoIndex + 1) + ' / ' + test.photos.length;
+}
+function lightboxNav(dir){
+  var test = findTest(lightboxState.phase, lightboxState.sessionId, lightboxState.id);
+  if (!test || !test.photos.length) return;
+  var n = test.photos.length;
+  lightboxState.photoIndex = (lightboxState.photoIndex + dir + n) % n;
+  renderLightbox();
+}
+
+/* ---------------- export ---------------- */
+function buildFilename(ext){
+  var d = new Date();
+  var namePart = (state.meta.projectName || 'Projet').replace(/[^a-zA-Z0-9_\-]+/g, '-').replace(/^-+|-+$/g,'') || 'Projet';
+  return d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate()) + '_Suivi-FAT-SAT_' + namePart + '_v' + state.meta.version + '.' + ext;
+}
+function triggerDownload(blob, filename){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1200);
+}
+function buildExportBlob(){
+  var json = JSON.stringify(state);
+  var safeJson = json.replace(/<\/script/gi, '<\\/script');
+  var newHtml = PRISTINE_HTML.replace(/(<script[^>]*id="app-data"[^>]*>)[\s\S]*?(<\/script>)/, function(m, open, close){
+    return open + safeJson + close;
+  });
+  newHtml = newHtml.replace(/(<html[^>]*\sdata-theme=")[^"]*(")/, '$1' + state.theme + '$2');
+  return new Blob([newHtml], { type:'text/html;charset=utf-8' });
+}
+function exportHtml(){
+  triggerDownload(buildExportBlob(), buildFilename('html'));
+  dirty = false;
+  showToast('Fichier téléchargé');
+}
+function markOfficialSend(){
+  var nextVersion = (state.meta.version || 0) + 1;
+  if (!window.confirm('Marquer un envoi officiel ? Cela crée la version v' + nextVersion + ' (avec l\'avancement actuel des réserves dans l\'historique) et télécharge le fichier correspondant.')) return;
+  state.meta.version = nextVersion;
+  var rp = computeReservesProgress();
+  state.versionHistory.push({
+    version:state.meta.version,
+    date:formatDateTime(new Date()),
+    totalReserves:rp.total,
+    soldees:rp.soldee,
+    bloquantesOuvertes:rp.bloqOuverte,
+    nonBloquantesOuvertes:rp.nonbloqOuverte
+  });
+  if (state.versionHistory.length > 50) state.versionHistory = state.versionHistory.slice(-50);
+  markDirty();
+  triggerDownload(buildExportBlob(), buildFilename('html'));
+  dirty = false;
+  updateVersionBadge();
+  showToast('Envoi officiel enregistré — fichier téléchargé (v' + state.meta.version + ')');
+}
+function cancelLastOfficialSend(){
+  if (!state.versionHistory.length){ showToast('Aucun envoi officiel à annuler'); return; }
+  var last = state.versionHistory[state.versionHistory.length - 1];
+  var previousVersion = state.versionHistory.length > 1 ? state.versionHistory[state.versionHistory.length - 2].version : 0;
+  if (!window.confirm('Annuler le dernier envoi officiel (v' + last.version + ') ? La version repassera à ' + (previousVersion > 0 ? ('v' + previousVersion) : 'aucune version') + ' et cette entrée sera retirée de l\'historique.')) return;
+  state.versionHistory.pop();
+  state.meta.version = previousVersion;
+  markDirty();
+  updateVersionBadge();
+  showToast('Dernier envoi officiel annulé — retour à ' + (previousVersion > 0 ? ('v' + previousVersion) : 'v0'));
+}
+function exportJson(){
+  var json = JSON.stringify(state, null, 2);
+  triggerDownload(new Blob([json], { type:'application/json;charset=utf-8' }), buildFilename('json').replace(/\.json$/, '_donnees.json'));
+  showToast('Données exportées en JSON');
+}
+function importJsonFile(file){
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var parsed;
+    try{ parsed = JSON.parse(e.target.result); }
+    catch(err){ window.alert('Ce fichier ne semble pas être un JSON valide.'); return; }
+    if (!window.confirm('Importer ce fichier remplacera toutes les données actuelles de ce formulaire. Continuer ?')) return;
+    state = normalizeState(parsed);
+    activeSessionByPhase = { prefat:null, fat:null, sat:null };
+    loadFailed = false;
+    hideLoadWarning();
+    renderAll();
+    closeAllModals();
+    markDirty();
+    captureHistorySnapshot();
+    showToast('Données importées avec succès');
+  };
+  reader.onerror = function(){ window.alert('Impossible de lire ce fichier.'); };
+  reader.readAsText(file);
+}
+
+/* ---------------- print synthesis ---------------- */
+function buildPrintSynthesis(){
+  var html = '';
+  html += '<div class="print-header">';
+  html += '<h1>' + esc(state.meta.projectName || 'Suivi FAT / SAT') + '</h1>';
+  var metaBits = [];
+  if (state.meta.client) metaBits.push('Client : ' + esc(state.meta.client));
+  if (state.meta.gmaoCode) metaBits.push('Code GMAO : ' + esc(state.meta.gmaoCode));
+  if (state.meta.supplier) metaBits.push('Fournisseur : ' + esc(state.meta.supplier));
+  if (metaBits.length) html += '<p class="print-meta">' + metaBits.join(' &middot; ') + '</p>';
+  html += '<p class="print-meta">Synthèse générée le ' + formatTodayDisplay() + '</p>';
+  html += '</div>';
+
+  var anyPhaseHasTests = false;
+  var photoAnnexItems = [];
+  var photoAnnexSeen = {};
+  getPhaseIds().forEach(function(phase){
+    var phDef = findPhaseDef(phase); if (!phDef || !phDef.included) return;
+    var sessions = state.sessions[phase];
+    var anySession = sessions.some(function(s){ return s.tests.length > 0; });
+    if (!anySession) return;
+    anyPhaseHasTests = true;
+    html += '<h2 class="print-phase-title">' + phaseLabel(phase) + '</h2>';
+    sessions.forEach(function(session, sIdx){
+      if (!session.tests.length) return;
+      html += '<h3 class="print-session-title">' + esc(session.label) + (session.date ? (' — ' + esc(formatDateDisplay(session.date))) : '');
+      if (session.conclusion === 'acceptee') html += ' — <span class="print-conclusion-acceptee">Acceptée</span>';
+      else if (session.conclusion === 'non-acceptee') html += ' — <span class="print-conclusion-non-acceptee">Non acceptée</span>';
+      html += '</h3>';
+      var groups = groupByTheme(session.tests, function(t){ return t.themeId; });
+      var displayIndex = {}, counter = 0;
+      groups.forEach(function(g){ g.items.forEach(function(t){ displayIndex[t.id] = counter++; }); });
+      html += '<table class="print-table"><thead><tr><th>#</th><th>Thème</th><th>Qualif.</th><th>Description</th><th>Résultat</th><th>Réserve</th></tr></thead><tbody>';
+      groups.forEach(function(g){
+        g.items.forEach(function(t){
+          var num = phaseCode(phase) + (sIdx+1) + '-' + pad2(displayIndex[t.id]+1);
+          var resClass = t.result ? ('print-result-' + t.result) : '';
+          var resLabel = t.result === 'ok' ? 'OK' : (t.result === 'nok' ? 'NON OK' : (t.result === 'na' ? 'N/A' : '—'));
+          var qsCell = t.qualStage ? ('<span class="qualstage-tag qualstage-tag-' + t.qualStage + '">' + t.qualStage.toUpperCase() + '</span>') : '—';
+          var reserveInfo = '';
+          if (t.result === 'nok'){
+            reserveInfo = t.reserveType === 'bloquante' ? 'Bloquante' : (t.reserveType === 'non-bloquante' ? 'Non bloquante' : '—');
+            if (t.reserveReasons && t.reserveReasons.length){
+              var labels = t.reserveReasons.map(function(rid){ var r = findBlockingReason(rid); return r ? r.label : null; }).filter(function(x){ return x; });
+              if (labels.length) reserveInfo += ' (' + labels.join(', ') + ')';
+            }
+          }
+          var descCell = esc(t.description);
+          if (t.comment) descCell += '<br><span class="print-comment-inline">' + esc(t.comment) + '</span>';
+          html += '<tr><td>' + num + '</td><td>' + esc(g.theme ? g.theme.label : 'Sans thème') + '</td><td>' + qsCell + '</td><td>' + descCell + '</td>' +
+            '<td class="' + resClass + '">' + resLabel + '</td><td>' + esc(reserveInfo) + '</td></tr>';
+          if (t.photos.length){ photoAnnexItems.push({ num:num, description:t.description, photos:t.photos }); photoAnnexSeen[t.id] = true; }
+        });
+      });
+      html += '</tbody></table>';
+    });
+  });
+  if (!anyPhaseHasTests) html += '<p class="print-empty">Aucun test enregistré pour le moment.</p>';
+
+  var entries = getAllNokTests();
+  html += '<h2 class="print-phase-title">Liste de réserves</h2>';
+  if (!entries.length){
+    html += '<p class="print-empty">Aucune réserve à ce jour.</p>';
+  }else{
+    html += '<table class="print-table"><thead><tr><th>ID</th><th>Phase</th><th>#</th><th>Thème</th><th>Qualif.</th><th>Description</th><th>Type</th><th>Statut</th><th>Responsable</th><th>Échéance</th><th>Clôture</th></tr></thead><tbody>';
+    entries.forEach(function(e){
+      var num = phaseCode(e.phase) + (e.sessionIndex+1) + '-' + pad2(e.displayIndex+1);
+      var typeLabel = e.test.reserveType === 'bloquante' ? 'Bloquante' : (e.test.reserveType === 'non-bloquante' ? 'Non bloquante' : '—');
+      var themeLabel = (e.test.themeId && findTheme(e.test.themeId)) ? findTheme(e.test.themeId).label : 'Sans thème';
+      var descCellR = esc(e.test.description);
+      if (e.test.comment) descCellR += '<br><span class="print-comment-inline">' + esc(e.test.comment) + '</span>';
+      html += '<tr><td>' + esc(e.test.action.reserveId || '—') + '</td><td>' + phaseLabel(e.phase) + '</td><td>' + num + '</td><td>' + esc(themeLabel) + '</td>' +
+        '<td>' + (e.test.qualStage ? e.test.qualStage.toUpperCase() : '—') + '</td>' +
+        '<td>' + descCellR + '</td><td>' + esc(typeLabel) + '</td><td>' + esc(statusLabel(e.test.action.status)) + '</td><td>' + esc(formatResponsableLabel(e.test.action)) + '</td>' +
+        '<td>' + esc(e.test.action.echeance ? formatDateDisplay(e.test.action.echeance) : '—') + '</td><td>' + esc(e.test.action.dateCloture || '—') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+
+    entries.forEach(function(e){
+      if (e.test.photos.length && !photoAnnexSeen[e.test.id]){
+        var numR = phaseCode(e.phase) + (e.sessionIndex+1) + '-' + pad2(e.displayIndex+1);
+        photoAnnexItems.push({ num:numR, description:e.test.description, photos:e.test.photos });
+        photoAnnexSeen[e.test.id] = true;
+      }
+    });
+
+    /* --- jalons d'avancement : journal de suivi date, reserve par reserve --- */
+    var entriesWithLog = entries.filter(function(e){ return e.test.action.log && e.test.action.log.length; });
+    if (entriesWithLog.length){
+      html += '<h3 class="print-session-title">Jalons d\'avancement (journal de suivi)</h3>';
+      html += '<table class="print-table print-milestones-table"><thead><tr><th>ID</th><th>Description</th><th>Jalons</th></tr></thead><tbody>';
+      entriesWithLog.forEach(function(e){
+        var milestones = e.test.action.log.map(function(entry){
+          return '<div class="print-milestone-entry"><span class="print-milestone-date">' + esc(entry.date) + '</span> ' + esc(entry.text) + '</div>';
+        }).join('');
+        html += '<tr><td>' + esc(e.test.action.reserveId || '—') + '</td><td>' + esc(e.test.description) + '</td><td>' + milestones + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+  }
+
+  /* --- historique des versions, lie a l'avancement des reserves --- */
+  html += '<h2 class="print-phase-title">Historique des versions</h2>';
+  if (!state.versionHistory.length){
+    html += '<p class="print-empty">Aucun envoi officiel enregistré pour le moment.</p>';
+  }else{
+    html += '<table class="print-table print-version-table"><thead><tr><th>Version</th><th>Date</th><th>Réserves soldées</th><th>Bloquantes ouvertes</th><th>Non bloquantes ouvertes</th></tr></thead><tbody>';
+    state.versionHistory.forEach(function(v){
+      html += '<tr><td>v' + v.version + '</td><td>' + esc(v.date) + '</td>' +
+        '<td>' + v.soldees + ' / ' + v.totalReserves + '</td>' +
+        '<td' + (v.bloquantesOuvertes > 0 ? ' class="print-result-nok"' : '') + '>' + v.bloquantesOuvertes + '</td>' +
+        '<td>' + v.nonBloquantesOuvertes + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  /* --- approbation / signatures --- */
+  html += '<h2 class="print-phase-title">Approbation</h2>';
+  if (state.meta.finalAcceptancePhaseId){
+    var facDef = findPhaseDef(state.meta.finalAcceptancePhaseId);
+    if (facDef) html += '<p class="print-meta">La réception définitive de l\'équipement est conditionnée à la validation de la phase <strong>' + esc(facDef.label) + '</strong>.</p>';
+  }
+  var supplierLabel = state.meta.supplier ? ('Fournisseur (' + esc(state.meta.supplier) + ')') : 'Fournisseur';
+  html += '<table class="print-table print-signature-table"><thead><tr><th>Phase</th><th>Conclusion</th><th>' + supplierLabel + '</th><th>Delpharm Reims</th></tr></thead><tbody>';
+  getPhaseIds().forEach(function(phase){
+    var phDef = findPhaseDef(phase); if (!phDef || !phDef.included) return;
+    var sessions = state.sessions[phase];
+    var lastSession = sessions.length ? sessions[sessions.length - 1] : null;
+    var conclusionLabel = '<span class="print-empty">En attente</span>';
+    if (lastSession && lastSession.conclusion === 'acceptee') conclusionLabel = '<span class="print-conclusion-acceptee">Acceptée</span>';
+    else if (lastSession && lastSession.conclusion === 'non-acceptee') conclusionLabel = '<span class="print-conclusion-non-acceptee">Non acceptée</span>';
+    var isFinal = state.meta.finalAcceptancePhaseId === phase;
+    var phaseCellLabel = phaseLabel(phase) + (isFinal ? ' <span class="print-final-acceptance-badge">RÉCEPTION DÉFINITIVE</span>' : '');
+    var signCell = '<div class="print-sign-line">Signature :</div><div class="print-sign-blank"></div><div class="print-sign-line">Date :</div>';
+    html += '<tr' + (isFinal ? ' class="print-final-acceptance-row"' : '') + '><td>' + phaseCellLabel + '</td><td>' + conclusionLabel + '</td>' +
+      '<td class="print-sign-cell">' + signCell + '</td><td class="print-sign-cell">' + signCell + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  /* --- annexe photos : plus grandes, a part, avec reference + rappel de la description --- */
+  if (photoAnnexItems.length){
+    if (printIncludePhotoAnnex){
+      html += '<h2 class="print-phase-title print-annex-title">Annexe — Photos</h2>';
+      photoAnnexItems.forEach(function(item){
+        html += '<div class="print-annex-item">';
+        html += '<div class="print-annex-header"><span class="print-annex-num">' + esc(item.num) + '</span> — <span class="print-annex-desc">' + esc(item.description) + '</span></div>';
+        html += '<div class="print-annex-photos">';
+        item.photos.forEach(function(p){ html += '<img class="print-annex-photo" src="' + p.dataUrl + '" alt="Photo">'; });
+        html += '</div></div>';
+      });
+    }else{
+      html += '<h2 class="print-phase-title print-annex-title">Annexe — Photos</h2>';
+      html += '<p class="print-empty">Annexe photos non incluse dans cette impression (' + photoAnnexItems.length + ' test(s) concerné(s) — activez « Inclure l\'annexe photos » pour les afficher).</p>';
+    }
+  }
+
+  document.getElementById('printContent').innerHTML = html;
+}
+function openPrintOverlay(){
+  buildPrintSynthesis();
+  document.getElementById('printOverlay').classList.add('show');
+  document.body.classList.add('print-overlay-active');
+}
+function closePrintOverlay(){
+  document.getElementById('printOverlay').classList.remove('show');
+  document.body.classList.remove('print-overlay-active');
+}
+
+/* ---------------- events ---------------- */
+function handleGlobalClick(e){
+  var t = e.target, el;
+  if ((el = t.closest('.stepper-node')) || (el = t.closest('.actions-tab-btn'))){
+    switchTab(el.getAttribute('data-tab'));
+    return;
+  }
+  if ((el = t.closest('.session-chip-add'))){ addSession(el.getAttribute('data-phase')); return; }
+  if ((el = t.closest('.session-chip'))){
+    activeSessionByPhase[el.getAttribute('data-phase')] = el.getAttribute('data-session');
+    renderPhaseTab(el.getAttribute('data-phase'));
+    return;
+  }
+  if ((el = t.closest('.session-delete-btn'))){ removeSession(el.getAttribute('data-phase'), el.getAttribute('data-session')); return; }
+  if ((el = t.closest('.btn-add-test'))){ addTest(el.getAttribute('data-phase'), activeSessionByPhase[el.getAttribute('data-phase')]); return; }
+  if ((el = t.closest('.qualstage-clear'))){
+    var qsClearTest = findTest(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id'));
+    if (qsClearTest){
+      qsClearTest.qualStage = null;
+      markDirty();
+      renderPhaseTab(el.getAttribute('data-phase'));
+      renderActions();
+    }
+    return;
+  }
+  if ((el = t.closest('.btn-copy-phase'))){ copyTestsFromPhase(el.getAttribute('data-source'), el.getAttribute('data-target')); return; }
+  if ((el = t.closest('.btn-delete'))){
+    if (window.confirm('Supprimer ce test ? Cette action est irréversible.')){
+      removeTest(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id'));
+    }
+    return;
+  }
+  if ((el = t.closest('.btn-duplicate'))){ duplicateTest(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id')); return; }
+  if ((el = t.closest('.btn-copy-forward'))){ copyTestForward(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id')); return; }
+  if ((el = t.closest('.btn-move-up'))){ moveTest(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id'), -1); return; }
+  if ((el = t.closest('.btn-move-down'))){ moveTest(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id'), 1); return; }
+  if ((el = t.closest('.photo-remove'))){ removePhoto(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id'), el.getAttribute('data-photo-id')); return; }
+  if ((el = t.closest('.photo-thumb'))){ openLightbox(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id'), el.getAttribute('data-photo-id')); return; }
+  if ((el = t.closest('.log-add-btn'))){
+    var row = el.closest('.log-add-row');
+    var input = row ? row.querySelector('.log-input') : null;
+    if (input && input.value.trim()){
+      addLogEntry(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id'), input.value.trim());
+    }
+    return;
+  }
+  if ((el = t.closest('.goto-test-btn'))){ gotoTest(el.getAttribute('data-phase'), el.getAttribute('data-session'), el.getAttribute('data-id')); return; }
+  if ((el = t.closest('#exportBtn'))){ exportHtml(); return; }
+  if ((el = t.closest('#officialSendBtn'))){ markOfficialSend(); return; }
+  if ((el = t.closest('#versionCancelBtn'))){ cancelLastOfficialSend(); return; }
+  if ((el = t.closest('#themeToggle'))){ toggleTheme(); return; }
+  if ((el = t.closest('.qs-filter-pill'))){
+    qualStageFilter = el.getAttribute('data-qs');
+    document.querySelectorAll('.qs-filter-pill').forEach(function(p){ p.classList.toggle('active', p.getAttribute('data-qs') === qualStageFilter); });
+    getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+    renderActions();
+    return;
+  }
+  if ((el = t.closest('#undoBtn'))){ undo(); return; }
+  if ((el = t.closest('#redoBtn'))){ redo(); return; }
+  if ((el = t.closest('#settingsBtn'))){ renderReasonsList(); renderThemesList(); renderPhasesList(); renderFinalAcceptanceSelect(); openModal('settingsModal'); return; }
+  if ((el = t.closest('.phase-delete-btn'))){ deletePhase(el.getAttribute('data-phase-id')); return; }
+  if ((el = t.closest('.phase-move-up'))){ movePhase(el.getAttribute('data-phase-id'), -1); return; }
+  if ((el = t.closest('.phase-move-down'))){ movePhase(el.getAttribute('data-phase-id'), 1); return; }
+  if ((el = t.closest('#addPhaseBtn'))){
+    var newPhaseInput = document.getElementById('newPhaseInput');
+    if (newPhaseInput && newPhaseInput.value.trim()){
+      addPhase(newPhaseInput.value.trim());
+      newPhaseInput.value = '';
+      newPhaseInput.focus();
+    }
+    return;
+  }
+  if ((el = t.closest('#printTriggerBtn'))){ openPrintOverlay(); return; }
+  if ((el = t.closest('#printCloseBtn'))){ closePrintOverlay(); return; }
+  if ((el = t.closest('#printNowBtn'))){ window.print(); return; }
+  if ((el = t.closest('.theme-delete-btn'))){ deleteTheme(el.getAttribute('data-theme-id')); return; }
+  if ((el = t.closest('.theme-move-up'))){ moveTheme(el.getAttribute('data-theme-id'), -1); return; }
+  if ((el = t.closest('.theme-move-down'))){ moveTheme(el.getAttribute('data-theme-id'), 1); return; }
+  if ((el = t.closest('#addThemeBtn'))){
+    var newThemeInput = document.getElementById('newThemeInput');
+    if (newThemeInput && newThemeInput.value.trim()){
+      addTheme(newThemeInput.value.trim());
+      newThemeInput.value = '';
+      newThemeInput.focus();
+    }
+    return;
+  }
+  if ((el = t.closest('.reason-delete-btn'))){ deleteBlockingReason(el.getAttribute('data-reason-id')); return; }
+  if ((el = t.closest('#addReasonBtn'))){
+    var newReasonInput = document.getElementById('newReasonInput');
+    if (newReasonInput && newReasonInput.value.trim()){
+      addBlockingReason(newReasonInput.value.trim());
+      newReasonInput.value = '';
+      newReasonInput.focus();
+    }
+    return;
+  }
+  if ((el = t.closest('#newProjectBtn'))){ resetProject(); return; }
+  if ((el = t.closest('#exportJsonBtn'))){ exportJson(); return; }
+  if ((el = t.closest('#loadWarningClose'))){ hideLoadWarning(); return; }
+  if ((el = t.closest('.modal-close'))){ closeAllModals(); return; }
+  if ((el = t.closest('.lightbox-prev'))){ lightboxNav(-1); return; }
+  if ((el = t.closest('.lightbox-next'))){ lightboxNav(1); return; }
+  if ((el = t.closest('.modal-overlay')) && t === el){ closeAllModals(); return; }
+}
+function handleGlobalChange(e){
+  var t = e.target;
+  if (t.id === 'importJsonInput'){
+    if (t.files && t.files[0]) importJsonFile(t.files[0]);
+    t.value = '';
+    return;
+  }
+  if (t.id === 'printAnnexToggle'){
+    printIncludePhotoAnnex = t.checked;
+    buildPrintSynthesis();
+    return;
+  }
+  if (t.classList.contains('theme-select')){
+    var themeTest = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (themeTest){
+      themeTest.themeId = t.value || null;
+      markDirty();
+      renderPhaseTab(t.getAttribute('data-phase'));
+      renderActions();
+    }
+    return;
+  }
+  if (t.classList.contains('qualstage-radio')){
+    var qsTest = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (qsTest){
+      qsTest.qualStage = t.value;
+      markDirty();
+      renderPhaseTab(t.getAttribute('data-phase'));
+      renderActions();
+    }
+    return;
+  }
+  if (t.classList.contains('move-phase-select')){
+    if (t.value){
+      moveTestToPhase(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'), t.value);
+    }
+    return;
+  }
+  if (t.classList.contains('result-radio')){
+    var test = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (test){
+      test.result = t.value;
+      if (test.result === 'nok') assignReserveIdIfNeeded(test);
+      markDirty(); renderPhaseTab(t.getAttribute('data-phase')); renderActions();
+    }
+    return;
+  }
+  if (t.classList.contains('reserve-type-radio')){
+    var test2 = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (test2){ test2.reserveType = t.value; markDirty(); renderPhaseTab(t.getAttribute('data-phase')); renderActions(); }
+    return;
+  }
+  if (t.classList.contains('reason-chip-checkbox')){
+    var reasonTest = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (reasonTest){
+      if (!reasonTest.reserveReasons) reasonTest.reserveReasons = [];
+      var reasonId = t.getAttribute('data-reason-id');
+      var ridx = reasonTest.reserveReasons.indexOf(reasonId);
+      if (t.checked){
+        if (ridx === -1) reasonTest.reserveReasons.push(reasonId);
+      }else{
+        if (ridx !== -1) reasonTest.reserveReasons.splice(ridx, 1);
+      }
+      markDirty();
+      renderPhaseTab(t.getAttribute('data-phase'));
+      renderActions();
+    }
+    return;
+  }
+  if (t.classList.contains('photo-file-input')){
+    if (t.files && t.files.length) handlePhotoFilesSelected(t.files, t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    return;
+  }
+  if (t.classList.contains('action-status-select')){
+    var test3 = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (test3){
+      var oldStatus = test3.action.status, newStatus = t.value;
+      test3.action.status = newStatus;
+      if (newStatus === 'soldee' && oldStatus !== 'soldee'){
+        test3.action.dateCloture = formatDateTime(new Date());
+        test3.action.log.push({ date:formatDateTime(new Date()), text:'Réserve soldée.' });
+      }else if (newStatus !== 'soldee' && oldStatus === 'soldee'){
+        test3.action.dateCloture = '';
+        test3.action.log.push({ date:formatDateTime(new Date()), text:'Réserve rouverte (statut : ' + statusLabel(newStatus) + ').' });
+      }
+      markDirty();
+      renderPhaseTab(t.getAttribute('data-phase'));
+      renderActions();
+    }
+    return;
+  }
+  if (t.classList.contains('action-echeance-input')){
+    var test4 = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (test4){ test4.action.echeance = t.value; markDirty(); }
+    return;
+  }
+  if (t.classList.contains('responsable-fournisseur-check')){
+    var testRF = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (testRF){ testRF.action.responsableFournisseur = t.checked; markDirty(); }
+    return;
+  }
+  if (t.classList.contains('responsable-delpharm-check')){
+    var testRD = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (testRD){ testRD.action.responsableDelpharm = t.checked; markDirty(); }
+    return;
+  }
+  if (t.classList.contains('session-date-input')){
+    var session = findSession(t.getAttribute('data-phase'), t.getAttribute('data-session'));
+    if (session){
+      session.date = t.value;
+      markDirty();
+      var chip = document.querySelector('.session-chip[data-session="' + session.id + '"]');
+      if (chip) chip.textContent = session.label + (session.date ? (' \u00b7 ' + formatDateDisplay(session.date)) : '');
+      renderStepper();
+    }
+    return;
+  }
+  if (t.classList.contains('session-conclusion-radio')){
+    var concSession = findSession(t.getAttribute('data-phase'), t.getAttribute('data-session'));
+    if (concSession){
+      concSession.conclusion = t.value;
+      markDirty();
+      renderPhaseTab(t.getAttribute('data-phase'));
+      renderStepper();
+    }
+    return;
+  }
+  if (t.classList.contains('phase-included-input')){
+    var incDef = findPhaseDef(t.getAttribute('data-phase-id'));
+    if (incDef){
+      if (!t.checked){
+        var stillIncluded = state.phases.filter(function(p){ return p.included && p.id !== incDef.id; });
+        if (!stillIncluded.length){
+          t.checked = true;
+          showToast('Au moins une phase doit rester incluse');
+          return;
+        }
+      }
+      incDef.included = t.checked;
+      markDirty();
+      rebuildPhasePanels();
+      renderActions();
+    }
+    return;
+  }
+  if (t.id === 'finalAcceptanceSelect'){
+    state.meta.finalAcceptancePhaseId = t.value || null;
+    markDirty();
+    return;
+  }
+}
+function handleGlobalInput(e){
+  var t = e.target;
+  if (t.classList.contains('description-textarea')){
+    var test = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (test){ test.description = t.value; markDirty(); }
+    autoGrow(t);
+    return;
+  }
+  if (t.classList.contains('ref-input')){
+    var test2 = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (test2){ test2.ref = t.value; markDirty(); }
+    return;
+  }
+  if (t.classList.contains('reserve-text-textarea')){
+    var test3 = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (test3){ test3.reserveText = t.value; markDirty(); }
+    autoGrow(t);
+    return;
+  }
+  if (t.classList.contains('comment-textarea')){
+    var testComment = findTest(t.getAttribute('data-phase'), t.getAttribute('data-session'), t.getAttribute('data-id'));
+    if (testComment){ testComment.comment = t.value; markDirty(); }
+    autoGrow(t);
+    return;
+  }
+  if (t.classList.contains('session-label-input')){
+    var session = findSession(t.getAttribute('data-phase'), t.getAttribute('data-session'));
+    if (session){
+      session.label = t.value;
+      markDirty();
+      var chip = document.querySelector('.session-chip[data-session="' + session.id + '"]');
+      if (chip) chip.textContent = (session.label || '') + (session.date ? (' \u00b7 ' + formatDateDisplay(session.date)) : '');
+    }
+    return;
+  }
+  if (t.classList.contains('reason-label-input')){
+    var reason = findBlockingReason(t.getAttribute('data-reason-id'));
+    if (reason){
+      reason.label = t.value;
+      markDirty();
+      /* on ne re-rend pas #reasonsList (le champ en cours de frappe y est) mais on propage
+         le nouveau libelle aux puces affichees dans les onglets phases et dans les reserves */
+      getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+      renderActions();
+    }
+    return;
+  }
+  if (t.classList.contains('theme-label-input')){
+    var theme = findTheme(t.getAttribute('data-theme-id'));
+    if (theme){
+      theme.label = t.value;
+      markDirty();
+      /* on ne re-rend pas #themesList (le champ en cours de frappe y est) mais on propage
+         le nouveau libelle aux selecteurs et en-tetes de groupe affiches ailleurs */
+      getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+      renderActions();
+    }
+    return;
+  }
+  if (t.classList.contains('phase-label-input')){
+    var phaseDef = findPhaseDef(t.getAttribute('data-phase-id'));
+    if (phaseDef && !phaseDef.builtin){
+      phaseDef.label = t.value;
+      markDirty();
+      /* on ne re-rend pas #phasesList (le champ en cours de frappe y est) mais on propage
+         le nouveau libelle au stepper, aux panneaux et au selecteur de reception definitive */
+      renderStepper();
+      getPhaseIds().forEach(function(phase){ renderPhaseTab(phase); });
+    }
+    return;
+  }
+  if (t.id === 'projectName'){ state.meta.projectName = t.value; markDirty(); return; }
+  if (t.id === 'projectClient'){ state.meta.client = t.value; markDirty(); return; }
+  if (t.id === 'projectGmao'){ state.meta.gmaoCode = t.value; markDirty(); return; }
+  if (t.id === 'projectSupplier'){ state.meta.supplier = t.value; markDirty(); return; }
+}
+function attachEventListeners(){
+  document.addEventListener('click', handleGlobalClick);
+  document.addEventListener('change', handleGlobalChange);
+  document.addEventListener('input', handleGlobalInput);
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){ closeAllModals(); closePrintOverlay(); }
+    var focusTag = e.target && e.target.tagName;
+    var inField = focusTag === 'INPUT' || focusTag === 'TEXTAREA' || focusTag === 'SELECT';
+    var key = (e.key || '').toLowerCase();
+    if (!inField && (e.ctrlKey || e.metaKey) && !e.shiftKey && key === 'z'){
+      e.preventDefault();
+      undo();
+    }else if (!inField && (e.ctrlKey || e.metaKey) && (key === 'y' || (e.shiftKey && key === 'z'))){
+      e.preventDefault();
+      redo();
+    }
+    if (e.key === 'Enter' && e.target && e.target.id === 'newReasonInput'){
+      e.preventDefault();
+      var newReasonInput = document.getElementById('newReasonInput');
+      if (newReasonInput && newReasonInput.value.trim()){
+        addBlockingReason(newReasonInput.value.trim());
+        newReasonInput.value = '';
+        newReasonInput.focus();
+      }
+    }
+    if (e.key === 'Enter' && e.target && e.target.id === 'newThemeInput'){
+      e.preventDefault();
+      var newThemeInput = document.getElementById('newThemeInput');
+      if (newThemeInput && newThemeInput.value.trim()){
+        addTheme(newThemeInput.value.trim());
+        newThemeInput.value = '';
+        newThemeInput.focus();
+      }
+    }
+    if (e.key === 'Enter' && e.target && e.target.id === 'newPhaseInput'){
+      e.preventDefault();
+      var newPhaseInput = document.getElementById('newPhaseInput');
+      if (newPhaseInput && newPhaseInput.value.trim()){
+        addPhase(newPhaseInput.value.trim());
+        newPhaseInput.value = '';
+        newPhaseInput.focus();
+      }
+    }
+  });
+  window.addEventListener('beforeunload', function(e){
+    if (dirty){ e.preventDefault(); e.returnValue = ''; }
+  });
+}
+
+/* ---------------- init ---------------- */
+function showLoadWarning(){
+  var el = document.getElementById('loadWarning');
+  if (el) el.classList.add('show');
+}
+function hideLoadWarning(){
+  var el = document.getElementById('loadWarning');
+  if (el) el.classList.remove('show');
+}
+/* ---------------- sélection de suivi (multi-documents) ---------------- */
+async function listAllDocs(){
+  if (!hasWindowStorage()) return [];
+  var result = await window.storage.list();
+  var keys = (result && result.keys) || [];
+  var out = [];
+  for (var i=0; i<keys.length; i++){
+    var k = keys[i];
+    try{
+      var rec = await window.storage.get(k);
+      if (!rec || !rec.value) continue;
+      var parsed = JSON.parse(rec.value);
+      var name = (parsed.meta && parsed.meta.projectName) || (k === 'fatsat-state' ? '' : k);
+      out.push({ key:k, projectName: name, client: (parsed.meta && parsed.meta.client) || '' });
+    }catch(e){}
+  }
+  out.sort(function(a,b){
+    if (a.key === 'fatsat-state') return -1;
+    if (b.key === 'fatsat-state') return 1;
+    return (a.projectName||'').localeCompare(b.projectName||'');
+  });
+  return out;
+}
+async function refreshDocSelect(){
+  var sel = document.getElementById('docSelect');
+  var delBtn = document.getElementById('btnDeleteDoc');
+  if (!sel) return;
+  var docs = await listAllDocs();
+  var opts = docs.map(function(d){
+    var label = d.key === 'fatsat-state'
+      ? 'Suivi actuel (non classé)' + (d.projectName ? ' — ' + d.projectName : '')
+      : (d.projectName || d.key) + (d.client ? ' (' + d.client + ')' : '');
+    return '<option value="' + d.key.replace(/"/g,'&quot;') + '">' + esc(label) + '</option>';
+  });
+  if (opts.length === 0) opts.push('<option value="fatsat-state">Suivi actuel (non classé)</option>');
+  sel.innerHTML = opts.join('');
+  sel.value = CURRENT_DOC_KEY;
+  delBtn.disabled = (CURRENT_DOC_KEY === 'fatsat-state');
+}
+window.__fatsatRefreshDocSelect = refreshDocSelect;
+async function switchToDoc(key){
+  if (key === CURRENT_DOC_KEY) return;
+  if (!window.confirm('Charger ce suivi ? (le suivi actuellement affiché reste sauvegardé sous son propre nom)')) {
+    refreshDocSelect();
+    return;
+  }
+  var result = await window.storage.get(key);
+  if (!result || !result.value){
+    window.alert('Impossible de charger ce suivi.');
+    refreshDocSelect();
+    return;
+  }
+  try{ state = normalizeState(JSON.parse(result.value)); }
+  catch(e){ window.alert('Suivi corrompu.'); return; }
+  CURRENT_DOC_KEY = key;
+  if (key !== 'fatsat-state'){ try{ localStorage.setItem('fatsat_last_active_key', key); }catch(e){} }
+  else { try{ localStorage.removeItem('fatsat_last_active_key'); }catch(e){} }
+  dirty = false;
+  activeTab = 'fat';
+  activeSessionByPhase = { prefat:null, fat:null, sat:null };
+  renderAll();
+  captureHistorySnapshot();
+  refreshDocSelect();
+  showToast('Suivi chargé');
+}
+async function createNewDocFromCurrentName(){
+  var name = document.getElementById('projectName').value.trim();
+  if (!name){
+    window.alert('Merci de renseigner un nom de projet avant de créer un nouveau suivi classé.');
+    return;
+  }
+  var newKey = 'fatsat-doc-' + slugifyKey(name);
+  if (newKey === CURRENT_DOC_KEY) return;
+  var wasScratch = (CURRENT_DOC_KEY === 'fatsat-state');
+  var existing = await window.storage.get(newKey);
+  if (existing && existing.value){
+    if (!window.confirm('Un suivi nommé « ' + name + ' » existe déjà. Le charger ?')) return;
+    switchToDoc(newKey);
+    return;
+  }
+  if (!window.confirm('Créer un nouveau suivi FAT/SAT classé pour « ' + name + ' » avec les données actuellement affichées ?')) return;
+  CURRENT_DOC_KEY = newKey;
+  try{ localStorage.setItem('fatsat_last_active_key', newKey); }catch(e){}
+  persistStateDebounced();
+  await window.storage.set(newKey, JSON.stringify(state), false);
+  if (wasScratch){ try{ await window.storage.delete('fatsat-state'); }catch(e){} }
+  refreshDocSelect();
+  showToast('Suivi « ' + name + ' » classé et créé');
+}
+async function deleteCurrentDoc(){
+  if (CURRENT_DOC_KEY === 'fatsat-state') return;
+  var canDeleteRemote = (typeof window.__driveDelete === 'function');
+  var msg = 'Supprimer définitivement ce suivi FAT/SAT ?\n\nCette action est irréversible et le supprime localement' +
+    (canDeleteRemote ? ', ainsi que sur Google Drive si vous êtes connecté.' : '. (Non connecté à Drive : si un exemplaire y existe déjà, il faudra le supprimer manuellement, sinon il pourrait réapparaître à la prochaine synchro.)');
+  if (!window.confirm(msg)) return;
+
+  var keyToDelete = CURRENT_DOC_KEY;
+  await window.storage.delete(keyToDelete);
+  try{ localStorage.removeItem('fatsat_last_active_key'); }catch(e){}
+
+  var deleteP = canDeleteRemote ? window.__driveDelete(keyToDelete) : Promise.resolve({ driveDeleted:false, reason:'not-connected' });
+  deleteP.then(function(result){
+    if (result && result.driveDeleted) showToast('Suivi supprimé (local + Drive)');
+    else if (result && result.reason === 'not-connected') showToast('Suivi supprimé localement (non connecté à Drive)');
+    else showToast('Suivi supprimé localement');
+  }).catch(function(){
+    showToast('Supprimé localement — échec de la suppression sur Drive');
+  });
+
+  CURRENT_DOC_KEY = 'fatsat-state';
+  var scratch = await window.storage.get('fatsat-state');
+  if (scratch && scratch.value){
+    try{ state = normalizeState(JSON.parse(scratch.value)); }catch(e){ state = defaultState(); }
+  } else {
+    state = defaultState();
+  }
+  dirty = false;
+  activeTab = 'fat';
+  activeSessionByPhase = { prefat:null, fat:null, sat:null };
+  renderAll();
+  captureHistorySnapshot();
+  refreshDocSelect();
+}
+
+function finishInit(){
+  renderAll();
+  attachEventListeners();
+  historyStack = [JSON.stringify(state)];
+  historyIndex = 0;
+  updateUndoRedoButtons();
+  if (loadFailed) showLoadWarning();
+  var selEl = document.getElementById('docSelect');
+  var delEl = document.getElementById('btnDeleteDoc');
+  var classifyEl = document.getElementById('btnClassifyDoc');
+  if (selEl) selEl.addEventListener('change', function(){ switchToDoc(this.value); });
+  if (delEl) delEl.addEventListener('click', deleteCurrentDoc);
+  if (classifyEl) classifyEl.addEventListener('click', createNewDocFromCurrentName);
+  refreshDocSelect();
+}
+function init(){
+  /* Trame toujours vierge à l'ouverture : on n'essaie jamais de reprendre
+     automatiquement le dernier suivi actif ni le brouillon "fatsat-state"
+     précédemment enregistré. L'utilisateur choisit explicitement un suivi
+     existant via le sélecteur "Charger un suivi" s'il souhaite le reprendre. */
+  try{ localStorage.removeItem('fatsat_last_active_key'); }catch(e){}
+  state = parseEmbeddedState();
+  CURRENT_DOC_KEY = 'fatsat-state';
+  finishInit();
+}
+init();
+
+})();
+</script>
+</body>
+</html>
