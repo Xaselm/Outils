@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Budgets Projets</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#f2f4f8;
+    --surface:#ffffff;
+    --surface-alt:#f7f8fb;
+    --border:#dde2ea;
+    --ink:#1a2233;
+    --ink-muted:#647089;
+    --primary:#2955a3;
+    --primary-dark:#1f4280;
+    --primary-tint:#e7edf8;
+    --accent:#b8860b;
+    --accent-tint:#faf3e0;
+    --ok:#1f8a4c;
+    --ok-bg:#e3f6ea;
+    --warn:#b3760a;
+    --warn-bg:#fbf1dc;
+    --danger:#c0392b;
+    --danger-bg:#fbe6e3;
+    --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.05);
+    --shadow-hover:0 10px 24px rgba(20,30,50,.12);
+    --radius:12px;
+    --radius-sm:8px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  html[data-theme="dark"]{
+    --bg:#0f141c;
+    --surface:#171e28;
+    --surface-alt:#1d2531;
+    --border:#2b3444;
+    --ink:#e7ebf3;
+    --ink-muted:#8e9ab0;
+    --primary:#6f9ceb;
+    --primary-dark:#8fb4f0;
+    --primary-tint:#1c2940;
+    --accent:#e0b04a;
+    --accent-tint:#332a14;
+    --ok:#4bcf87;
+    --ok-bg:#123321;
+    --warn:#e0b04a;
+    --warn-bg:#332a14;
+    --danger:#e2685d;
+    --danger-bg:#3a1c1a;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+    --shadow-hover:0 10px 26px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:var(--sans); background:var(--bg); color:var(--ink);
+    padding:26px; -webkit-font-smoothing:antialiased;
+  }
+  button, input, select, textarea{ font-family:inherit; color:inherit; }
+  .container{ max-width:1360px; margin:0 auto; }
+
+  /* ---- Header ---- */
+  .app-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .app-header h1{ margin:0 0 4px; font-size:24px; font-weight:800; letter-spacing:-0.01em; }
+  .subtitle{ margin:0; color:var(--ink-muted); font-size:13.5px; }
+  .header-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+  .btn-primary{ background:var(--primary); color:#fff; border:none; padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .btn-secondary{ background:var(--surface); color:var(--ink); border:1px solid var(--border); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; }
+  .btn-secondary:hover{ background:var(--surface-alt); }
+  .btn-outline-danger{ background:transparent; border:1px solid var(--danger); color:var(--danger); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; }
+  .btn-outline-danger:hover{ background:var(--danger-bg); }
+  .btn-icon{ background:var(--surface); border:1px solid var(--border); width:38px; height:38px; border-radius:var(--radius-sm); font-size:16px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .btn-icon:hover{ background:var(--surface-alt); }
+  .btn-mini{ background:transparent; border:1px dashed var(--border); color:var(--ink-muted); border-radius:6px; padding:4px 8px; font-size:11.5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
+  .btn-mini:hover{ color:var(--primary); border-color:var(--primary); }
+  .btn-link{ background:none; border:none; color:var(--primary); font-size:12.5px; font-weight:600; cursor:pointer; padding:2px 0; }
+  .btn-link:hover{ text-decoration:underline; }
+  .icon-x{ background:none; border:none; color:var(--ink-muted); cursor:pointer; font-size:14px; padding:2px 5px; border-radius:4px; line-height:1; }
+  .icon-x:hover{ color:var(--danger); background:var(--danger-bg); }
+
+  .drive-btn{ display:inline-flex; align-items:center; gap:7px; }
+  .drive-dot{ width:8px; height:8px; border-radius:50%; background:var(--ink-muted); flex-shrink:0; transition:background .2s ease; }
+  .drive-dot.is-connected{ background:var(--ok); }
+  .drive-dot.is-syncing{ background:var(--warn); animation:drivePulse 1s ease-in-out infinite; }
+  .drive-dot.is-error{ background:var(--danger); }
+  @keyframes drivePulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* ---- Project bar ---- */
+  .project-bar{
+    display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:18px; box-shadow:var(--shadow);
+  }
+  .project-bar .field{ min-width:220px; }
+  .project-bar label{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); font-weight:700; margin-bottom:5px; }
+  .project-bar select, .project-bar input[type=text]{
+    width:100%; border:1px solid var(--border); border-radius:8px; padding:9px 11px;
+    font-size:13.5px; background:var(--surface); color:var(--ink);
+  }
+  .project-bar .spacer{ flex:1; }
+  .project-empty-note{ font-size:12.5px; color:var(--ink-muted); }
+
+  /* ---- Stats ---- */
+  .stats-bar{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .stat-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow); }
+  .stat-label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); font-weight:700; margin-bottom:6px; }
+  .stat-value{ font-size:21px; font-weight:800; }
+  .stat-value.accent{ color:var(--accent); }
+  .stat-value.ok{ color:var(--ok); }
+  .stat-sub{ font-size:11.5px; color:var(--ink-muted); margin-top:2px; }
+
+  /* ---- Lines list ---- */
+  .lines-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px; flex-wrap:wrap; }
+  .lines-toolbar h2{ margin:0; font-size:16px; font-weight:800; }
+  .empty-state{ background:var(--surface); border:1px dashed var(--border); border-radius:var(--radius); padding:40px 20px; text-align:center; color:var(--ink-muted); }
+  .lines-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(360px,1fr)); gap:14px; }
+
+  .line-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px; }
+  .line-card:hover{ box-shadow:var(--shadow-hover); }
+  .line-card-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .line-title{ font-size:15.5px; font-weight:800; line-height:1.3; }
+  .line-actions{ display:flex; gap:4px; flex-shrink:0; }
+  .line-actions button{ background:transparent; border:1px solid var(--border); width:30px; height:30px; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ink-muted); }
+  .line-actions button:hover{ color:var(--primary); border-color:var(--primary); }
+  .line-actions button.del-btn:hover{ color:var(--danger); border-color:var(--danger); background:var(--danger-bg); }
+
+  .supplier-chip{ display:flex; align-items:center; gap:9px; background:var(--surface-alt); border:1px solid var(--border); border-radius:20px; padding:5px 12px 5px 5px; width:fit-content; }
+  .supplier-logo{ width:26px; height:26px; border-radius:50%; object-fit:cover; background:var(--primary-tint); flex-shrink:0; }
+  .supplier-logo-placeholder{ width:26px; height:26px; border-radius:50%; background:var(--primary-tint); color:var(--primary); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0; }
+  .supplier-name{ font-size:12.5px; font-weight:700; }
+  .supplier-code{ font-size:10.5px; color:var(--ink-muted); font-family:ui-monospace,"SF Mono","Cascadia Mono",monospace; }
+  .supplier-none{ font-size:12px; color:var(--ink-muted); font-style:italic; }
+
+  .doc-refs{ display:flex; flex-direction:column; gap:6px; }
+  .doc-ref-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; }
+  .doc-ref-tag{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--primary); background:var(--primary-tint); border-radius:5px; padding:2px 6px; flex-shrink:0; min-width:38px; text-align:center; }
+  .doc-ref-value{ flex:1; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .doc-ref-value.empty{ color:var(--ink-muted); font-style:italic; }
+  .doc-file-link{ display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--primary); background:none; border:none; cursor:pointer; padding:2px 4px; flex-shrink:0; }
+  .doc-file-link:hover{ text-decoration:underline; }
+  .doc-file-none{ font-size:11px; color:var(--ink-muted); flex-shrink:0; }
+
+  .line-meta-row{ display:flex; justify-content:space-between; align-items:center; font-size:13px; border-top:1px dashed var(--border); border-bottom:1px dashed var(--border); padding:9px 0; }
+  .line-cost{ font-size:16px; font-weight:800; color:var(--accent); }
+  .line-order{ color:var(--ink-muted); font-size:12px; }
+  .line-order b{ color:var(--ink); font-weight:700; }
+
+  .milestones-block{ display:flex; flex-direction:column; gap:8px; }
+  .milestones-head{ display:flex; justify-content:space-between; align-items:center; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); font-weight:700; }
+  .progress-track{ height:9px; border-radius:5px; overflow:hidden; background:var(--border); display:flex; }
+  .progress-seg{ height:100%; }
+  .progress-seg.validated{ background:var(--ok); }
+  .progress-seg.pending{ background:var(--accent); opacity:.45; }
+  .milestone-list{ display:flex; flex-direction:column; gap:5px; }
+  .milestone-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; padding:4px 0; }
+  .milestone-row input[type=checkbox]{ width:16px; height:16px; flex-shrink:0; cursor:pointer; accent-color:var(--ok); }
+  .milestone-name{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .milestone-name.validated{ color:var(--ok); font-weight:700; }
+  .milestone-pct{ font-weight:700; color:var(--ink-muted); flex-shrink:0; width:38px; text-align:right; }
+  .milestone-date{ border:1px solid var(--border); border-radius:6px; padding:3px 6px; font-size:11.5px; width:118px; flex-shrink:0; }
+  .milestone-date-empty{ font-size:11px; color:var(--ink-muted); width:118px; flex-shrink:0; }
+  .milestones-empty{ font-size:12px; color:var(--ink-muted); font-style:italic; }
+
+  /* ---- Modal ---- */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(15,20,30,0.55); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+  .modal-overlay.hidden{ display:none; }
+  .modal{ background:var(--surface); border-radius:16px; width:100%; max-width:620px; max-height:90vh; overflow-y:auto; box-shadow:0 25px 70px rgba(0,0,0,.35); }
+  .modal-small{ max-width:480px; }
+  .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:18px 22px 10px; position:sticky; top:0; background:var(--surface); z-index:2; }
+  .modal-header h2{ margin:0; font-size:17px; font-weight:800; }
+  .close-btn{ background:none; border:none; font-size:22px; cursor:pointer; color:var(--ink-muted); line-height:1; padding:4px; }
+  .close-btn:hover{ color:var(--ink); }
+  .modal-body{ padding:4px 22px 22px; }
+  .modal-footer{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid var(--border); }
+
+  .form-group{ margin-bottom:14px; }
+  .form-row{ display:flex; gap:12px; }
+  .form-row .form-group{ flex:1; }
+  .form-group label{ display:block; font-size:12px; font-weight:700; color:var(--ink-muted); margin-bottom:5px; }
+  .form-group .req{ color:var(--danger); }
+  input[type=text], input[type=number], input[type=date], textarea, select{
+    width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:8px; font-size:13.5px; background:var(--surface); color:var(--ink);
+  }
+  textarea{ resize:vertical; min-height:50px; }
+  select{ cursor:pointer; }
+  .field-hint{ font-size:11px; color:var(--ink-muted); margin-top:4px; }
+
+  .doc-field-box{ border:1px solid var(--border); border-radius:10px; padding:10px 12px; background:var(--surface-alt); }
+  .doc-field-box .form-group{ margin-bottom:8px; }
+  .doc-attach-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .doc-attach-chip{ display:flex; align-items:center; gap:6px; background:var(--primary-tint); color:var(--primary); border-radius:16px; padding:4px 6px 4px 10px; font-size:12px; font-weight:600; max-width:100%; }
+  .doc-attach-chip span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px; }
+  .doc-attach-chip button{ background:none; border:none; color:inherit; cursor:pointer; padding:2px; display:inline-flex; }
+
+  .section-title{ font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--primary); margin:22px 0 10px; padding-top:14px; border-top:1px solid var(--border); }
+  .section-title:first-of-type{ margin-top:0; padding-top:0; border-top:none; }
+
+  .milestone-edit-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .milestone-edit-row input[type=text]{ flex:2; }
+  .milestone-edit-row input[type=number]{ flex:1; text-align:right; }
+  .milestone-total-line{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; font-weight:700; margin-top:6px; padding:8px 10px; border-radius:8px; background:var(--surface-alt); }
+  .milestone-total-line.is-ok{ color:var(--ok); background:var(--ok-bg); }
+  .milestone-total-line.is-warn{ color:var(--warn); background:var(--warn-bg); }
+  .milestone-total-line.is-over{ color:var(--danger); background:var(--danger-bg); }
+
+  /* Supplier manager */
+  .supplier-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .supplier-item{ display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:10px; padding:8px 10px; }
+  .supplier-item .supplier-logo, .supplier-item .supplier-logo-placeholder{ width:34px; height:34px; }
+  .supplier-item-info{ flex:1; min-width:0; }
+  .supplier-item-name{ font-size:13.5px; font-weight:700; }
+  .supplier-item-code{ font-size:11px; color:var(--ink-muted); font-family:ui-monospace,"SF Mono",monospace; }
+  .supplier-item-actions{ display:flex; gap:4px; }
+  .supplier-item-actions button{ background:transparent; border:1px solid var(--border); width:28px; height:28px; border-radius:6px; cursor:pointer; color:var(--ink-muted); display:inline-flex; align-items:center; justify-content:center; }
+  .supplier-item-actions button:hover{ color:var(--primary); border-color:var(--primary); }
+  .logo-upload-row{ display:flex; align-items:center; gap:10px; }
+  .logo-preview{ width:52px; height:52px; border-radius:50%; object-fit:cover; background:var(--primary-tint); flex-shrink:0; }
+  .logo-preview-placeholder{ width:52px; height:52px; border-radius:50%; background:var(--primary-tint); color:var(--primary); display:inline-flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; flex-shrink:0; }
+
+  .form-error{ color:var(--danger); font-size:12.5px; margin:-4px 0 12px; }
+  .form-error.hidden{ display:none; }
+
+  #toastContainer{ position:fixed; bottom:20px; right:20px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
+  .toast{ background:var(--ink); color:var(--bg); padding:11px 16px; border-radius:8px; font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; transform:translateY(8px); animation:toastIn .2s ease forwards; }
+  .toast.toast-error{ background:var(--danger); color:#fff; }
+  .toast.toast-success{ background:var(--ok); color:#fff; }
+  .toast.toast-warning{ background:var(--warn); color:#3a2a00; }
+  @keyframes toastIn{ to{ opacity:1; transform:translateY(0); } }
+
+  footer{ text-align:center; color:var(--ink-muted); font-size:12px; padding:26px 0 6px; }
+
+  @media (max-width: 720px){
+    body{ padding:16px; }
+    .stats-bar{ grid-template-columns:repeat(2,1fr); }
+    .lines-grid{ grid-template-columns:1fr; }
+    .form-row{ flex-direction:column; gap:0; }
+    .project-bar{ flex-direction:column; align-items:stretch; }
+  }
+  input[type=file]{ display:none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="app-header">
+    <div>
+      <h1>💰 Suivi Budgets Projets</h1>
+      <p class="subtitle">Sous-projets, cahiers des charges, offres fournisseurs et jalons de paiement</p>
+    </div>
+    <div class="header-actions">
+      <button id="themeToggleBtn" class="btn-icon" title="Changer de thème">🌙</button>
+      <button id="btn-drive-connect" class="btn-secondary drive-btn" title="Connecter Google Drive">
+        <span id="drive-dot" class="drive-dot"></span><span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button id="btn-drive-force" class="btn-secondary" title="Forcer la synchro">Forcer synchro</button>
+      <button id="btnExport" class="btn-secondary">Exporter (JSON)</button>
+      <button id="btnImport" class="btn-secondary">Importer (JSON)</button>
+      <input type="file" id="importInput" accept="application/json">
+    </div>
+  </header>
+
+  <div class="project-bar">
+    <div class="field" style="min-width:260px;">
+      <label for="projectSelect">Projet</label>
+      <select id="projectSelect"></select>
+    </div>
+    <button id="btnNewProject" class="btn-secondary">➕ Nouveau projet</button>
+    <button id="btnRenameProject" class="btn-secondary">✏️ Renommer</button>
+    <button id="btnDeleteProject" class="btn-outline-danger">🗑️ Supprimer le projet</button>
+    <div class="spacer"></div>
+    <button id="btnSuppliers" class="btn-secondary">🏷️ Fournisseurs</button>
+  </div>
+
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="lines-toolbar">
+    <h2 id="linesTitle">Lignes budgétaires</h2>
+    <button id="btnNewLine" class="btn-primary">➕ Nouvelle ligne budgétaire</button>
+  </div>
+
+  <div id="linesContainer"></div>
+
+  <footer>Outil autonome — données stockées dans ce navigateur (localStorage). Pense à exporter régulièrement pour sauvegarder / transférer tes données.</footer>
+</div>
+
+<!-- ============ Modal : Ligne budgétaire ============ -->
+<div id="lineModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="lineModalTitle">Nouvelle ligne budgétaire</h2>
+      <button type="button" class="close-btn" data-action="close-line-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="fProject">Projet <span class="req">*</span></label>
+        <select id="fProject"></select>
+      </div>
+      <div class="form-group">
+        <label for="fSubProject">Sous-projet / Lot / Prestation <span class="req">*</span></label>
+        <input type="text" id="fSubProject" maxlength="140" placeholder="Ex : Lot 3 — Câblage réseau">
+      </div>
+
+      <div class="section-title">Documents de référence</div>
+
+      <div class="doc-field-box" style="margin-bottom:10px;">
+        <div class="form-group">
+          <label for="fSptRef">Cahier des charges (SPT) — référence</label>
+          <input type="text" id="fSptRef" maxlength="80" placeholder="Ex : SPT-2026-014">
+        </div>
+        <div class="doc-attach-row" id="sptAttachRow" data-doc="spt"></div>
+      </div>
+
+      <div class="doc-field-box" style="margin-bottom:10px;">
+        <div class="form-group">
+          <label for="fCntRef">Consultation technique (CNT) — référence</label>
+          <input type="text" id="fCntRef" maxlength="80" placeholder="Ex : CNT-2026-014">
+        </div>
+        <div class="doc-attach-row" id="cntAttachRow" data-doc="cnt"></div>
+      </div>
+
+      <div class="doc-field-box">
+        <div class="form-group">
+          <label for="fOfferRef">Offre finale fournisseur — référence</label>
+          <input type="text" id="fOfferRef" maxlength="80" placeholder="Ex : OFF-2026-014">
+        </div>
+        <div class="doc-attach-row" id="offerAttachRow" data-doc="offer"></div>
+      </div>
+
+      <div class="section-title">Commande &amp; fournisseur</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fCost">Coût de la prestation (€) <span class="req">*</span></label>
+          <input type="number" id="fCost" step="0.01" min="0" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label for="fOrderRef">Référence de commande</label>
+          <input type="text" id="fOrderRef" maxlength="80" placeholder="Ex : CMD-2026-0142">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="fSupplier">Fournisseur</label>
+        <select id="fSupplier"></select>
+        <div class="field-hint"><button type="button" class="btn-link" id="btnAddSupplierInline">+ Ajouter / gérer les fournisseurs</button></div>
+      </div>
+
+      <div class="section-title">Jalons de paiement</div>
+      <div id="milestoneEditList"></div>
+      <button type="button" id="btnAddMilestone" class="btn-mini">➕ Ajouter un jalon</button>
+      <div id="milestoneTotalLine" class="milestone-total-line">Total : 0 %</div>
+
+      <p id="lineFormError" class="form-error hidden">Merci de renseigner au moins un sous-projet/lot et un coût valide.</p>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" data-action="close-line-modal">Annuler</button>
+        <button type="button" class="btn-primary" id="btnSaveLine">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal : Fournisseurs ============ -->
+<div id="supplierModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal modal-small">
+    <div class="modal-header">
+      <h2>Fournisseurs</h2>
+      <button type="button" class="close-btn" data-action="close-supplier-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="supplier-list" id="supplierList"></div>
+
+      <div class="section-title" id="supplierFormTitle">Ajouter un fournisseur</div>
+      <div class="form-group">
+        <div class="logo-upload-row">
+          <img id="supplierLogoPreviewImg" class="logo-preview" style="display:none;" alt="Logo">
+          <div id="supplierLogoPreviewPlaceholder" class="logo-preview-placeholder">?</div>
+          <button type="button" class="btn-mini" id="btnUploadSupplierLogo">📷 Photo / logo</button>
+          <button type="button" class="btn-mini" id="btnRemoveSupplierLogo" style="display:none;">Retirer</button>
+          <input type="file" id="supplierLogoInput" accept="image/*">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fSupplierName">Nom du fournisseur <span class="req">*</span></label>
+          <input type="text" id="fSupplierName" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label for="fSupplierCode">Code fournisseur</label>
+          <input type="text" id="fSupplierCode" maxlength="30" placeholder="Ex : FRN-0042">
+        </div>
+      </div>
+      <p id="supplierFormError" class="form-error hidden">Merci de renseigner un nom de fournisseur.</p>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btnCancelSupplierEdit" style="display:none;">Annuler la modification</button>
+        <button type="button" class="btn-primary" id="btnSaveSupplier">Ajouter le fournisseur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="docAttachInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp,.txt">
+<div id="toastContainer"></div>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — se branche sur la clé
+   localStorage existante de l'appli (STORAGE_KEY) au lieu de la
+   remplacer. Réutilisable : changer APP_NS pour un autre outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'budgetprojets';
+  var APP_STORAGE_KEY = 'axelBudgetProjetsTracker_v1';
+  var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
+  var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  function getLocalRecord() {
+    var value = null;
+    try { value = localStorage.getItem(APP_STORAGE_KEY); } catch (e) { value = null; }
+    if (!value) return null;
+    var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10);
+    if (!modified) modified = Date.now();
+    return { value: value, modified: modified };
+  }
+
+  function setLocalRecord(value, modified) {
+    try {
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connecté', connected: 'Drive : connecté', ok: 'Drive : synchronisé', sync: 'Drive : synchro…', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName() { return 'storage__' + APP_NS + '__state.json'; }
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  function driveCreateFile(record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(record) {
+    return driveFindFile().then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(record); });
+  }
+
+  async function syncFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var local = getLocalRecord();
+      var existing = await driveFindFile();
+      if (!existing) {
+        if (local) await drivePushRecord(local);
+        setSyncStatus('ok');
+        return;
+      }
+      var remote = await driveGetRecord(existing.id);
+      if (!remote) { setSyncStatus('ok'); return; }
+
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        setLocalRecord(remote.value, remote.modified);
+        setSyncStatus('ok');
+        if (changed) {
+          setSyncStatus('sync');
+          setTimeout(function () { location.reload(); }, 700);
+        }
+      } else if (local.modified > remote.modified) {
+        await driveUpdateFile(existing.id, local);
+        setSyncStatus('ok');
+      } else {
+        setSyncStatus('ok');
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord à Drive (bouton "Drive : non connecté").'); return; }
+      var local = getLocalRecord();
+      if (!local) { alert('Rien en local à synchroniser.'); return; }
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () {
+        setSyncStatus('ok');
+        alert('Synchro forcée : OK (' + Math.round(local.value.length / 1024) + ' Ko envoyés)');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        alert('Erreur : ' + e.message);
+      });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  window.__driveNotifySave = function () {
+    var modified = Date.now();
+    localStorage.setItem(MODIFIED_KEY, String(modified));
+    if (hasValidToken()) {
+      var local = getLocalRecord();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive :', e);
+      });
+    }
+  };
+})();
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'axelBudgetProjetsTracker_v1';
+  var APP_VERSION = 'v1';
+
+  var state = null;
+  var editingLineId = null;   // null = création
+  var editingMilestones = []; // tableau temporaire pendant l'édition d'une ligne
+  var editingDocs = { spt: null, cnt: null, offer: null }; // docs temporaires pendant l'édition
+  var editingSupplierId = null; // fournisseur en cours de modification (null = ajout)
+  var currentSupplierLogoDataUrl = null;
+  var currentDocAttachTarget = null; // 'spt' | 'cnt' | 'offer'
+
+  var ICON_TRASH = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+  var ICON_EDIT = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>';
+  var ICON_PAPERCLIP = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>';
+  var ICON_FILE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
+
+  // ---------- Default structure ----------
+  function defaultState() {
+    return {
+      version: 1,
+      projects: [ { id: 'proj-default', name: 'Projet sans nom' } ],
+      currentProjectId: 'proj-default',
+      suppliers: [],
+      lines: [],
+      theme: 'light'
+    };
+  }
+
+  function loadState() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    if (raw) {
+      try { state = JSON.parse(raw); } catch (e) { state = defaultState(); }
+    } else {
+      state = defaultState();
+    }
+    if (!state.projects || !state.projects.length) state.projects = defaultState().projects;
+    if (!state.currentProjectId || !findProject(state.currentProjectId)) state.currentProjectId = state.projects[0].id;
+    if (!state.suppliers) state.suppliers = [];
+    if (!state.lines) state.lines = [];
+    if (!state.theme) state.theme = 'light';
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (window.__driveNotifySave) window.__driveNotifySave();
+    } catch (e) { alert('Impossible de sauvegarder (stockage plein ou indisponible).'); }
+  }
+
+  // ---------- Helpers ----------
+  function nextId(prefix) { return prefix + '-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 100000).toString(36); }
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function formatFileSize(bytes) {
+    if (!bytes && bytes !== 0) return '';
+    if (bytes < 1024) return bytes + ' o';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
+  }
+  function formatMoney(n) {
+    n = parseFloat(n) || 0;
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+  function formatDateDisplay(iso) {
+    if (!iso) return '';
+    var parts = iso.split('-');
+    if (parts.length !== 3) return iso;
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+  function todayIso() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function initials(name) {
+    if (!name) return '?';
+    var parts = name.trim().split(/\s+/);
+    var s = parts[0] ? parts[0][0] : '';
+    if (parts.length > 1) s += parts[1][0];
+    return s.toUpperCase();
+  }
+  function showToast(message, type) {
+    var container = document.getElementById('toastContainer');
+    if (!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'toast' + (type ? ' toast-' + type : '');
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3200);
+  }
+
+  // ---------- Projects ----------
+  function findProject(id) {
+    for (var i = 0; i < state.projects.length; i++) { if (state.projects[i].id === id) return state.projects[i]; }
+    return null;
+  }
+  function currentProject() { return findProject(state.currentProjectId); }
+  function linesForProject(projectId) {
+    return state.lines.filter(function (l) { return l.projectId === projectId; });
+  }
+
+  // ---------- Suppliers ----------
+  function findSupplier(id) {
+    for (var i = 0; i < state.suppliers.length; i++) { if (state.suppliers[i].id === id) return state.suppliers[i]; }
+    return null;
+  }
+  function supplierAvatarHtml(supplier, sizeClass) {
+    if (!supplier) return '';
+    if (supplier.logo && supplier.logo.dataUrl) {
+      return '<img class="' + sizeClass + '" src="' + supplier.logo.dataUrl + '" alt="' + escapeHtml(supplier.name) + '">';
+    }
+    var placeholderClass = sizeClass === 'supplier-logo' ? 'supplier-logo-placeholder' : 'supplier-logo-placeholder';
+    return '<span class="' + placeholderClass + '">' + escapeHtml(initials(supplier.name)) + '</span>';
+  }
+
+  // ---------- Rendering : Project select ----------
+  function renderProjectSelect() {
+    var sel = document.getElementById('projectSelect');
+    sel.innerHTML = state.projects.map(function (p) {
+      return '<option value="' + p.id + '"' + (p.id === state.currentProjectId ? ' selected' : '') + '>' + escapeHtml(p.name) + '</option>';
+    }).join('');
+  }
+
+  function renderProjectSelectInModal() {
+    var sel = document.getElementById('fProject');
+    sel.innerHTML = state.projects.map(function (p) {
+      return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>';
+    }).join('');
+  }
+
+  function renderSupplierSelectInModal(selectedId) {
+    var sel = document.getElementById('fSupplier');
+    var opts = ['<option value="">— Aucun fournisseur —</option>'];
+    state.suppliers.forEach(function (s) {
+      opts.push('<option value="' + s.id + '">' + escapeHtml(s.name) + (s.code ? ' (' + escapeHtml(s.code) + ')' : '') + '</option>');
+    });
+    sel.innerHTML = opts.join('');
+    sel.value = selectedId || '';
+  }
+
+  // ---------- Rendering : Stats ----------
+  function renderStats() {
+    var lines = linesForProject(state.currentProjectId);
+    var totalCost = 0, totalValidated = 0, totalOrders = 0;
+    lines.forEach(function (l) {
+      var cost = parseFloat(l.cost) || 0;
+      totalCost += cost;
+      if (l.orderRef) totalOrders += 1;
+      (l.milestones || []).forEach(function (m) {
+        if (m.validated) totalValidated += cost * ((parseFloat(m.percent) || 0) / 100);
+      });
+    });
+    var remaining = totalCost - totalValidated;
+    var html = '';
+    html += statCardHtml('Lignes budgétaires', lines.length, '');
+    html += statCardHtml('Coût total du projet', formatMoney(totalCost), '', 'accent');
+    html += statCardHtml('Montant validé (payé)', formatMoney(totalValidated), totalCost > 0 ? Math.round(totalValidated / totalCost * 100) + ' % du total' : '', 'ok');
+    html += statCardHtml('Reste à valider', formatMoney(remaining), '');
+    document.getElementById('statsBar').innerHTML = html;
+  }
+  function statCardHtml(label, value, sub, colorClass) {
+    return '<div class="stat-card"><div class="stat-label">' + escapeHtml(label) + '</div>' +
+      '<div class="stat-value' + (colorClass ? ' ' + colorClass : '') + '">' + value + '</div>' +
+      (sub ? '<div class="stat-sub">' + escapeHtml(sub) + '</div>' : '') + '</div>';
+  }
+
+  // ---------- Rendering : Lines ----------
+  function renderLines() {
+    var project = currentProject();
+    document.getElementById('linesTitle').textContent = 'Lignes budgétaires — ' + (project ? project.name : '');
+    var lines = linesForProject(state.currentProjectId);
+    var container = document.getElementById('linesContainer');
+    if (!lines.length) {
+      container.innerHTML = '<div class="empty-state">Aucune ligne budgétaire pour ce projet.<br>Clique sur « Nouvelle ligne budgétaire » pour en ajouter une.</div>';
+      return;
+    }
+    var html = '<div class="lines-grid">';
+    lines.forEach(function (line) { html += lineCardHtml(line); });
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  function lineCardHtml(line) {
+    var supplier = line.supplierId ? findSupplier(line.supplierId) : null;
+    var milestones = line.milestones || [];
+    var cost = parseFloat(line.cost) || 0;
+
+    var html = '<div class="line-card" data-line-id="' + line.id + '">';
+    html += '<div class="line-card-header"><div class="line-title">' + escapeHtml(line.subProject || 'Sans nom') + '</div>';
+    html += '<div class="line-actions"><button type="button" data-action="edit-line" data-id="' + line.id + '" title="Modifier">' + ICON_EDIT + '</button>';
+    html += '<button type="button" class="del-btn" data-action="delete-line" data-id="' + line.id + '" title="Supprimer">' + ICON_TRASH + '</button></div></div>';
+
+    if (supplier) {
+      html += '<div class="supplier-chip">' + supplierAvatarHtml(supplier, 'supplier-logo') +
+        '<div><div class="supplier-name">' + escapeHtml(supplier.name) + '</div>' +
+        (supplier.code ? '<div class="supplier-code">' + escapeHtml(supplier.code) + '</div>' : '') + '</div></div>';
+    } else {
+      html += '<div class="supplier-none">Aucun fournisseur renseigné</div>';
+    }
+
+    html += '<div class="doc-refs">';
+    html += docRefRowHtml('SPT', line.spt);
+    html += docRefRowHtml('CNT', line.cnt);
+    html += docRefRowHtml('Offre', line.offer);
+    html += '</div>';
+
+    html += '<div class="line-meta-row"><span class="line-cost">' + formatMoney(cost) + '</span>' +
+      '<span class="line-order">' + (line.orderRef ? 'Commande : <b>' + escapeHtml(line.orderRef) + '</b>' : 'Pas de commande') + '</span></div>';
+
+    html += '<div class="milestones-block">';
+    var totalPct = 0, validatedPct = 0;
+    milestones.forEach(function (m) { totalPct += (parseFloat(m.percent) || 0); if (m.validated) validatedPct += (parseFloat(m.percent) || 0); });
+    html += '<div class="milestones-head"><span>Jalons de paiement</span><span>' + validatedPct + ' % validé / ' + totalPct + ' %</span></div>';
+    if (milestones.length) {
+      html += '<div class="progress-track">';
+      milestones.forEach(function (m) {
+        var pct = parseFloat(m.percent) || 0;
+        html += '<div class="progress-seg ' + (m.validated ? 'validated' : 'pending') + '" style="width:' + pct + '%;" title="' + escapeHtml(m.name) + ' — ' + pct + '%"></div>';
+      });
+      html += '</div>';
+      html += '<div class="milestone-list">';
+      milestones.forEach(function (m) {
+        html += '<div class="milestone-row">';
+        html += '<input type="checkbox" data-action="toggle-milestone" data-line="' + line.id + '" data-milestone="' + m.id + '"' + (m.validated ? ' checked' : '') + '>';
+        html += '<span class="milestone-name' + (m.validated ? ' validated' : '') + '">' + escapeHtml(m.name) + '</span>';
+        html += '<span class="milestone-pct">' + (parseFloat(m.percent) || 0) + ' %</span>';
+        if (m.validated) {
+          html += '<input type="date" class="milestone-date" value="' + escapeHtml(m.validatedDate || '') + '" data-action="set-milestone-date" data-line="' + line.id + '" data-milestone="' + m.id + '">';
+        } else {
+          html += '<span class="milestone-date-empty">—</span>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="milestones-empty">Aucun jalon défini.</div>';
+    }
+    html += '</div>'; // milestones-block
+
+    html += '</div>'; // line-card
+    return html;
+  }
+
+  function docRefRowHtml(label, doc) {
+    doc = doc || {};
+    var refHtml = doc.ref ? escapeHtml(doc.ref) : '<span class="empty">Non renseignée</span>';
+    var fileHtml = doc.file
+      ? '<button type="button" class="doc-file-link" data-action="open-doc-file" data-name="' + escapeHtml(doc.file.name) + '">' + ICON_FILE + ' ' + escapeHtml(doc.file.name.length > 18 ? doc.file.name.slice(0, 16) + '…' : doc.file.name) + '</button>'
+      : '<span class="doc-file-none">Aucun document</span>';
+    // stocke la dataUrl via un data-attribute sur un élément caché n'est pas pratique ; on gère l'ouverture via un mapping en mémoire (voir openDocFileByName)
+    return '<div class="doc-ref-row"><span class="doc-ref-tag">' + label + '</span><span class="doc-ref-value' + (doc.ref ? '' : ' empty') + '">' + refHtml + '</span>' + fileHtml + '</div>';
+  }
+
+  function refreshAll() {
+    renderProjectSelect();
+    renderStats();
+    renderLines();
+  }
+
+  // ---------- Milestones editor (modal) ----------
+  function renderMilestoneEditor() {
+    var container = document.getElementById('milestoneEditList');
+    if (!editingMilestones.length) {
+      container.innerHTML = '<p class="field-hint" style="margin:0 0 8px;">Aucun jalon. Ajoute un premier jalon (ex : « Acompte », « Livraison », « Réception »).</p>';
+    } else {
+      var html = '';
+      editingMilestones.forEach(function (m) {
+        html += '<div class="milestone-edit-row" data-mid="' + m.id + '">';
+        html += '<input type="text" class="ms-name-input" data-mid="' + m.id + '" value="' + escapeHtml(m.name) + '" placeholder="Nom du jalon" maxlength="60">';
+        html += '<input type="number" class="ms-pct-input" data-mid="' + m.id + '" value="' + (m.percent === '' || m.percent === undefined ? '' : m.percent) + '" min="0" max="100" step="1" placeholder="%">';
+        html += '<button type="button" class="icon-x" data-action="remove-milestone" data-mid="' + m.id + '" title="Supprimer ce jalon">✕</button>';
+        html += '</div>';
+      });
+      container.innerHTML = html;
+    }
+    updateMilestoneTotal();
+  }
+  function updateMilestoneTotal() {
+    var total = 0;
+    editingMilestones.forEach(function (m) { total += (parseFloat(m.percent) || 0); });
+    var el = document.getElementById('milestoneTotalLine');
+    el.className = 'milestone-total-line ' + (total === 100 ? 'is-ok' : total > 100 ? 'is-over' : 'is-warn');
+    var msg = 'Total : ' + total + ' %';
+    if (total === 100) msg += ' — parfait, 100 % atteints ✓';
+    else if (total > 100) msg += ' — dépasse 100 %, à corriger';
+    else msg += ' — il reste ' + (100 - total) + ' % à répartir';
+    el.textContent = msg;
+  }
+
+  // ---------- Doc attachment editor (modal) ----------
+  function renderDocAttachRow(docKey) {
+    var row = document.getElementById(docKey + 'AttachRow');
+    var doc = editingDocs[docKey];
+    var html = '';
+    if (doc && doc.file) {
+      html += '<div class="doc-attach-chip"><span>' + ICON_FILE + ' ' + escapeHtml(doc.file.name) + ' (' + formatFileSize(doc.file.size) + ')</span>';
+      html += '<button type="button" data-action="preview-doc-attach" data-doc="' + docKey + '" title="Consulter">👁</button>';
+      html += '<button type="button" data-action="remove-doc-attach" data-doc="' + docKey + '" title="Retirer">✕</button></div>';
+    } else {
+      html += '<button type="button" class="btn-mini" data-action="attach-doc" data-doc="' + docKey + '">' + ICON_PAPERCLIP + ' Joindre le document</button>';
+    }
+    row.innerHTML = html;
+  }
+  function renderAllDocAttachRows() { ['spt', 'cnt', 'offer'].forEach(renderDocAttachRow); }
+
+  // ---------- Line modal open/close ----------
+  function openLineModal(lineId) {
+    editingLineId = lineId || null;
+    var line = lineId ? state.lines.filter(function (l) { return l.id === lineId; })[0] : null;
+
+    document.getElementById('lineModalTitle').textContent = line ? 'Modifier la ligne budgétaire' : 'Nouvelle ligne budgétaire';
+    document.getElementById('lineFormError').classList.add('hidden');
+
+    renderProjectSelectInModal();
+    renderSupplierSelectInModal(line ? line.supplierId : '');
+
+    document.getElementById('fProject').value = line ? line.projectId : state.currentProjectId;
+    document.getElementById('fSubProject').value = line ? line.subProject || '' : '';
+    document.getElementById('fSptRef').value = line ? (line.spt && line.spt.ref) || '' : '';
+    document.getElementById('fCntRef').value = line ? (line.cnt && line.cnt.ref) || '' : '';
+    document.getElementById('fOfferRef').value = line ? (line.offer && line.offer.ref) || '' : '';
+    document.getElementById('fCost').value = line ? line.cost : '';
+    document.getElementById('fOrderRef').value = line ? line.orderRef || '' : '';
+
+    editingDocs = {
+      spt: line && line.spt ? { ref: line.spt.ref, file: line.spt.file || null } : { ref: '', file: null },
+      cnt: line && line.cnt ? { ref: line.cnt.ref, file: line.cnt.file || null } : { ref: '', file: null },
+      offer: line && line.offer ? { ref: line.offer.ref, file: line.offer.file || null } : { ref: '', file: null }
+    };
+    renderAllDocAttachRows();
+
+    editingMilestones = line ? (line.milestones || []).map(function (m) { return { id: m.id, name: m.name, percent: m.percent, validated: m.validated, validatedDate: m.validatedDate }; }) : [];
+    renderMilestoneEditor();
+
+    document.getElementById('lineModalOverlay').classList.remove('hidden');
+    document.getElementById('fSubProject').focus();
+  }
+  function closeLineModal() {
+    document.getElementById('lineModalOverlay').classList.add('hidden');
+    editingLineId = null;
+    currentDocAttachTarget = null;
+  }
+
+  function saveLineFromModal() {
+    var subProject = document.getElementById('fSubProject').value.trim();
+    var costRaw = document.getElementById('fCost').value;
+    var cost = parseFloat(costRaw);
+    var errEl = document.getElementById('lineFormError');
+    if (!subProject || isNaN(cost) || cost < 0) {
+      errEl.classList.remove('hidden');
+      return;
+    }
+    errEl.classList.add('hidden');
+
+    var projectId = document.getElementById('fProject').value;
+    var supplierId = document.getElementById('fSupplier').value || '';
+    var orderRef = document.getElementById('fOrderRef').value.trim();
+
+    var sptRef = document.getElementById('fSptRef').value.trim();
+    var cntRef = document.getElementById('fCntRef').value.trim();
+    var offerRef = document.getElementById('fOfferRef').value.trim();
+
+    var milestones = editingMilestones.map(function (m) {
+      return {
+        id: m.id, name: (m.name || 'Jalon').trim() || 'Jalon',
+        percent: parseFloat(m.percent) || 0,
+        validated: !!m.validated,
+        validatedDate: m.validated ? (m.validatedDate || todayIso()) : ''
+      };
+    });
+
+    if (editingLineId) {
+      var line = state.lines.filter(function (l) { return l.id === editingLineId; })[0];
+      if (line) {
+        line.projectId = projectId;
+        line.subProject = subProject;
+        line.spt = { ref: sptRef, file: editingDocs.spt.file };
+        line.cnt = { ref: cntRef, file: editingDocs.cnt.file };
+        line.offer = { ref: offerRef, file: editingDocs.offer.file };
+        line.cost = cost;
+        line.orderRef = orderRef;
+        line.supplierId = supplierId;
+        line.milestones = milestones;
+      }
+    } else {
+      state.lines.push({
+        id: nextId('line'), projectId: projectId, subProject: subProject,
+        spt: { ref: sptRef, file: editingDocs.spt.file },
+        cnt: { ref: cntRef, file: editingDocs.cnt.file },
+        offer: { ref: offerRef, file: editingDocs.offer.file },
+        cost: cost, orderRef: orderRef, supplierId: supplierId, milestones: milestones
+      });
+    }
+    saveState();
+    closeLineModal();
+    refreshAll();
+    showToast('Ligne budgétaire enregistrée.', 'success');
+  }
+
+  function deleteLine(lineId) {
+    if (!window.confirm('Supprimer définitivement cette ligne budgétaire ?')) return;
+    state.lines = state.lines.filter(function (l) { return l.id !== lineId; });
+    saveState();
+    refreshAll();
+    showToast('Ligne supprimée.', 'info');
+  }
+
+  // ---------- Doc attachment logic ----------
+  function openDocAttachDialog(docKey) {
+    currentDocAttachTarget = docKey;
+    var input = document.getElementById('docAttachInput');
+    input.value = '';
+    input.click();
+  }
+  function handleDocAttachInputChange(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file || !currentDocAttachTarget) return;
+    if (file.size > 6 * 1024 * 1024) {
+      showToast('Fichier volumineux : le stockage local est limité (quelques Mo au total).', 'warning');
+    }
+    var reader = new FileReader();
+    var docKey = currentDocAttachTarget;
+    reader.onload = function (evt) {
+      editingDocs[docKey].file = { name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: evt.target.result };
+      renderDocAttachRow(docKey);
+    };
+    reader.onerror = function () { showToast('Erreur de lecture du fichier ' + file.name, 'error'); };
+    reader.readAsDataURL(file);
+  }
+  function openDataUrlFile(name, dataUrl) {
+    var a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = name;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // ---------- Milestone toggle on card ----------
+  function toggleMilestone(lineId, milestoneId, validated) {
+    var line = state.lines.filter(function (l) { return l.id === lineId; })[0];
+    if (!line) return;
+    var m = (line.milestones || []).filter(function (x) { return x.id === milestoneId; })[0];
+    if (!m) return;
+    m.validated = validated;
+    m.validatedDate = validated ? (m.validatedDate || todayIso()) : '';
+    saveState();
+    refreshAll();
+  }
+  function setMilestoneDate(lineId, milestoneId, dateVal) {
+    var line = state.lines.filter(function (l) { return l.id === lineId; })[0];
+    if (!line) return;
+    var m = (line.milestones || []).filter(function (x) { return x.id === milestoneId; })[0];
+    if (!m) return;
+    m.validatedDate = dateVal;
+    saveState();
+    renderStats();
+  }
+
+  // ---------- Supplier modal ----------
+  function openSupplierModal() {
+    resetSupplierForm();
+    renderSupplierList();
+    document.getElementById('supplierModalOverlay').classList.remove('hidden');
+  }
+  function closeSupplierModal() {
+    document.getElementById('supplierModalOverlay').classList.add('hidden');
+    // Rafraîchit le select fournisseur de la ligne en cours d'édition si ouvert
+    if (!document.getElementById('lineModalOverlay').classList.contains('hidden')) {
+      var currentVal = document.getElementById('fSupplier').value;
+      renderSupplierSelectInModal(currentVal);
+    }
+    refreshAll();
+  }
+  function renderSupplierList() {
+    var container = document.getElementById('supplierList');
+    if (!state.suppliers.length) {
+      container.innerHTML = '<p class="field-hint" style="margin:0;">Aucun fournisseur enregistré pour le moment.</p>';
+      return;
+    }
+    var html = '';
+    state.suppliers.forEach(function (s) {
+      html += '<div class="supplier-item">' + supplierAvatarHtml(s, 'supplier-logo');
+      html += '<div class="supplier-item-info"><div class="supplier-item-name">' + escapeHtml(s.name) + '</div>';
+      html += (s.code ? '<div class="supplier-item-code">' + escapeHtml(s.code) + '</div>' : '') + '</div>';
+      html += '<div class="supplier-item-actions"><button type="button" data-action="edit-supplier" data-id="' + s.id + '" title="Modifier">' + ICON_EDIT + '</button>';
+      html += '<button type="button" data-action="delete-supplier" data-id="' + s.id + '" title="Supprimer">' + ICON_TRASH + '</button></div></div>';
+    });
+    container.innerHTML = html;
+  }
+  function resetSupplierForm() {
+    editingSupplierId = null;
+    currentSupplierLogoDataUrl = null;
+    document.getElementById('supplierFormTitle').textContent = 'Ajouter un fournisseur';
+    document.getElementById('fSupplierName').value = '';
+    document.getElementById('fSupplierCode').value = '';
+    document.getElementById('supplierFormError').classList.add('hidden');
+    document.getElementById('btnSaveSupplier').textContent = 'Ajouter le fournisseur';
+    document.getElementById('btnCancelSupplierEdit').style.display = 'none';
+    updateSupplierLogoPreview();
+  }
+  function updateSupplierLogoPreview() {
+    var img = document.getElementById('supplierLogoPreviewImg');
+    var placeholder = document.getElementById('supplierLogoPreviewPlaceholder');
+    var removeBtn = document.getElementById('btnRemoveSupplierLogo');
+    if (currentSupplierLogoDataUrl) {
+      img.src = currentSupplierLogoDataUrl;
+      img.style.display = '';
+      placeholder.style.display = 'none';
+      removeBtn.style.display = '';
+    } else {
+      img.style.display = 'none';
+      placeholder.style.display = '';
+      removeBtn.style.display = 'none';
+    }
+  }
+  function editSupplier(id) {
+    var s = findSupplier(id);
+    if (!s) return;
+    editingSupplierId = id;
+    currentSupplierLogoDataUrl = s.logo ? s.logo.dataUrl : null;
+    document.getElementById('supplierFormTitle').textContent = 'Modifier le fournisseur';
+    document.getElementById('fSupplierName').value = s.name;
+    document.getElementById('fSupplierCode').value = s.code || '';
+    document.getElementById('btnSaveSupplier').textContent = 'Enregistrer les modifications';
+    document.getElementById('btnCancelSupplierEdit').style.display = '';
+    updateSupplierLogoPreview();
+    document.getElementById('fSupplierName').focus();
+  }
+  function deleteSupplier(id) {
+    var used = state.lines.some(function (l) { return l.supplierId === id; });
+    var msg = used ? 'Ce fournisseur est utilisé par au moins une ligne budgétaire. Le supprimer quand même ?' : 'Supprimer ce fournisseur ?';
+    if (!window.confirm(msg)) return;
+    state.suppliers = state.suppliers.filter(function (s) { return s.id !== id; });
+    state.lines.forEach(function (l) { if (l.supplierId === id) l.supplierId = ''; });
+    saveState();
+    renderSupplierList();
+    showToast('Fournisseur supprimé.', 'info');
+  }
+  function saveSupplierFromForm() {
+    var name = document.getElementById('fSupplierName').value.trim();
+    var code = document.getElementById('fSupplierCode').value.trim();
+    var errEl = document.getElementById('supplierFormError');
+    if (!name) { errEl.classList.remove('hidden'); return; }
+    errEl.classList.add('hidden');
+    var logo = currentSupplierLogoDataUrl ? { dataUrl: currentSupplierLogoDataUrl } : null;
+    if (editingSupplierId) {
+      var s = findSupplier(editingSupplierId);
+      if (s) { s.name = name; s.code = code; s.logo = logo; }
+    } else {
+      state.suppliers.push({ id: nextId('sup'), name: name, code: code, logo: logo });
+    }
+    saveState();
+    resetSupplierForm();
+    renderSupplierList();
+    showToast('Fournisseur enregistré.', 'success');
+  }
+  function resizeImageFile(file, callback) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var maxDim = 180;
+        var w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        callback(canvas.toDataURL('image/jpeg', 0.86));
+      };
+      img.onerror = function () { callback(null); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function () { callback(null); };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- Projects: add / rename / delete ----------
+  function addProject() {
+    var name = window.prompt('Nom du nouveau projet :', '');
+    if (name === null) return;
+    name = name.trim();
+    if (!name) { showToast('Nom de projet vide, création annulée.', 'warning'); return; }
+    var p = { id: nextId('proj'), name: name };
+    state.projects.push(p);
+    state.currentProjectId = p.id;
+    saveState();
+    refreshAll();
+    showToast('Projet créé.', 'success');
+  }
+  function renameProject() {
+    var project = currentProject();
+    if (!project) return;
+    var name = window.prompt('Renommer le projet « ' + project.name + ' » en :', project.name);
+    if (name === null) return;
+    name = name.trim();
+    if (!name) return;
+    project.name = name;
+    saveState();
+    refreshAll();
+  }
+  function deleteProject() {
+    if (state.projects.length <= 1) { showToast('Impossible de supprimer le dernier projet restant.', 'warning'); return; }
+    var project = currentProject();
+    if (!project) return;
+    var lineCount = linesForProject(project.id).length;
+    var msg = 'Supprimer le projet « ' + project.name + ' » ?' + (lineCount ? ' Ses ' + lineCount + ' ligne(s) budgétaire(s) seront également supprimées.' : '');
+    if (!window.confirm(msg)) return;
+    state.projects = state.projects.filter(function (p) { return p.id !== project.id; });
+    state.lines = state.lines.filter(function (l) { return l.projectId !== project.id; });
+    state.currentProjectId = state.projects[0].id;
+    saveState();
+    refreshAll();
+    showToast('Projet supprimé.', 'info');
+  }
+
+  // ---------- Theme ----------
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+    var btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  function toggleTheme() {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(state.theme);
+    saveState();
+  }
+
+  // ---------- Import / Export ----------
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function exportFileName() {
+    var d = new Date();
+    var datePart = d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate());
+    return datePart + '_Suivi Budgets Projets - ' + APP_VERSION + '.json';
+  }
+  function doExport() {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = exportFileName();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function doImport(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        if (!data.projects || !data.lines) { alert('Fichier invalide : structure inattendue.'); return; }
+        if (!window.confirm('Importer ce fichier remplacera toutes les données actuelles. Continuer ?')) return;
+        state = data;
+        if (!state.suppliers) state.suppliers = [];
+        if (!state.currentProjectId || !findProject(state.currentProjectId)) state.currentProjectId = state.projects[0] ? state.projects[0].id : null;
+        if (!state.theme) state.theme = 'light';
+        saveState();
+        applyTheme(state.theme);
+        refreshAll();
+        showToast('Import réussi.', 'success');
+      } catch (err) { alert('Impossible de lire ce fichier JSON.'); }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- Event delegation ----------
+  function onDocumentClick(e) {
+    var t = e.target;
+    var el;
+
+    if ((el = t.closest('[data-action="edit-line"]'))) { openLineModal(el.getAttribute('data-id')); return; }
+    if ((el = t.closest('[data-action="delete-line"]'))) { deleteLine(el.getAttribute('data-id')); return; }
+    if ((el = t.closest('[data-action="open-doc-file"]'))) {
+      var card = el.closest('.line-card');
+      var lineId = card ? card.getAttribute('data-line-id') : null;
+      var line = lineId ? state.lines.filter(function (l) { return l.id === lineId; })[0] : null;
+      if (line) {
+        var name = el.getAttribute('data-name');
+        var doc = [line.spt, line.cnt, line.offer].filter(function (d) { return d && d.file && d.file.name === name; })[0];
+        if (doc && doc.file) openDataUrlFile(doc.file.name, doc.file.dataUrl);
+      }
+      return;
+    }
+
+    if (t.id === 'btnNewLine') { openLineModal(null); return; }
+    if (t.id === 'btnSaveLine') { saveLineFromModal(); return; }
+    if ((el = t.closest('[data-action="close-line-modal"]'))) { closeLineModal(); return; }
+
+    if ((el = t.closest('[data-action="attach-doc"]'))) { openDocAttachDialog(el.getAttribute('data-doc')); return; }
+    if ((el = t.closest('[data-action="remove-doc-attach"]'))) {
+      var dk = el.getAttribute('data-doc');
+      if (window.confirm('Retirer le document joint ?')) { editingDocs[dk].file = null; renderDocAttachRow(dk); }
+      return;
+    }
+    if ((el = t.closest('[data-action="preview-doc-attach"]'))) {
+      var dk2 = el.getAttribute('data-doc');
+      var d2 = editingDocs[dk2];
+      if (d2 && d2.file) openDataUrlFile(d2.file.name, d2.file.dataUrl);
+      return;
+    }
+
+    if (t.id === 'btnAddMilestone') {
+      editingMilestones.push({ id: nextId('ms'), name: '', percent: '', validated: false, validatedDate: '' });
+      renderMilestoneEditor();
+      return;
+    }
+    if ((el = t.closest('[data-action="remove-milestone"]'))) {
+      var mid = el.getAttribute('data-mid');
+      editingMilestones = editingMilestones.filter(function (m) { return m.id !== mid; });
+      renderMilestoneEditor();
+      return;
+    }
+
+    if (t.id === 'btnNewProject') { addProject(); return; }
+    if (t.id === 'btnRenameProject') { renameProject(); return; }
+    if (t.id === 'btnDeleteProject') { deleteProject(); return; }
+    if (t.id === 'btnSuppliers' || t.id === 'btnAddSupplierInline') { openSupplierModal(); return; }
+    if ((el = t.closest('[data-action="close-supplier-modal"]'))) { closeSupplierModal(); return; }
+    if (t.id === 'btnSaveSupplier') { saveSupplierFromForm(); return; }
+    if (t.id === 'btnCancelSupplierEdit') { resetSupplierForm(); return; }
+    if ((el = t.closest('[data-action="edit-supplier"]'))) { editSupplier(el.getAttribute('data-id')); return; }
+    if ((el = t.closest('[data-action="delete-supplier"]'))) { deleteSupplier(el.getAttribute('data-id')); return; }
+    if (t.id === 'btnUploadSupplierLogo') { document.getElementById('supplierLogoInput').click(); return; }
+    if (t.id === 'btnRemoveSupplierLogo') { currentSupplierLogoDataUrl = null; updateSupplierLogoPreview(); return; }
+
+    if (t.id === 'btnExport') { doExport(); return; }
+    if (t.id === 'btnImport') { document.getElementById('importInput').click(); return; }
+    if (t.id === 'themeToggleBtn') { toggleTheme(); return; }
+  }
+
+  function onDocumentChange(e) {
+    var t = e.target;
+    if (t.id === 'projectSelect') { state.currentProjectId = t.value; saveState(); refreshAll(); return; }
+    if (t.classList.contains('ms-name-input')) {
+      var mid = t.getAttribute('data-mid');
+      var m = editingMilestones.filter(function (x) { return x.id === mid; })[0];
+      if (m) m.name = t.value;
+      return;
+    }
+    if (t.classList.contains('ms-pct-input')) {
+      var mid2 = t.getAttribute('data-mid');
+      var m2 = editingMilestones.filter(function (x) { return x.id === mid2; })[0];
+      if (m2) m2.percent = t.value === '' ? '' : parseFloat(t.value);
+      updateMilestoneTotal();
+      return;
+    }
+    if (t.getAttribute && t.getAttribute('data-action') === 'toggle-milestone') {
+      toggleMilestone(t.getAttribute('data-line'), t.getAttribute('data-milestone'), t.checked);
+      return;
+    }
+    if (t.getAttribute && t.getAttribute('data-action') === 'set-milestone-date') {
+      setMilestoneDate(t.getAttribute('data-line'), t.getAttribute('data-milestone'), t.value);
+      return;
+    }
+    if (t.id === 'docAttachInput') { handleDocAttachInputChange(e); return; }
+    if (t.id === 'supplierLogoInput') {
+      var file = t.files && t.files[0];
+      if (!file) return;
+      resizeImageFile(file, function (dataUrl) {
+        if (dataUrl) { currentSupplierLogoDataUrl = dataUrl; updateSupplierLogoPreview(); }
+        else { showToast('Impossible de lire cette image.', 'error'); }
+      });
+      return;
+    }
+    if (t.id === 'importInput') {
+      if (t.files && t.files[0]) doImport(t.files[0]);
+      t.value = '';
+      return;
+    }
+  }
+
+  // polyfill closest (vieux navigateurs)
+  if (!Element.prototype.closest) {
+    Element.prototype.closest = function (selector) {
+      var el = this;
+      while (el) { if (el.matches && el.matches(selector)) return el; el = el.parentElement; }
+      return null;
+    };
+  }
+
+  // ---------- Init ----------
+  document.addEventListener('DOMContentLoaded', function () {
+    loadState();
+    applyTheme(state.theme);
+    refreshAll();
+    document.addEventListener('click', onDocumentClick);
+    document.addEventListener('change', onDocumentChange);
+  });
+})();
+</script>
+</body>
+</html>
