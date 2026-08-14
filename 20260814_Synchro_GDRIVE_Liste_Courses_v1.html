@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liste de Courses</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --ink:#1c2733; --paper:#f4f6f5; --surface:#ffffff; --steel:#5b7086; --steel-soft:#8fa0b0;
+  --border:#dde3e7; --signal:#2e7d46; --signal-dark:#215c33; --signal-soft:rgba(46,125,70,.12);
+  --ok:#1a8f52; --ok-bg:#e5f5eb; --bad:#c0362c; --bad-bg:#fbe9e7; --warn:#b8720a; --warn-bg:#fdf1de;
+  --radius:10px; --radius-sm:6px;
+  --shadow:0 1px 2px rgba(28,39,51,.06),0 4px 14px rgba(28,39,51,.05);
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Consolas,monospace;
+}
+html[data-theme="dark"]{
+  --ink:#e6eaed; --paper:#12181d; --surface:#1a2128; --steel:#93a4b3; --steel-soft:#5f7383;
+  --border:#2b343c; --signal:#42b36a; --signal-dark:#63cad2; --signal-soft:rgba(66,179,106,.15);
+  --ok:#3ecb7d; --ok-bg:#123321; --bad:#e2685d; --bad-bg:#3a1c1a; --warn:#e0a94a; --warn-bg:#372a10;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans);line-height:1.45;padding-bottom:60px;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea,select{font-family:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 9px;font-size:14px;}
+
+/* ---- Topbar ---- */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;position:sticky;top:0;z-index:20;box-shadow:var(--shadow);}
+.topbar-row1{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:220px;}
+.brand-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--signal);font-weight:700;text-transform:uppercase;}
+.list-name-input{font-size:20px;font-weight:700;border:none;background:transparent;padding:2px 0;min-width:220px;color:var(--ink);}
+.list-name-input:focus{outline:none;border-bottom:1.5px solid var(--signal);}
+.list-meta{font-size:12px;color:var(--steel);margin-top:2px;}
+.topbar-actions{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.icon-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;color:var(--steel);font-size:15px;}
+.icon-btn:hover{border-color:var(--signal);color:var(--signal);}
+.drive-btn{display:inline-flex;align-items:center;gap:7px;padding:0 12px;height:36px;}
+.drive-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--steel-soft);transition:background .2s ease;}
+.drive-dot.is-connected{background:var(--ok);}
+.drive-dot.is-syncing{background:var(--warn);animation:drive-pulse 1s ease-in-out infinite;}
+.drive-dot.is-error{background:var(--bad);}
+@keyframes drive-pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+.btn{background:var(--surface);color:var(--steel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 14px;height:36px;display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px;white-space:nowrap;}
+.btn:hover{border-color:var(--signal);color:var(--signal);}
+.btn.primary{background:var(--signal);color:#fff;border-color:var(--signal);}
+.btn.primary:hover{background:var(--signal-dark);}
+.btn.danger{border-color:var(--bad);color:var(--bad);}
+.btn.danger:hover{background:var(--bad-bg);}
+.btn.small{height:30px;padding:0 10px;font-size:12.5px;}
+
+/* ---- Lists row (chips) ---- */
+.lists-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.list-chip{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--steel);display:inline-flex;align-items:center;gap:6px;}
+.list-chip.active{border-color:var(--signal);color:var(--signal-dark);background:var(--signal-soft);}
+.list-chip.completed{opacity:.65;}
+.list-chip .chip-badge{background:var(--steel-soft);color:#fff;border-radius:9px;font-size:10.5px;padding:1px 6px;}
+.list-chip-add{border-style:dashed;color:var(--signal);}
+
+/* ---- Tabs ---- */
+nav.tabs{display:flex;gap:4px;padding:8px 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:96px;z-index:19;flex-wrap:wrap;}
+nav.tabs button{border:none;background:transparent;padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;color:var(--steel);font-weight:700;}
+nav.tabs button:hover{background:var(--paper);}
+nav.tabs button.active{background:var(--signal);color:#fff;}
+
+main{max-width:980px;margin:0 auto;padding:20px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.card h2{margin:0 0 12px 0;font-size:15.5px;}
+.muted{color:var(--steel);font-size:12.5px;}
+.empty-hint{color:var(--steel);font-size:13px;padding:14px 0;text-align:center;}
+
+/* ---- Suggestions ---- */
+.suggest-card{border-color:var(--warn);background:var(--warn-bg);}
+.suggest-list{display:flex;flex-wrap:wrap;gap:8px;}
+.suggest-pill{background:var(--surface);border:1px solid var(--warn);border-radius:16px;padding:5px 8px 5px 12px;font-size:12.5px;display:inline-flex;align-items:center;gap:8px;color:var(--ink);}
+.suggest-pill button{background:var(--warn);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;}
+
+/* ---- Add item form ---- */
+.add-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.add-form input[type="text"]{flex:1;min-width:180px;}
+.add-form input.qty{width:90px;flex:none;}
+
+/* ---- Items ---- */
+.item-row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid var(--border);}
+.item-row:last-child{border-bottom:none;}
+.item-row.checked .item-name{text-decoration:line-through;color:var(--steel);}
+.item-photo{width:34px;height:34px;border-radius:6px;background:var(--paper);border:1px solid var(--border);object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--steel-soft);}
+.item-check{width:20px;height:20px;flex-shrink:0;accent-color:var(--signal);cursor:pointer;}
+.item-name{flex:1;font-size:14px;}
+.item-qty{font-size:12px;color:var(--steel);background:var(--paper);border-radius:10px;padding:2px 8px;flex-shrink:0;}
+.item-checked-at{font-size:11px;color:var(--ok);flex-shrink:0;font-family:var(--font-mono);}
+.item-del{background:none;border:none;color:var(--steel);font-size:16px;padding:2px 6px;flex-shrink:0;}
+.item-del:hover{color:var(--bad);}
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--steel);font-weight:700;margin:14px 0 4px;}
+.section-label:first-child{margin-top:0;}
+.list-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;justify-content:flex-end;}
+
+/* ---- Catalogue ---- */
+.catalog-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.catalog-toolbar input[type="text"]{flex:1;min-width:180px;}
+.catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.cat-item{border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;gap:10px;background:var(--paper);}
+.cat-photo-box{width:56px;height:56px;border-radius:8px;background:var(--surface);border:1px dashed var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:22px;color:var(--steel-soft);cursor:pointer;}
+.cat-photo-box img{width:100%;height:100%;object-fit:cover;}
+.cat-photo-box:hover{border-color:var(--signal);}
+.cat-body{flex:1;min-width:0;}
+.cat-name-input{font-weight:700;font-size:13.5px;width:100%;border:none;background:transparent;padding:1px 0;margin-bottom:6px;}
+.cat-name-input:focus{outline:none;border-bottom:1px solid var(--signal);}
+.cat-meta-row{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--steel);margin-bottom:4px;flex-wrap:wrap;}
+.cat-periodicity{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--steel);}
+.cat-periodicity input{width:52px;padding:3px 5px;font-size:12px;}
+.cat-count-badge{background:var(--signal-soft);color:var(--signal-dark);border-radius:9px;padding:1px 7px;font-size:10.5px;font-weight:700;}
+.cat-due-badge{background:var(--warn-bg);color:var(--warn);border-radius:9px;padding:1px 7px;font-size:10.5px;font-weight:700;}
+.cat-del{background:none;border:none;color:var(--steel);font-size:15px;align-self:flex-start;}
+.cat-del:hover{color:var(--bad);}
+.cat-photo-input{display:none;}
+
+/* ---- Stats ---- */
+.stats-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+.stat-box{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;}
+.stat-box .label{font-size:11px;color:var(--steel);text-transform:uppercase;letter-spacing:.04em;}
+.stat-box .value{font-size:22px;font-weight:700;margin-top:2px;}
+.bar-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+.bar-rank{width:22px;font-size:12px;color:var(--steel);text-align:right;flex-shrink:0;}
+.bar-photo{width:26px;height:26px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--paper);border:1px solid var(--border);}
+.bar-name{width:150px;flex-shrink:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{flex:1;background:var(--paper);border-radius:5px;height:16px;overflow:hidden;}
+.bar-fill{background:var(--signal);height:100%;border-radius:5px;}
+.bar-count{width:34px;text-align:right;font-size:12.5px;font-weight:700;color:var(--steel);flex-shrink:0;}
+
+#file-input{display:none;}
+footer{text-align:center;color:var(--steel);font-size:12px;padding:20px;}
+@media (max-width:640px){
+  .item-qty, .item-checked-at{display:none;}
+  .bar-name{width:100px;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row1">
+    <div class="brand">
+      <span class="brand-eyebrow">🛒 Courses</span>
+      <input type="text" id="list-name-input" class="list-name-input" placeholder="Nom de la liste" maxlength="80">
+      <div class="list-meta" id="list-meta"></div>
+    </div>
+    <div class="topbar-actions">
+      <button type="button" id="themeToggle" class="icon-btn" title="Thème clair / sombre">🌙</button>
+      <button type="button" id="btn-export" class="btn">Exporter (JSON)</button>
+      <button type="button" id="btn-import" class="btn">Importer (JSON)</button>
+      <input type="file" id="file-input" accept="application/json">
+      <button type="button" id="btn-drive-connect" class="btn drive-btn" title="Connecter Google Drive">
+        <span id="drive-dot" class="drive-dot"></span><span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button type="button" id="btn-drive-force" class="icon-btn" title="Forcer la synchro">⟳</button>
+    </div>
+  </div>
+  <div class="lists-row" id="lists-row"></div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button type="button" data-tab="liste">🛒 Liste en cours</button>
+  <button type="button" data-tab="catalogue">📦 Catalogue</button>
+  <button type="button" data-tab="stats">📊 Statistiques</button>
+</nav>
+
+<main id="app"></main>
+
+<datalist id="catalog-datalist"></datalist>
+
+<footer>Outil autonome — données stockées dans ce navigateur (localStorage). Pense à exporter régulièrement pour sauvegarder / transférer tes données.</footer>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — se branche sur la clé
+   localStorage existante de l'appli (STORAGE_KEY) au lieu de la
+   remplacer. Réutilisable : changer APP_NS pour un autre outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'listecourses';
+  var APP_STORAGE_KEY = 'axelListeCourses_v1'; /* doit rester identique à STORAGE_KEY du script principal */
+  var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
+  var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  function getLocalRecord() {
+    var value = null;
+    try { value = localStorage.getItem(APP_STORAGE_KEY); } catch (e) { value = null; }
+    if (!value) return null;
+    var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10);
+    if (!modified) modified = Date.now();
+    return { value: value, modified: modified };
+  }
+
+  function setLocalRecord(value, modified) {
+    try {
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connecté', connected: 'Drive : connecté', ok: 'Drive : synchronisé', sync: 'Drive : synchro…', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName() { return 'storage__' + APP_NS + '__state.json'; }
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  function driveCreateFile(record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(record) {
+    return driveFindFile().then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(record); });
+  }
+
+  async function syncFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var local = getLocalRecord();
+      var existing = await driveFindFile();
+      if (!existing) {
+        if (local) await drivePushRecord(local);
+        setSyncStatus('ok');
+        return;
+      }
+      var remote = await driveGetRecord(existing.id);
+      if (!remote) { setSyncStatus('ok'); return; }
+
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        setLocalRecord(remote.value, remote.modified);
+        setSyncStatus('ok');
+        if (changed) {
+          setSyncStatus('sync');
+          setTimeout(function () { location.reload(); }, 700);
+        }
+      } else if (local.modified > remote.modified) {
+        await driveUpdateFile(existing.id, local);
+        setSyncStatus('ok');
+      } else {
+        setSyncStatus('ok');
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord à Drive (bouton "Drive : non connecté").'); return; }
+      var local = getLocalRecord();
+      if (!local) { alert('Rien en local à synchroniser.'); return; }
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () {
+        setSyncStatus('ok');
+        alert('Synchro forcée : OK (' + Math.round(local.value.length / 1024) + ' Ko envoyés)');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        alert('Erreur : ' + e.message);
+      });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  /* Point d'accroche appelé par saveState() dans le script principal après
+     chaque sauvegarde réussie, pour pousser la nouvelle version vers Drive. */
+  window.__driveNotifySave = function () {
+    var modified = Date.now();
+    localStorage.setItem(MODIFIED_KEY, String(modified));
+    if (hasValidToken()) {
+      var local = getLocalRecord();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive :', e);
+      });
+    }
+  };
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "axelListeCourses_v1";
+  // v1 = premier jet : listes multiples, catalogue global auto-alimenté,
+  // pointage achat (date/heure), photo + périodicité par article du catalogue,
+  // suggestions "à racheter bientôt", onglet statistiques (top achats).
+  var APP_VERSION = "v1";
+  var DUE_SOON_DAYS = 3; // fenêtre (en jours) pour considérer un article "à racheter bientôt"
+
+  var state = null;
+
+  function uid(prefix){
+    return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function defaultState(){
+    return {
+      version: 1,
+      theme: "light",
+      currentTab: "liste",
+      currentListId: null,
+      catalogFilter: "",
+      lists: [],
+      catalog: []
+    };
+  }
+
+  function loadState(){
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch(e){ raw = null; }
+    if (raw){
+      try { state = JSON.parse(raw); }
+      catch(e){ state = defaultState(); }
+    } else {
+      state = defaultState();
+    }
+    if (!state.lists) state.lists = [];
+    if (!state.catalog) state.catalog = [];
+    if (!state.theme) state.theme = "light";
+    if (!state.currentTab) state.currentTab = "liste";
+    if (state.catalogFilter === undefined) state.catalogFilter = "";
+    document.documentElement.setAttribute("data-theme", state.theme);
+    ensureCurrentList();
+  }
+
+  function saveState(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (window.__driveNotifySave) window.__driveNotifySave();
+    }
+    catch(e){ alert("Impossible de sauvegarder (stockage plein ou indisponible)."); }
+  }
+
+  // ---------- Blank-template-on-open : réutilise une liste active vide
+  // existante si elle existe déjà, sinon en crée une nouvelle. Les listes
+  // précédentes (avec contenu) restent disponibles via le sélecteur. ----------
+  function ensureCurrentList(){
+    var reusable = state.lists.find(function(l){
+      return l.status === "active" && l.items.length === 0;
+    });
+    if (reusable){
+      state.currentListId = reusable.id;
+      return;
+    }
+    var current = state.lists.find(function(l){ return l.id === state.currentListId; });
+    if (current) return;
+    createNewList();
+  }
+
+  function defaultListName(){
+    var d = new Date();
+    var jours = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+    return "Courses du " + pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + " (" + jours[d.getDay()] + ")";
+  }
+
+  function createNewList(){
+    var list = {
+      id: uid("l-"),
+      name: defaultListName(),
+      createdAt: new Date().toISOString(),
+      completedAt: null,
+      status: "active",
+      items: []
+    };
+    state.lists.unshift(list);
+    state.currentListId = list.id;
+    return list;
+  }
+
+  function getCurrentList(){
+    return state.lists.find(function(l){ return l.id === state.currentListId; }) || null;
+  }
+
+  function getCatalogItem(id){
+    return state.catalog.find(function(c){ return c.id === id; }) || null;
+  }
+
+  function findCatalogItemByName(name){
+    var norm = name.trim().toLowerCase();
+    return state.catalog.find(function(c){ return c.name.trim().toLowerCase() === norm; }) || null;
+  }
+
+  // Trouve ou crée un article de catalogue à partir d'un nom saisi.
+  function ensureCatalogItem(name){
+    var existing = findCatalogItemByName(name);
+    if (existing) return existing;
+    var item = {
+      id: uid("c-"),
+      name: name.trim(),
+      photo: null,
+      periodicityDays: null,
+      lastPurchasedAt: null,
+      purchaseCount: 0,
+      createdAt: new Date().toISOString()
+    };
+    state.catalog.push(item);
+    return item;
+  }
+
+  function pad2(n){ return n < 10 ? "0" + n : "" + n; }
+
+  function fmtDateTime(iso){
+    if (!iso) return "";
+    var d = new Date(iso);
+    return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  }
+  function fmtDate(iso){
+    if (!iso) return "";
+    var d = new Date(iso);
+    return pad2(d.getDate()) + "/" + pad2(d.getMonth()+1) + "/" + d.getFullYear();
+  }
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+
+  // ---------- Suggestions "à racheter bientôt" ----------
+  function getDueSoonItems(){
+    var now = Date.now();
+    var horizon = now + DUE_SOON_DAYS * 86400000;
+    var currentList = getCurrentList();
+    var alreadyInList = {};
+    if (currentList){
+      currentList.items.forEach(function(it){ if (it.catalogItemId) alreadyInList[it.catalogItemId] = true; });
+    }
+    return state.catalog.filter(function(c){
+      if (!c.periodicityDays || !c.lastPurchasedAt) return false;
+      if (alreadyInList[c.id]) return false;
+      var nextDue = new Date(c.lastPurchasedAt).getTime() + c.periodicityDays * 86400000;
+      return nextDue <= horizon;
+    }).map(function(c){
+      var nextDue = new Date(c.lastPurchasedAt).getTime() + c.periodicityDays * 86400000;
+      return { item: c, nextDue: nextDue, overdue: nextDue <= now };
+    }).sort(function(a,b){ return a.nextDue - b.nextDue; });
+  }
+
+  // ---------- Actions sur les listes ----------
+  function addItemToList(listId, rawName, qty){
+    var list = state.lists.find(function(l){ return l.id === listId; });
+    if (!list || !rawName || !rawName.trim()) return;
+    var catalogItem = ensureCatalogItem(rawName);
+    // Évite les doublons dans la même liste
+    var already = list.items.find(function(it){ return it.catalogItemId === catalogItem.id; });
+    if (already){
+      already.qty = qty || already.qty;
+      saveState();
+      render();
+      return;
+    }
+    list.items.push({
+      id: uid("li-"),
+      catalogItemId: catalogItem.id,
+      name: catalogItem.name,
+      qty: qty || "",
+      checked: false,
+      checkedAt: null
+    });
+    saveState();
+    render();
+  }
+
+  function toggleItemChecked(listId, itemId){
+    var list = state.lists.find(function(l){ return l.id === listId; });
+    if (!list) return;
+    var item = list.items.find(function(it){ return it.id === itemId; });
+    if (!item) return;
+    var catalogItem = getCatalogItem(item.catalogItemId);
+    if (!item.checked){
+      item.checked = true;
+      item.checkedAt = new Date().toISOString();
+      if (catalogItem){
+        catalogItem.lastPurchasedAt = item.checkedAt;
+        catalogItem.purchaseCount = (catalogItem.purchaseCount || 0) + 1;
+      }
+    } else {
+      item.checked = false;
+      item.checkedAt = null;
+      if (catalogItem && catalogItem.purchaseCount > 0){
+        catalogItem.purchaseCount -= 1;
+      }
+    }
+    saveState();
+    render();
+  }
+
+  function removeItemFromList(listId, itemId){
+    var list = state.lists.find(function(l){ return l.id === listId; });
+    if (!list) return;
+    list.items = list.items.filter(function(it){ return it.id !== itemId; });
+    saveState();
+    render();
+  }
+
+  function renameList(listId, name){
+    var list = state.lists.find(function(l){ return l.id === listId; });
+    if (!list) return;
+    list.name = name.trim() || defaultListName();
+    saveState();
+  }
+
+  function finishCurrentList(){
+    var list = getCurrentList();
+    if (!list) return;
+    if (list.items.length === 0){ alert("Cette liste est vide."); return; }
+    var unchecked = list.items.filter(function(it){ return !it.checked; }).length;
+    var msg = "Terminer « " + list.name + " » ?";
+    if (unchecked > 0) msg += "\n" + unchecked + " article(s) non pointé(s) resteront non achetés.";
+    if (!confirm(msg)) return;
+    list.status = "completed";
+    list.completedAt = new Date().toISOString();
+    createNewList();
+    saveState();
+    render();
+  }
+
+  function deleteList(listId){
+    var list = state.lists.find(function(l){ return l.id === listId; });
+    if (!list) return;
+    if (!confirm('Supprimer la liste "' + list.name + '" ? Cette action est irréversible.')) return;
+    state.lists = state.lists.filter(function(l){ return l.id !== listId; });
+    if (state.currentListId === listId) state.currentListId = null;
+    ensureCurrentList();
+    saveState();
+    render();
+  }
+
+  function switchToList(listId){
+    state.currentListId = listId;
+    state.currentTab = "liste";
+    saveState();
+    render();
+  }
+
+  // ---------- Catalogue ----------
+  function updateCatalogItem(id, patch){
+    var item = getCatalogItem(id);
+    if (!item) return;
+    Object.assign(item, patch);
+    saveState();
+  }
+
+  function deleteCatalogItem(id){
+    var item = getCatalogItem(id);
+    if (!item) return;
+    var usedIn = state.lists.some(function(l){ return l.items.some(function(it){ return it.catalogItemId === id; }); });
+    var msg = 'Supprimer "' + item.name + '" du catalogue ?';
+    if (usedIn) msg += "\nIl restera visible dans les listes existantes (référence conservée), mais ses stats seront perdues.";
+    if (!confirm(msg)) return;
+    state.catalog = state.catalog.filter(function(c){ return c.id !== id; });
+    saveState();
+    render();
+  }
+
+  function resizeImageFile(file, maxSide, quality, onDone, onError){
+    if (!file || file.type.indexOf("image/") !== 0){ onError("type"); return; }
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var img = new Image();
+      img.onload = function(){
+        var w = img.width, h = img.height;
+        var scale = Math.min(1, maxSide / w, maxSide / h);
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(w * scale));
+        canvas.height = Math.max(1, Math.round(h * scale));
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        onDone(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = function(){ onError("image"); };
+      img.src = ev.target.result;
+    };
+    reader.onerror = function(){ onError("file"); };
+    reader.readAsDataURL(file);
+  }
+
+  function handleCatalogPhotoSelect(id, file){
+    resizeImageFile(file, 240, 0.72, function(dataUrl){
+      updateCatalogItem(id, { photo: dataUrl });
+      render();
+    }, function(kind){
+      if (kind === "type") alert("Choisis un fichier image valide.");
+      else alert("Impossible de lire cette image.");
+    });
+  }
+
+  // ==================== RENDU ====================
+
+  function render(){
+    renderHeader();
+    renderTabs();
+    var app = document.getElementById("app");
+    if (state.currentTab === "liste") app.innerHTML = renderListeTab();
+    else if (state.currentTab === "catalogue") app.innerHTML = renderCatalogueTab();
+    else app.innerHTML = renderStatsTab();
+    renderDatalist();
+  }
+
+  function renderHeader(){
+    var list = getCurrentList();
+    var input = document.getElementById("list-name-input");
+    if (input && document.activeElement !== input) input.value = list ? list.name : "";
+    var meta = document.getElementById("list-meta");
+    if (meta && list){
+      var checkedCount = list.items.filter(function(it){ return it.checked; }).length;
+      meta.textContent = "Créée le " + fmtDate(list.createdAt) + " · " + checkedCount + "/" + list.items.length + " article(s) pointé(s)";
+    } else if (meta){
+      meta.textContent = "";
+    }
+
+    var row = document.getElementById("lists-row");
+    var sorted = state.lists.slice().sort(function(a,b){
+      if (a.status !== b.status) return a.status === "active" ? -1 : 1;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    var html = sorted.map(function(l){
+      var checkedCount = l.items.filter(function(it){ return it.checked; }).length;
+      var cls = "list-chip" + (l.id === state.currentListId ? " active" : "") + (l.status === "completed" ? " completed" : "");
+      return '<button type="button" class="' + cls + '" data-action="switch-list" data-id="' + l.id + '">' +
+        (l.status === "completed" ? "✅ " : "") + esc(l.name) +
+        '<span class="chip-badge">' + checkedCount + "/" + l.items.length + "</span></button>";
+    }).join("");
+    html += '<button type="button" class="list-chip list-chip-add" data-action="new-list">＋ Nouvelle liste</button>';
+    row.innerHTML = html;
+  }
+
+  function renderTabs(){
+    var tabs = document.getElementById("tabs");
+    Array.prototype.forEach.call(tabs.querySelectorAll("button"), function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-tab") === state.currentTab);
+    });
+  }
+
+  function renderDatalist(){
+    var dl = document.getElementById("catalog-datalist");
+    dl.innerHTML = state.catalog.slice().sort(function(a,b){ return a.name.localeCompare(b.name); })
+      .map(function(c){ return '<option value="' + esc(c.name) + '">'; }).join("");
+  }
+
+  function renderListeTab(){
+    var list = getCurrentList();
+    if (!list) return '<div class="empty-hint">Aucune liste sélectionnée.</div>';
+
+    var due = getDueSoonItems();
+    var suggestHtml = "";
+    if (due.length > 0){
+      suggestHtml = '<div class="card suggest-card">' +
+        '<h2>🔔 À racheter bientôt</h2>' +
+        '<div class="suggest-list">' +
+        due.map(function(d){
+          var label = d.overdue ? "à racheter" : "bientôt";
+          return '<span class="suggest-pill">' + esc(d.item.name) + ' <span class="muted">(' + label + ')</span>' +
+            '<button type="button" data-action="add-suggestion" data-name="' + esc(d.item.name) + '" title="Ajouter à la liste">＋</button></span>';
+        }).join("") +
+        "</div></div>";
+    }
+
+    var uncheckedItems = list.items.filter(function(it){ return !it.checked; });
+    var checkedItems = list.items.filter(function(it){ return it.checked; });
+
+    function itemRowHtml(it){
+      var catalogItem = getCatalogItem(it.catalogItemId);
+      var photoHtml = (catalogItem && catalogItem.photo)
+        ? '<img class="item-photo" src="' + catalogItem.photo + '" alt="">'
+        : '<span class="item-photo">🛒</span>';
+      return '<div class="item-row' + (it.checked ? " checked" : "") + '">' +
+        '<input type="checkbox" class="item-check" data-action="toggle-item" data-id="' + it.id + '"' + (it.checked ? " checked" : "") + '>' +
+        photoHtml +
+        '<span class="item-name">' + esc(it.name) + "</span>" +
+        (it.qty ? '<span class="item-qty">' + esc(it.qty) + "</span>" : "") +
+        (it.checked ? '<span class="item-checked-at">' + fmtDateTime(it.checkedAt) + "</span>" : "") +
+        '<button type="button" class="item-del" data-action="delete-item" data-id="' + it.id + '" title="Supprimer">✕</button>' +
+        "</div>";
+    }
+
+    var itemsHtml = "";
+    if (list.items.length === 0){
+      itemsHtml = '<div class="empty-hint">Liste vide — ajoute des articles ci-dessous.</div>';
+    } else {
+      if (uncheckedItems.length > 0){
+        itemsHtml += '<div class="section-label">À acheter (' + uncheckedItems.length + ")</div>";
+        itemsHtml += uncheckedItems.map(itemRowHtml).join("");
+      }
+      if (checkedItems.length > 0){
+        itemsHtml += '<div class="section-label">Déjà acheté (' + checkedItems.length + ")</div>";
+        itemsHtml += checkedItems.map(itemRowHtml).join("");
+      }
+    }
+
+    return suggestHtml +
+      '<div class="card">' +
+      '<h2>Ajouter un article</h2>' +
+      '<div class="add-form">' +
+      '<input type="text" id="new-item-name" placeholder="Nom de l\'article…" list="catalog-datalist" autocomplete="off">' +
+      '<input type="text" class="qty" id="new-item-qty" placeholder="Qté (ex. 2, 1L)">' +
+      '<button type="button" class="btn primary" data-action="add-item">＋ Ajouter</button>' +
+      "</div></div>" +
+      '<div class="card">' +
+      "<h2>Articles</h2>" +
+      itemsHtml +
+      '<div class="list-actions">' +
+      '<button type="button" class="btn" data-action="delete-list" data-id="' + list.id + '">🗑 Supprimer cette liste</button>' +
+      '<button type="button" class="btn primary" data-action="finish-list">✅ Terminer la liste</button>' +
+      "</div></div>";
+  }
+
+  function renderCatalogueTab(){
+    var filter = (state.catalogFilter || "").trim().toLowerCase();
+    var items = state.catalog.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+    if (filter) items = items.filter(function(c){ return c.name.toLowerCase().indexOf(filter) !== -1; });
+
+    var now = Date.now();
+    function dueBadge(c){
+      if (!c.periodicityDays || !c.lastPurchasedAt) return "";
+      var nextDue = new Date(c.lastPurchasedAt).getTime() + c.periodicityDays * 86400000;
+      if (nextDue <= now) return '<span class="cat-due-badge">à racheter</span>';
+      if (nextDue <= now + DUE_SOON_DAYS * 86400000) return '<span class="cat-due-badge">bientôt</span>';
+      return "";
+    }
+
+    var gridHtml = items.length === 0
+      ? '<div class="empty-hint">Aucun article dans le catalogue. Ajoute des articles depuis une liste ou ci-dessus.</div>'
+      : '<div class="catalog-grid">' + items.map(function(c){
+          var photoInner = c.photo ? '<img src="' + c.photo + '" alt="">' : "📦";
+          return '<div class="cat-item">' +
+            '<div class="cat-photo-box" data-action="pick-photo" data-id="' + c.id + '" title="Changer la photo">' + photoInner + "</div>" +
+            '<input type="file" class="cat-photo-input" accept="image/*" data-id="' + c.id + '">' +
+            '<div class="cat-body">' +
+            '<input type="text" class="cat-name-input" value="' + esc(c.name) + '" data-action="rename-catalog" data-id="' + c.id + '">' +
+            '<div class="cat-meta-row">' +
+            '<span class="cat-count-badge">' + (c.purchaseCount || 0) + " achat(s)</span>" +
+            dueBadge(c) +
+            "</div>" +
+            '<div class="cat-meta-row muted">' + (c.lastPurchasedAt ? "Dernier achat : " + fmtDate(c.lastPurchasedAt) : "Jamais acheté") + "</div>" +
+            '<div class="cat-periodicity">Racheter tous les <input type="number" min="0" step="1" value="' + (c.periodicityDays || "") + '" data-action="set-periodicity" data-id="' + c.id + '" placeholder="—"> jours</div>' +
+            "</div>" +
+            '<button type="button" class="cat-del" data-action="delete-catalog" data-id="' + c.id + '" title="Supprimer du catalogue">🗑</button>' +
+            "</div>";
+        }).join("") + "</div>";
+
+    return '<div class="card">' +
+      "<h2>Catalogue global (" + state.catalog.length + " article(s))</h2>" +
+      '<div class="catalog-toolbar">' +
+      '<input type="text" id="catalog-filter" placeholder="Rechercher un article…" value="' + esc(state.catalogFilter || "") + '">' +
+      '<input type="text" id="new-catalog-name" placeholder="Nouvel article…">' +
+      '<button type="button" class="btn primary" data-action="add-catalog-item">＋ Ajouter au catalogue</button>' +
+      "</div>" +
+      gridHtml +
+      "</div>";
+  }
+
+  function renderStatsTab(){
+    var completedLists = state.lists.filter(function(l){ return l.status === "completed"; });
+    var totalBought = state.catalog.reduce(function(sum, c){ return sum + (c.purchaseCount || 0); }, 0);
+    var top = state.catalog.filter(function(c){ return (c.purchaseCount || 0) > 0; })
+      .sort(function(a,b){ return (b.purchaseCount || 0) - (a.purchaseCount || 0); })
+      .slice(0, 15);
+    var maxCount = top.length > 0 ? top[0].purchaseCount : 1;
+
+    var barsHtml = top.length === 0
+      ? '<div class="empty-hint">Pas encore d\'historique d\'achats — pointe des articles comme achetés dans tes listes.</div>'
+      : top.map(function(c, i){
+          var pct = Math.max(4, Math.round((c.purchaseCount / maxCount) * 100));
+          var photoHtml = c.photo ? '<img class="bar-photo" src="' + c.photo + '" alt="">' : '<span class="bar-photo"></span>';
+          return '<div class="bar-row">' +
+            '<span class="bar-rank">#' + (i+1) + "</span>" +
+            photoHtml +
+            '<span class="bar-name" title="' + esc(c.name) + '">' + esc(c.name) + "</span>" +
+            '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
+            '<span class="bar-count">' + c.purchaseCount + "</span>" +
+            "</div>";
+        }).join("");
+
+    var due = getDueSoonItems();
+    var dueHtml = due.length === 0 ? '<div class="empty-hint">Rien à racheter dans l\'immédiat.</div>' :
+      due.map(function(d){
+        return '<div class="bar-row"><span class="bar-name" title="' + esc(d.item.name) + '">' + esc(d.item.name) + '</span>' +
+          '<span class="muted">' + (d.overdue ? "à racheter — dernier achat le " + fmtDate(d.item.lastPurchasedAt) : "prévu vers le " + fmtDate(new Date(d.nextDue).toISOString())) + "</span></div>";
+      }).join("");
+
+    return '<div class="stats-summary">' +
+      '<div class="stat-box"><div class="label">Listes terminées</div><div class="value">' + completedLists.length + "</div></div>" +
+      '<div class="stat-box"><div class="label">Articles au catalogue</div><div class="value">' + state.catalog.length + "</div></div>" +
+      '<div class="stat-box"><div class="label">Total achats pointés</div><div class="value">' + totalBought + "</div></div>" +
+      "</div>" +
+      '<div class="card"><h2>🏆 Articles les plus achetés</h2>' + barsHtml + "</div>" +
+      '<div class="card"><h2>🔔 À racheter bientôt</h2>' + dueHtml + "</div>";
+  }
+
+  // ==================== ÉVÉNEMENTS ====================
+
+  function onAppClick(e){
+    var el = e.target.closest("[data-action]");
+    if (!el) return;
+    var action = el.getAttribute("data-action");
+    var list = getCurrentList();
+
+    if (action === "toggle-item"){
+      toggleItemChecked(list.id, el.getAttribute("data-id"));
+    } else if (action === "delete-item"){
+      removeItemFromList(list.id, el.getAttribute("data-id"));
+    } else if (action === "add-item"){
+      var nameEl = document.getElementById("new-item-name");
+      var qtyEl = document.getElementById("new-item-qty");
+      addItemToList(list.id, nameEl.value, qtyEl.value);
+      nameEl.value = ""; qtyEl.value = "";
+      nameEl.focus();
+    } else if (action === "add-suggestion"){
+      addItemToList(list.id, el.getAttribute("data-name"), "");
+    } else if (action === "finish-list"){
+      finishCurrentList();
+    } else if (action === "delete-list"){
+      deleteList(el.getAttribute("data-id"));
+    } else if (action === "switch-list"){
+      switchToList(el.getAttribute("data-id"));
+    } else if (action === "new-list"){
+      createNewList();
+      saveState();
+      render();
+    } else if (action === "add-catalog-item"){
+      var newNameEl = document.getElementById("new-catalog-name");
+      if (newNameEl.value.trim()){
+        ensureCatalogItem(newNameEl.value);
+        newNameEl.value = "";
+        saveState();
+        render();
+      }
+    } else if (action === "delete-catalog"){
+      deleteCatalogItem(el.getAttribute("data-id"));
+    } else if (action === "pick-photo"){
+      var input = el.parentElement.querySelector('.cat-photo-input[data-id="' + el.getAttribute("data-id") + '"]');
+      if (input) input.click();
+    } else if (action === "export"){
+      doExport();
+    } else if (action === "import"){
+      document.getElementById("file-input").click();
+    }
+  }
+
+  function onAppChange(e){
+    var el = e.target;
+    var action = el.getAttribute && el.getAttribute("data-action");
+    if (action === "rename-catalog"){
+      updateCatalogItem(el.getAttribute("data-id"), { name: el.value.trim() || "Article" });
+      renderHeader(); renderDatalist();
+    } else if (action === "set-periodicity"){
+      var val = parseInt(el.value, 10);
+      updateCatalogItem(el.getAttribute("data-id"), { periodicityDays: (isNaN(val) || val <= 0) ? null : val });
+      render();
+    } else if (el.classList && el.classList.contains("cat-photo-input")){
+      if (el.files && el.files[0]) handleCatalogPhotoSelect(el.getAttribute("data-id"), el.files[0]);
+    } else if (el.id === "catalog-filter"){
+      state.catalogFilter = el.value;
+      render();
+      var f = document.getElementById("catalog-filter");
+      if (f){ f.focus(); f.selectionStart = f.selectionEnd = f.value.length; }
+    } else if (el.id === "list-name-input"){
+      var list = getCurrentList();
+      if (list) renameList(list.id, el.value);
+      renderHeader();
+    }
+  }
+
+  function onAppKeydown(e){
+    if (e.target && e.target.id === "new-item-name" && e.key === "Enter"){
+      e.preventDefault();
+      document.getElementById("app").querySelector('[data-action="add-item"]').click();
+    }
+    if (e.target && e.target.id === "new-catalog-name" && e.key === "Enter"){
+      e.preventDefault();
+      document.getElementById("app").querySelector('[data-action="add-catalog-item"]').click();
+    }
+  }
+
+  // ---------- Export / Import ----------
+  function exportFileName(){
+    var d = new Date();
+    var datePart = d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate());
+    return datePart + "_Liste de Courses - " + APP_VERSION + ".json";
+  }
+
+  function doExport(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = exportFileName();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function doImport(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var data = JSON.parse(reader.result);
+        if (!data.lists || !data.catalog){
+          alert("Fichier invalide : structure inattendue.");
+          return;
+        }
+        if (!confirm("Importer ce fichier remplacera toutes les données actuelles. Continuer ?")) return;
+        state = data;
+        if (!state.theme) state.theme = "light";
+        if (!state.currentTab) state.currentTab = "liste";
+        if (state.catalogFilter === undefined) state.catalogFilter = "";
+        document.documentElement.setAttribute("data-theme", state.theme);
+        ensureCurrentList();
+        saveState();
+        render();
+      } catch(err){
+        alert("Impossible de lire ce fichier JSON.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function toggleTheme(){
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", state.theme);
+    document.getElementById("themeToggle").textContent = state.theme === "dark" ? "☀️" : "🌙";
+    saveState();
+  }
+
+  // polyfill closest (très anciens navigateurs)
+  if (!Element.prototype.closest){
+    Element.prototype.closest = function(selector){
+      var el = this;
+      while (el){
+        if (el.matches && el.matches(selector)) return el;
+        el = el.parentElement;
+      }
+      return null;
+    };
+  }
+
+  // ---------- Init ----------
+  document.addEventListener("DOMContentLoaded", function(){
+    loadState();
+    document.getElementById("app").addEventListener("click", onAppClick);
+    document.getElementById("app").addEventListener("change", onAppChange);
+    document.getElementById("app").addEventListener("keydown", onAppKeydown);
+    document.getElementById("lists-row").addEventListener("click", onAppClick);
+    document.getElementById("tabs").addEventListener("click", function(e){
+      var btn = e.target.closest("button[data-tab]");
+      if (!btn) return;
+      state.currentTab = btn.getAttribute("data-tab");
+      saveState();
+      render();
+    });
+    document.getElementById("list-name-input").addEventListener("change", onAppChange);
+    document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+    document.getElementById("themeToggle").textContent = state && state.theme === "dark" ? "☀️" : "🌙";
+    document.getElementById("btn-export").addEventListener("click", doExport);
+    document.getElementById("btn-import").addEventListener("click", function(){ document.getElementById("file-input").click(); });
+    document.getElementById("file-input").addEventListener("change", function(e){
+      if (e.target.files && e.target.files[0]) doImport(e.target.files[0]);
+      e.target.value = "";
+    });
+    render();
+    document.getElementById("themeToggle").textContent = state.theme === "dark" ? "☀️" : "🌙";
+  });
+
+})();
+</script>
+</body>
+</html>
