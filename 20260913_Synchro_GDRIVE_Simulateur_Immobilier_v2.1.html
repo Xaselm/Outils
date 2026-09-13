@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur Immobilier</title>
+<meta name="description" content="Simulateur de projet d'achat immobilier — mensualité, coût du crédit, amortissement, scénarios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg: #14211C;
+    --card: #F2EAD3;
+    --ink: #241C14;
+    --moss: #5B7A4A;
+    --ochre: #B8842E;
+    --brick: #9C3B2E;
+    --indigo: #3F5D7A;
+    --gold: #C9A227;
+    --teal: #3F7A6B;
+
+    --bg-raised: #1C2C25;
+    --card-dim: #C9BB98;
+    --text-strong: #F2EAD3;
+    --ink-soft: #5B5041;
+    --moss-ink: #3A4E2F;
+    --ochre-ink: #7A551C;
+    --brick-ink: #6E2A20;
+    --indigo-ink: #25384A;
+    --gold-ink: #8C6D14;
+    --teal-ink: #2A5147;
+    --line: rgba(36,28,20,0.16);
+    --line-dark: rgba(242,234,211,0.14);
+    --input-bg: #FBF5E4;
+    --chip-bg: rgba(242,234,211,0.12);
+    --chip-bg-card: rgba(36,28,20,0.05);
+    --ghost-hover-bg: rgba(242,234,211,0.06);
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+    --radius-s: 4px; --radius-m: 8px; --radius-l: 14px;
+
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+
+    --shadow-card: 0 1px 2px rgba(10,16,13,.4), 0 8px 20px -10px rgba(10,16,13,.55);
+    --shadow-modal: 0 24px 64px -20px rgba(0,0,0,.65);
+  }
+
+  [data-theme="light"] {
+    --bg: #E3D9BE;
+    --card: #FFFCF2;
+    --bg-raised: #EEE5CC;
+    --card-dim: #6B5D45;
+    --text-strong: #241C14;
+    --line-dark: rgba(36,28,20,0.14);
+    --chip-bg: rgba(36,28,20,0.08);
+    --chip-bg-card: rgba(36,28,20,0.05);
+    --ghost-hover-bg: rgba(36,28,20,0.05);
+    --shadow-card: 0 1px 2px rgba(60,48,24,.10), 0 8px 20px -10px rgba(60,48,24,.22);
+    --shadow-modal: 0 24px 64px -20px rgba(40,30,15,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text-strong);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    color-scheme: dark;
+    transition: background-color .2s ease, color .2s ease;
+  }
+  [data-theme="light"] body { color-scheme: light; }
+  .hidden { display: none !important; }
+  button, input, select { font: inherit; }
+
+  .app { max-width: 1400px; margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-8); }
+
+  /* ---------- Header ---------- */
+  .header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-5); }
+  .header-title { display: flex; align-items: center; gap: var(--space-3); }
+  .logo { width: 36px; height: 36px; color: var(--ochre); flex-shrink: 0; }
+  .header-title h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(24px, 3.2vw, 32px); color: var(--text-strong); margin: 0; letter-spacing: -0.01em; }
+  .tagline { margin: 3px 0 0; color: var(--card-dim); font-size: 12.5px; font-family: var(--font-mono); letter-spacing: 0.01em; }
+  .header-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+
+  .btn { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: var(--radius-m); border: 1px solid transparent; cursor: pointer; transition: transform .12s ease, background .15s ease, border-color .15s ease; white-space: nowrap; }
+  .btn svg { width: 14px; height: 14px; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--ochre); color: #1B1206; }
+  .btn-primary:hover { background: #C6934A; }
+  .btn-ghost { background: transparent; border-color: var(--line-dark); color: var(--text-strong); }
+  .btn-ghost:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
+  .btn-danger { background: var(--brick); color: var(--card); }
+  .btn-danger:hover { background: #B34838; }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+  .drive-btn { position: relative; }
+  .drive-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--card-dim); transition: background .2s ease; }
+  .drive-dot.is-connected { background: var(--moss); }
+  .drive-dot.is-syncing { background: var(--ochre); animation: drive-pulse 1s ease-in-out infinite; }
+  .drive-dot.is-error { background: var(--brick); }
+  @keyframes drive-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+  .theme-toggle { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: transparent; color: var(--text-strong); cursor: pointer; flex-shrink: 0; }
+  .theme-toggle:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
+  .theme-toggle svg { width: 17px; height: 17px; }
+
+  button:focus-visible, input:focus-visible, select:focus-visible, .tab:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+
+  /* ---------- Tabs ---------- */
+  .tabs { display: flex; gap: 6px; margin-bottom: var(--space-5); flex-wrap: wrap; }
+  .tab { padding: 9px 16px; border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: transparent; color: var(--text-strong); cursor: pointer; font-weight: 600; font-size: 13.5px; }
+  .tab:hover { background: var(--ghost-hover-bg); }
+  .tab.active { background: var(--ochre); border-color: var(--ochre); color: #1B1206; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ---------- Layout ---------- */
+  .layout { display: grid; grid-template-columns: 380px 1fr; gap: var(--space-5); align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); padding: 20px 22px; box-shadow: var(--shadow-card); margin-bottom: var(--space-5); }
+  .panel-card h2 { font-family: var(--font-display); font-size: 18px; margin: 0 0 14px; color: var(--ink); }
+  .panel-card h3.subhead { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); margin: 18px 0 10px; font-weight: 700; }
+  .panel-card h3.subhead:first-of-type { margin-top: 0; }
+
+  /* ---------- Param controls ---------- */
+  .param-row { margin-bottom: 14px; }
+  .param-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--ink); }
+  .param-controls { display: flex; align-items: center; gap: 10px; }
+  .param-slider { flex: 1; accent-color: var(--ochre); height: 4px; }
+  .param-input-wrap { display: flex; align-items: center; gap: 4px; background: var(--input-bg); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 5px 8px; flex-shrink: 0; }
+  .param-number { width: 78px; border: none; background: transparent; font-weight: 600; text-align: right; color: var(--ink); font-family: var(--font-mono); font-size: 13px; }
+  .param-number:focus { outline: none; }
+  .param-unit { font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+  .param-hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+  .param-select, .param-text { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--input-bg); color: var(--ink); font-size: 13px; }
+  .param-checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 14px; color: var(--ink); }
+  .param-checkbox-row input { width: 16px; height: 16px; accent-color: var(--ochre); }
+
+  .advanced-toggle { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--ochre-ink); font-weight: 700; font-size: 12.5px; cursor: pointer; padding: 8px 0; text-transform: uppercase; letter-spacing: .04em; }
+  .advanced-toggle svg { width: 13px; height: 13px; transition: transform .15s ease; }
+  .advanced-toggle.open svg { transform: rotate(90deg); }
+  .advanced-body { display: none; }
+  .advanced-body.open { display: block; }
+
+  .computed-line { font-size: 12.5px; color: var(--ink-soft); background: var(--chip-bg-card); padding: 9px 11px; border-radius: var(--radius-s); margin-bottom: 16px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .computed-line b { color: var(--ink); font-family: var(--font-mono); }
+
+  /* ---------- Dashboard ---------- */
+  .pilotage-panel { border: 1.5px solid var(--ochre); }
+  .pilotage-panel h2 { margin: 0 0 4px; }
+  .pilotage-panel .chart-desc { font-size: 11.5px; color: var(--ink-soft); margin-bottom: 14px; }
+  .pilot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 16px 22px; margin-bottom: 14px; }
+  .pilot-readouts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pilot-readouts .stat-card { flex: 1 1 140px; margin: 0; }
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px,1fr)); gap: 10px; margin-bottom: var(--space-5); }
+  .stat-card { background: var(--card); color: var(--ink); border-radius: var(--radius-m); padding: 12px 14px; box-shadow: var(--shadow-card); border-left: 4px solid var(--ochre); }
+  .stat-card .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); font-weight: 700; }
+  .stat-card .stat-value { font-family: var(--font-mono); font-size: 19px; font-weight: 700; margin-top: 4px; line-height: 1.2; }
+  .stat-card .stat-sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .stat-card.a-moss { border-left-color: var(--moss); }
+  .stat-card.a-brick { border-left-color: var(--brick); }
+  .stat-card.a-indigo { border-left-color: var(--indigo); }
+  .stat-card.a-gold { border-left-color: var(--gold); }
+
+  .quickactions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space-5); }
+
+  /* ---------- Charts ---------- */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+  @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); padding: 16px 18px; box-shadow: var(--shadow-card); margin-bottom: var(--space-5); }
+  .chart-card h3 { margin: 0 0 4px; font-size: 14.5px; font-family: var(--font-display); font-weight: 600; }
+  .chart-card .chart-desc { font-size: 11.5px; color: var(--ink-soft); margin-bottom: 10px; }
+  svg.chart { width: 100%; height: auto; overflow: visible; display: block; }
+  .chart-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; margin-top: 8px; color: var(--ink); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+  .chart-toolbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .metric-btn { padding: 5px 10px; font-size: 11.5px; font-weight: 700; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink-soft); cursor: pointer; }
+  .metric-btn.active { background: var(--ochre); border-color: var(--ochre); color: #1B1206; }
+  .chart-pt { cursor: pointer; }
+  .chart-pt:hover { r: 5.5; }
+  .detail-panel { margin-top: 10px; font-size: 13px; background: var(--chip-bg-card); padding: 10px 12px; border-radius: var(--radius-s); display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: 8px; }
+  .detail-panel .dp-item .dp-label { font-size: 10.5px; text-transform: uppercase; color: var(--ink-soft); }
+  .detail-panel .dp-item .dp-value { font-family: var(--font-mono); font-weight: 700; }
+
+  /* ---------- Table ---------- */
+  .table-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; justify-content: space-between; }
+  .table-toolbar .seg { display: flex; border: 1px solid var(--line); border-radius: var(--radius-m); overflow: hidden; }
+  .seg button { border: none; background: transparent; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--ink-soft); }
+  .seg button.active { background: var(--ochre); color: #1B1206; }
+  .table-scroll { max-height: 460px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-m); }
+  table.amort-table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-family: var(--font-mono); }
+  table.amort-table th, table.amort-table td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  table.amort-table th { position: sticky; top: 0; background: var(--card); color: var(--ink-soft); font-size: 10.5px; text-transform: uppercase; z-index: 1; }
+  table.amort-table th:first-child, table.amort-table td:first-child { text-align: left; }
+  table.amort-table tr.row-year-end td { border-bottom: 2px solid var(--card-dim); }
+  table.amort-table tfoot td { font-weight: 700; background: var(--chip-bg-card); position: sticky; bottom: 0; }
+
+  /* ---------- Analysis ---------- */
+  .analysis-list { list-style: none; padding: 0; margin: 0; }
+  .analysis-list li { padding: 11px 13px; background: var(--chip-bg-card); border-radius: var(--radius-s); margin-bottom: 8px; font-size: 13.5px; border-left: 3px solid var(--indigo); }
+
+  /* ---------- Comparison / Et si ---------- */
+  .comparison-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .comparison-table th, .comparison-table td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: right; font-family: var(--font-mono); }
+  .comparison-table th:first-child, .comparison-table td:first-child { text-align: left; font-family: var(--font-body); font-weight: 600; }
+  .comparison-table thead th { font-family: var(--font-body); text-transform: uppercase; font-size: 10.5px; color: var(--ink-soft); }
+  .delta-pos { color: var(--moss-ink); font-weight: 700; }
+  .delta-neg { color: var(--brick-ink); font-weight: 700; }
+  .delta-flat { color: var(--ink-soft); }
+  .comparison-table td.cell-min { outline: 2px solid var(--moss); outline-offset: -2px; }
+  .comparison-table td.cell-max { outline: 2px solid var(--brick); outline-offset: -2px; }
+  .chart-annotation { margin-top: 10px; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--card-dim); font-size: 14px; }
+  .empty-state svg { width: 44px; height: 44px; margin-bottom: 12px; opacity: .5; }
+
+  /* ---------- Scenarios ---------- */
+  .scenario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; margin-bottom: var(--space-5); }
+  .scenario-card { background: var(--card); color: var(--ink); border-radius: var(--radius-m); padding: 14px 16px; box-shadow: var(--shadow-card); border-top: 3px solid var(--ochre); }
+  .scenario-card h4 { margin: 0 0 8px; font-size: 14px; font-family: var(--font-display); }
+  .scenario-card .sc-line { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); padding: 2px 0; }
+  .scenario-card .sc-line b { color: var(--ink); font-family: var(--font-mono); }
+  .scenario-card .sc-actions { display: flex; gap: 6px; margin-top: 10px; }
+  .save-scenario-row { display: flex; gap: 8px; margin-bottom: var(--space-5); }
+  .save-scenario-row input { flex: 1; padding: 9px 12px; border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: var(--card); color: var(--ink); }
+
+  /* ---------- Sensitivity ---------- */
+  .sensitivity-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  table.sensitivity-table { border-collapse: collapse; font-size: 12.5px; font-family: var(--font-mono); }
+  table.sensitivity-table th, table.sensitivity-table td { border: 1px solid var(--line); padding: 8px 10px; text-align: center; }
+  table.sensitivity-table th { background: var(--chip-bg-card); font-family: var(--font-body); font-weight: 700; }
+  table.sensitivity-table td.current-cell { outline: 2px solid var(--indigo); outline-offset: -2px; }
+
+  footer.app-footer { text-align: center; color: var(--card-dim); font-size: 12px; padding: 24px 0 0; }
+  #file-input { display: none; }
+
+  @media (max-width: 640px) {
+    .dashboard-grid { grid-template-columns: repeat(2,1fr); }
+    .param-controls { flex-wrap: wrap; }
+    .param-input-wrap { width: 100%; justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="header-title">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"></path></svg>
+      <div>
+        <h1>Simulateur Immobilier</h1>
+        <p class="tagline">Projet d'achat — crédit, amortissement &amp; scénarios</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-export" title="Exporter les données (JSON)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Exporter
+      </button>
+      <label class="btn btn-ghost" title="Importer des données (JSON)" for="file-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        Importer
+      </label>
+      <input type="file" id="file-input" accept="application/json">
+      <button class="btn btn-ghost drive-btn" id="btn-drive-connect" title="Connecter Google Drive">
+        <span id="drive-dot" class="drive-dot"></span>
+        <span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btn-drive-force" title="Forcer la synchronisation">Forcer synchro</button>
+      <button id="btn-theme-toggle" class="theme-toggle" title="Passer en mode clair" aria-label="Passer en mode clair"></button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs" aria-label="Navigation">
+    <button class="tab active" data-tab="simulateur">Simulateur</button>
+    <button class="tab" data-tab="etsi">Et si ?</button>
+    <button class="tab" data-tab="scenarios">Scénarios</button>
+    <button class="tab" data-tab="sensibilite">Sensibilité</button>
+    <button class="tab" data-tab="guide">Mode d'emploi</button>
+  </nav>
+
+  <!-- ===================== TAB : SIMULATEUR ===================== -->
+  <section class="tab-panel active" id="tab-simulateur">
+    <div class="layout">
+      <div id="params-column"></div>
+      <div id="results-column">
+        <div id="pilotage-panel" class="panel-card pilotage-panel"></div>
+        <div id="dashboard" class="dashboard-grid"></div>
+        <div id="quickactions" class="quickactions"></div>
+        <div class="chart-grid">
+          <div class="chart-card"><h3>Capital restant dû</h3><p class="chart-desc">Évolution du capital restant dû sur la durée du prêt.</p><div id="chart-crd"></div><div id="detail-crd"></div></div>
+          <div class="chart-card"><h3>Capital vs intérêts</h3><p class="chart-desc">Cumul du capital remboursé et des intérêts payés.</p><div id="chart-capint"></div><div id="detail-capint"></div></div>
+          <div class="chart-card"><h3>Composition du coût total</h3><p class="chart-desc">Répartition des postes de dépense du projet.</p><div id="chart-composition"></div></div>
+          <div class="chart-card">
+            <h3>Impact du taux</h3><p class="chart-desc">À montant et durée constants, selon le taux du crédit.</p>
+            <div class="chart-toolbar" id="metric-taux"></div>
+            <div id="chart-taux"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Impact de la durée</h3><p class="chart-desc">À montant et taux constants, selon la durée du crédit.</p>
+            <div class="chart-toolbar" id="metric-duree"></div>
+            <div id="chart-duree"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Impact de l'apport</h3><p class="chart-desc">À prix et durée constants, selon le montant de l'apport.</p>
+            <div class="chart-toolbar" id="metric-apport"></div>
+            <div id="chart-apport"></div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <h2>Analyse de la simulation</h2>
+          <ul class="analysis-list" id="analysis-list"></ul>
+        </div>
+        <div class="panel-card">
+          <h2>Tableau d'amortissement</h2>
+          <div class="table-toolbar">
+            <div class="seg" id="seg-view">
+              <button class="active" data-view="mensuel">Mensuel</button>
+              <button data-view="annuel">Annuel</button>
+            </div>
+            <input type="text" class="param-text" id="table-search" placeholder="Rechercher un mois / une année…" style="max-width:240px;">
+          </div>
+          <div class="table-scroll"><table class="amort-table" id="amort-table"></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB : ET SI ===================== -->
+  <section class="tab-panel" id="tab-etsi">
+    <div class="panel-card">
+      <h2>Mode « Et si ? »</h2>
+      <div class="quickactions">
+        <button class="btn btn-primary btn-sm" id="btn-save-reference">Enregistrer la simulation actuelle comme référence</button>
+        <button class="btn btn-ghost btn-sm" id="btn-swap-reference">Basculer référence ⇄ actuel</button>
+        <button class="btn btn-ghost btn-sm" id="btn-clear-reference">Effacer la référence</button>
+      </div>
+      <div id="etsi-content"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB : SCENARIOS ===================== -->
+  <section class="tab-panel" id="tab-scenarios">
+    <div class="panel-card">
+      <h2>Scénarios enregistrés</h2>
+      <div class="save-scenario-row">
+        <input type="text" class="param-text" id="scenario-name-input" placeholder="Nom du scénario (ex : 25 ans / 3,2 % / 50 000 € d'apport)">
+        <button class="btn btn-primary btn-sm" id="btn-save-scenario">Enregistrer le scénario actuel</button>
+      </div>
+      <div id="scenario-grid" class="scenario-grid"></div>
+    </div>
+    <div class="panel-card">
+      <h2>Comparaison des scénarios</h2>
+      <label class="param-checkbox-row"><input type="checkbox" id="chk-include-current" checked> Inclure la simulation actuelle dans la comparaison</label>
+      <div class="table-scroll" id="scenario-comparison"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB : SENSIBILITE ===================== -->
+  <section class="tab-panel" id="tab-sensibilite">
+    <div class="panel-card">
+      <h2>Analyse de sensibilité</h2>
+      <div class="sensitivity-controls">
+        <div class="seg" id="seg-sens-axes">
+          <button class="active" data-axes="taux-duree">Taux × Durée</button>
+          <button data-axes="apport-taux">Apport × Taux</button>
+          <button data-axes="apport-duree">Apport × Durée</button>
+        </div>
+        <div class="chart-toolbar" id="metric-sensibilite"></div>
+      </div>
+      <div class="table-scroll" id="sensitivity-table-wrap"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB : MODE D'EMPLOI ===================== -->
+  <section class="tab-panel" id="tab-guide">
+    <div class="panel-card">
+      <h2>Prendre en main le simulateur</h2>
+      <p class="chart-desc">Ce simulateur est un outil d'aide à la réflexion, pas un devis bancaire ou notarial. Toutes les valeurs affichées sont recalculées en direct par un seul et même moteur de calcul, à partir des paramètres que vous renseignez.</p>
+
+      <h3>Pilotage rapide</h3>
+      <p>En haut de l'onglet <b>Simulateur</b>, trois curseurs (taux, durée, apport) donnent une vue immédiate des résultats clés : montant emprunté, mensualité, intérêts, coût du crédit, coût total du projet. Ils sont reliés aux mêmes curseurs que ceux du panneau de paramètres à gauche : les deux se mettent à jour ensemble.</p>
+
+      <h3>Paramètres principaux et avancés</h3>
+      <p>Les champs les plus courants (prix, apport, travaux, type de bien, taux, durée, assurance, revenus) sont visibles directement. Les réglages plus spécifiques (frais de dossier, garantie, courtage, quotités, coefficient des revenus locatifs, pas des graphiques…) sont regroupés sous « Paramètres avancés » pour ne pas surcharger l'écran.</p>
+
+      <h3>Financement des frais</h3>
+      <ul class="analysis-list">
+        <li>Chaque poste de frais (acquisition, agence, dossier, garantie, courtage, autres) peut être payé avec l'apport ou financé dans le prêt, via une case à cocher dédiée.</li>
+        <li>Les frais non financés sont prélevés en priorité sur l'apport. Si l'apport ne suffit pas à les couvrir, un message d'avertissement l'indique clairement.</li>
+        <li>Important : si votre apport est largement supérieur aux frais non financés, cocher ou décocher un poste ne change pas le montant total emprunté — c'est normal, cela ne fait que réaffecter un même euro entre « apport » et « crédit ». L'effet devient visible précisément quand l'apport est tout juste suffisant.</li>
+      </ul>
+
+      <h3>Hypothèses de simulation à connaître</h3>
+      <ul class="analysis-list">
+        <li><b>Frais d'acquisition</b> : estimés à partir d'un taux forfaitaire selon que le bien est ancien (≈ 7,5 % du prix net vendeur) ou neuf (≈ 2,5 %). Ce sont des ordres de grandeur usuels, pas un calcul notarial définitif — vous pouvez aussi saisir un taux personnalisé.</li>
+        <li><b>Frais d'agence</b> : s'ils sont à la charge de l'acquéreur, ils sont déduits du prix affiché pour calculer l'assiette des frais d'acquisition (convention usuelle, pas une règle notariale exacte) et restent à votre charge dans le coût total. S'ils sont à la charge du vendeur, ils n'augmentent pas votre coût.</li>
+        <li><b>Taux d'endettement crédit estimé</b> : (mensualité du nouveau crédit + autres crédits) / revenus retenus. Les charges mensuelles n'entrent pas dans ce taux ; elles sont prises en compte séparément dans le reste à vivre. Indicateur informatif — les méthodes de calcul et les seuils varient réellement d'une banque à l'autre.</li>
+        <li><b>Coût du crédit pour 100 000 € empruntés</b> : un repère simple pour comparer des offres de crédit indépendamment du montant emprunté.</li>
+      </ul>
+
+      <h3>Mode « Et si ? »</h3>
+      <p>Enregistrez la simulation actuelle comme référence, puis modifiez librement vos paramètres : l'onglet « Et si ? » affiche une synthèse visuelle (mensualité, intérêts, coût total) et un tableau complet comparant référence, situation actuelle et écarts.</p>
+
+      <h3>Scénarios</h3>
+      <p>Sauvegardez autant de combinaisons de paramètres que nécessaire, donnez-leur un nom, dupliquez-les, renommez-les ou définissez-en un comme référence. Le tableau de comparaison des scénarios met en évidence (sans juger d'un « meilleur » choix) la valeur la plus basse et la plus haute de chaque ligne.</p>
+
+      <h3>Sensibilité</h3>
+      <p>Les matrices Taux × Durée, Apport × Taux et Apport × Durée se recentrent automatiquement autour de votre situation actuelle ; la cellule qui vous correspond est toujours entourée.</p>
+
+      <h3>Sauvegarde de vos données</h3>
+      <ul class="analysis-list">
+        <li>Vos données sont stockées localement dans ce navigateur (localStorage) — elles ne partent sur aucun serveur.</li>
+        <li>Le bouton de synchronisation Google Drive (en haut à droite) permet de sauvegarder et retrouver vos données sur plusieurs appareils.</li>
+        <li>Les boutons Export / Import JSON permettent de sauvegarder un fichier de secours ou de transférer vos données manuellement.</li>
+        <li>Si vous avez utilisé une version antérieure de cet outil, vos anciens paramètres, votre référence et vos scénarios sont automatiquement repris lors du premier chargement de cette version.</li>
+      </ul>
+
+      <h3>Ce que ce simulateur ne fait pas (volontairement)</h3>
+      <p class="param-hint">Pour rester simple et fiable, cette version ne modélise pas : le prêt à taux zéro (PTZ), le prêt relais, la fiscalité locative, le remboursement anticipé ou la renégociation de crédit. Ce sont des pistes possibles pour une future version.</p>
+    </div>
+  </section>
+
+  <footer class="app-footer">Outil autonome — données stockées dans ce navigateur (localStorage). Pense à exporter régulièrement pour sauvegarder / transférer tes données.</footer>
+</div>
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — se branche sur la clé
+   localStorage existante de l'appli (APP_STORAGE_KEY) au lieu de la
+   remplacer. Réutilisable : changer APP_NS pour un autre outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'immobilier';
+  var APP_STORAGE_KEY = 'axelSimImmo_v1'; /* doit rester identique au STORAGE_KEY du script principal */
+  var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
+  var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  function getLocalRecord() {
+    var value = null;
+    try { value = localStorage.getItem(APP_STORAGE_KEY); } catch (e) { value = null; }
+    if (!value) return null;
+    var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10);
+    if (!modified) modified = Date.now();
+    return { value: value, modified: modified };
+  }
+
+  function setLocalRecord(value, modified) {
+    try {
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connect\u00E9', connected: 'Drive : connect\u00E9', ok: 'Drive : synchronis\u00E9', sync: 'Drive : synchro\u2026', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName() { return 'storage__' + APP_NS + '__state.json'; }
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  function driveCreateFile(record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(record) {
+    return driveFindFile().then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(record); });
+  }
+
+  async function syncFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var local = getLocalRecord();
+      var existing = await driveFindFile();
+      if (!existing) {
+        if (local) await drivePushRecord(local);
+        setSyncStatus('ok');
+        return;
+      }
+      var remote = await driveGetRecord(existing.id);
+      if (!remote) { setSyncStatus('ok'); return; }
+
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        setLocalRecord(remote.value, remote.modified);
+        setSyncStatus('ok');
+        if (changed) {
+          setSyncStatus('sync');
+          setTimeout(function () { location.reload(); }, 700);
+        }
+      } else if (local.modified > remote.modified) {
+        await driveUpdateFile(existing.id, local);
+        setSyncStatus('ok');
+      } else {
+        setSyncStatus('ok');
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord \u00E0 Drive (bouton "Drive : non connect\u00E9").'); return; }
+      var local = getLocalRecord();
+      if (!local) { alert('Rien en local \u00E0 synchroniser.'); return; }
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () {
+        setSyncStatus('ok');
+        alert('Synchro forc\u00E9e : OK (' + Math.round(local.value.length / 1024) + ' Ko envoy\u00E9s)');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        alert('Erreur : ' + e.message);
+      });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  window.__driveNotifySave = function () {
+    var modified = Date.now();
+    localStorage.setItem(MODIFIED_KEY, String(modified));
+    if (hasValidToken()) {
+      var local = getLocalRecord();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] \u00C9chec de la sauvegarde vers Drive :', e);
+      });
+    }
+  };
+})();
+
+</script>
+<script>
+(function () {
+"use strict";
+
+/* ======================= Polyfills ======================= */
+if (!Element.prototype.matches) {
+  Element.prototype.matches = Element.prototype.matchesSelector || Element.prototype.webkitMatchesSelector || Element.prototype.mozMatchesSelector || Element.prototype.msMatchesSelector;
+}
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function (selector) {
+    var el = this;
+    while (el) { if (el.matches && el.matches(selector)) return el; el = el.parentElement; }
+    return null;
+  };
+}
+
+/* ======================= Formatters ======================= */
+function fmtEUR(n) {
+  if (!isFinite(n) || isNaN(n)) n = 0;
+  n = Math.round(n);
+  var neg = n < 0;
+  n = Math.abs(n);
+  var s = String(n);
+  var out = "";
+  while (s.length > 3) { out = " " + s.slice(-3) + out; s = s.slice(0, -3); }
+  out = s + out;
+  return (neg ? "-" : "") + out + " \u20AC";
+}
+function fmtEURShort(v) {
+  if (!isFinite(v) || isNaN(v)) v = 0;
+  if (Math.abs(v) >= 1000) return Math.round(v / 1000) + "k\u20AC";
+  return Math.round(v) + "\u20AC";
+}
+function fmtDeltaEUR(d) { return (d >= 0 ? "+" : "") + fmtEUR(d); }
+function fmtDeltaPct(d) { if (!isFinite(d) || isNaN(d)) d = 0; return (d >= 0 ? "+" : "") + d.toFixed(1).replace(".", ",") + " pt"; }
+function fmtPct(n, decimals) {
+  if (!isFinite(n) || isNaN(n)) n = 0;
+  if (decimals === undefined) decimals = 2;
+  return n.toFixed(decimals).replace(".", ",") + " %";
+}
+function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+function uid() { return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8); }
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+function escapeHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function emptyStateHtml(msg) { return '<div class="empty-state"><p>' + escapeHtml(msg) + "</p></div>"; }
+
+/* ============================================================
+   ============================================================
+   MOTEUR DE CALCUL (voir aussi le panneau d'aide dans l'app)
+   ============================================================
+   ============================================================ */
+var APP_VERSION = "v2.1";
+
+var FRAIS_ACQUISITION_HYPOTHESES = { ancien: 7.5, neuf: 2.5 };
+var FRAIS_ACQUISITION_LABELS = {
+  ancien: "Ancien \u2014 hypoth\u00E8se 7,5 % du prix net vendeur (\u00E9moluments + droits de mutation, ordre de grandeur usuel)",
+  neuf: "Neuf \u2014 hypoth\u00E8se 2,5 % du prix net vendeur (TVA d\u00E9j\u00E0 incluse dans le prix, frais r\u00E9duits)"
+};
+
+var RANGE_POINTS = { chartTaux: 4, chartDuree: 2, chartApport: 4, sensTaux: 2, sensDuree: 2, sensApport: 2 };
+
+var PARAM_DEFS = [
+  { key: "prixBien", section: "projet", advanced: false, label: "Prix du bien", min: 50000, max: 1500000, step: 1000, unit: "\u20AC", def: 250000 },
+  { key: "apport", section: "projet", advanced: false, label: "Apport personnel", min: 0, max: 500000, step: 1000, unit: "\u20AC", def: 30000 },
+  { key: "travaux", section: "projet", advanced: false, label: "Travaux", min: 0, max: 200000, step: 500, unit: "\u20AC", def: 0 },
+  { key: "fraisAgenceMontant", section: "projet", advanced: true, label: "Montant des frais d'agence", min: 0, max: 50000, step: 500, unit: "\u20AC", def: 0 },
+  { key: "fraisAcquisitionPct", section: "projet", advanced: true, label: "Taux personnalis\u00E9 (si activ\u00E9 ci-dessous)", min: 0, max: 15, step: 0.1, unit: "%", def: 7.5 },
+  { key: "autresFrais", section: "projet", advanced: true, label: "Autres frais", min: 0, max: 50000, step: 500, unit: "\u20AC", def: 0 },
+
+  { key: "tauxCredit", section: "credit", advanced: false, label: "Taux du cr\u00E9dit", min: 0.5, max: 7, step: 0.05, unit: "%", def: 3.2 },
+  { key: "dureeAnnees", section: "credit", advanced: false, label: "Dur\u00E9e", min: 5, max: 30, step: 1, unit: "ans", def: 25 },
+  { key: "emprunteur1TauxAssurance", section: "credit", advanced: false, label: "Assurance \u2014 taux (emprunteur 1)", min: 0, max: 1, step: 0.01, unit: "%", def: 0.34 },
+  { key: "emprunteur1Quotite", section: "credit", advanced: true, label: "Assurance \u2014 quotit\u00E9 (emprunteur 1)", min: 0, max: 100, step: 5, unit: "%", def: 100 },
+  { key: "emprunteur2TauxAssurance", section: "credit", advanced: true, label: "Assurance \u2014 taux (emprunteur 2)", min: 0, max: 1, step: 0.01, unit: "%", def: 0.34 },
+  { key: "emprunteur2Quotite", section: "credit", advanced: true, label: "Assurance \u2014 quotit\u00E9 (emprunteur 2)", min: 0, max: 100, step: 5, unit: "%", def: 100 },
+  { key: "fraisDossier", section: "credit", advanced: true, label: "Frais de dossier", min: 0, max: 5000, step: 50, unit: "\u20AC", def: 1000 },
+  { key: "fraisGarantie", section: "credit", advanced: true, label: "Frais de garantie", min: 0, max: 5000, step: 50, unit: "\u20AC", def: 1500 },
+  { key: "fraisCourtage", section: "credit", advanced: true, label: "Frais de courtage", min: 0, max: 5000, step: 50, unit: "\u20AC", def: 0 },
+
+  { key: "revenuPrincipal", section: "situation", advanced: false, label: "Revenus mensuels", min: 0, max: 15000, step: 100, unit: "\u20AC", def: 2500 },
+  { key: "revenuCoemprunteur", section: "situation", advanced: true, label: "Revenus du co-emprunteur", min: 0, max: 15000, step: 100, unit: "\u20AC", def: 0 },
+  { key: "revenuLocatif", section: "situation", advanced: true, label: "Revenus locatifs", min: 0, max: 5000, step: 50, unit: "\u20AC", def: 0 },
+  { key: "coefficientRevenuLocatif", section: "situation", advanced: true, label: "Part des revenus locatifs retenue", min: 0, max: 100, step: 5, unit: "%", def: 70 },
+  { key: "chargesMensuelles", section: "situation", advanced: true, label: "Charges mensuelles", min: 0, max: 5000, step: 50, unit: "\u20AC", def: 0 },
+  { key: "autresCredits", section: "situation", advanced: true, label: "Autres cr\u00E9dits", min: 0, max: 3000, step: 50, unit: "\u20AC", def: 0 },
+
+  { key: "tauxPlagePas", section: "plages", advanced: true, label: "Pas du graphique \u2014 taux", min: 0.05, max: 1, step: 0.05, unit: "%", def: 0.25 },
+  { key: "dureePlagePas", section: "plages", advanced: true, label: "Pas du graphique \u2014 dur\u00E9e", min: 1, max: 10, step: 1, unit: "ans", def: 5 },
+  { key: "apportPlagePas", section: "plages", advanced: true, label: "Pas du graphique \u2014 apport", min: 1000, max: 100000, step: 1000, unit: "\u20AC", def: 20000 }
+];
+
+var CHOICE_DEFS = [
+  { key: "typeBien", label: "Type de bien", options: [{ v: "ancien", l: "Ancien" }, { v: "neuf", l: "Neuf" }], def: "ancien" },
+  { key: "agenceCharge", label: "Agence \u00E0 la charge de", options: [{ v: "acquereur", l: "L'acqu\u00E9reur" }, { v: "vendeur", l: "Le vendeur" }], def: "acquereur" },
+  { key: "nombreEmprunteurs", label: "Nombre d'emprunteurs", options: [{ v: 1, l: "1" }, { v: 2, l: "2" }], def: 1 },
+  { key: "assuranceBase", label: "Base de calcul de l'assurance", options: [{ v: "initial", l: "Capital initial" }, { v: "crd", l: "Capital restant d\u00FB" }], def: "initial" }
+];
+
+var FLAG_DEFS = [
+  { key: "utiliserTauxAcquisitionPersonnalise", label: "Utiliser un taux de frais d'acquisition personnalis\u00E9 (plut\u00F4t que l'hypoth\u00E8se par type de bien)", def: false },
+  { key: "financerFraisAcquisition", label: "Financer les frais d'acquisition dans le pr\u00EAt", def: false },
+  { key: "financerFraisAgence", label: "Financer les frais d'agence dans le pr\u00EAt", def: false },
+  { key: "financerFraisDossier", label: "Financer les frais de dossier dans le pr\u00EAt", def: true },
+  { key: "financerFraisGarantie", label: "Financer les frais de garantie dans le pr\u00EAt", def: true },
+  { key: "financerFraisCourtage", label: "Financer les frais de courtage dans le pr\u00EAt", def: true },
+  { key: "financerAutresFrais", label: "Financer les autres frais dans le pr\u00EAt", def: false }
+];
+
+function findDef(key) { for (var i = 0; i < PARAM_DEFS.length; i++) { if (PARAM_DEFS[i].key === key) return PARAM_DEFS[i]; } return null; }
+function decimalsFor(def) { if (!def) return 0; return def.step < 1 ? (def.step < 0.1 ? 2 : 1) : 0; }
+function numToStr(v, decimals) { if (v === undefined || v === null || isNaN(v)) v = 0; return Number(v).toFixed(decimals); }
+function defsFor(section, advanced) {
+  var out = [];
+  for (var i = 0; i < PARAM_DEFS.length; i++) { if (PARAM_DEFS[i].section === section && !!PARAM_DEFS[i].advanced === !!advanced) out.push(PARAM_DEFS[i]); }
+  return out;
+}
+
+function defaultParams() {
+  var p = {};
+  for (var i = 0; i < PARAM_DEFS.length; i++) p[PARAM_DEFS[i].key] = PARAM_DEFS[i].def;
+  for (var j = 0; j < CHOICE_DEFS.length; j++) p[CHOICE_DEFS[j].key] = CHOICE_DEFS[j].def;
+  for (var k = 0; k < FLAG_DEFS.length; k++) p[FLAG_DEFS[k].key] = FLAG_DEFS[k].def;
+  return p;
+}
+
+function clampParam(key, value) {
+  var def = findDef(key);
+  if (!def) return value;
+  if (value === null || value === undefined || isNaN(value)) return def.def;
+  if (value < def.min) value = def.min;
+  if (value > def.max) value = def.max;
+  return value;
+}
+
+function mergeParams(pp) {
+  var d = defaultParams();
+  pp = pp || {};
+  for (var k in d) { if (pp[k] !== undefined) d[k] = pp[k]; }
+  return d;
+}
+
+/* --- Migration V1 -> V2 : ne jamais perdre de donn\u00E9es existantes --- */
+function migrateParamsV1toV2(oldParams) {
+  if (!oldParams) return defaultParams();
+  var p = defaultParams();
+  ["prixBien", "apport", "travaux", "autresFrais", "tauxCredit", "dureeAnnees",
+   "fraisDossier", "fraisGarantie", "fraisCourtage", "revenuPrincipal",
+   "revenuCoemprunteur", "revenuLocatif", "chargesMensuelles", "autresCredits"].forEach(function (k) {
+    if (oldParams[k] !== undefined) p[k] = oldParams[k];
+  });
+  if (oldParams.fraisAgence !== undefined) p.fraisAgenceMontant = oldParams.fraisAgence;
+  if (oldParams.tauxAssurance !== undefined) p.emprunteur1TauxAssurance = oldParams.tauxAssurance;
+  if (oldParams.quotite !== undefined) p.emprunteur1Quotite = oldParams.quotite;
+  if (oldParams.assuranceBase !== undefined) p.assuranceBase = oldParams.assuranceBase;
+  if (oldParams.fraisAcquisitionPct !== undefined) {
+    p.fraisAcquisitionPct = oldParams.fraisAcquisitionPct;
+    p.utiliserTauxAcquisitionPersonnalise = Math.abs(oldParams.fraisAcquisitionPct - 7.5) > 1e-9;
+  }
+  p.typeBien = "ancien";
+  p.agenceCharge = "acquereur";
+  p.nombreEmprunteurs = 1;
+  var financerAnnexes = oldParams.financerFraisAnnexes !== undefined ? !!oldParams.financerFraisAnnexes : true;
+  p.financerFraisDossier = financerAnnexes;
+  p.financerFraisGarantie = financerAnnexes;
+  p.financerFraisCourtage = financerAnnexes;
+  p.financerFraisAcquisition = false;
+  p.financerFraisAgence = false;
+  p.financerAutresFrais = false;
+  return p;
+}
+
+/* ============================================================
+   MOTEUR DE CALCUL DU CREDIT (multi-emprunteurs)
+   ============================================================ */
+function computeLoanSchedule(montant, tauxAnnuelPct, dureeAnnees, emprunteurs, assuranceBase) {
+  var result = { schedule: [], mensualiteHorsAssurance: 0, mensualiteInitiale: 0, interetsTotal: 0, assuranceTotal: 0, capitalTotal: 0, coutCredit: 0 };
+  montant = Math.max(0, montant || 0);
+  var n = Math.round((dureeAnnees || 0) * 12);
+  emprunteurs = emprunteurs && emprunteurs.length ? emprunteurs : [{ taux: 0, quotite: 100 }];
+  if (montant <= 0 || !isFinite(n) || n <= 0) return result;
+
+  var tauxMensuel = (tauxAnnuelPct || 0) / 100 / 12;
+  if (!isFinite(tauxMensuel) || tauxMensuel < 0) tauxMensuel = 0;
+
+  var tauxAssuranceMensuelCombine = 0;
+  for (var e = 0; e < emprunteurs.length; e++) {
+    tauxAssuranceMensuelCombine += ((emprunteurs[e].taux || 0) / 100) * ((emprunteurs[e].quotite || 0) / 100) / 12;
+  }
+  if (!isFinite(tauxAssuranceMensuelCombine) || tauxAssuranceMensuelCombine < 0) tauxAssuranceMensuelCombine = 0;
+
+  var mensualiteHA;
+  if (Math.abs(tauxMensuel) < 1e-9) {
+    mensualiteHA = montant / n;
+  } else {
+    mensualiteHA = montant * tauxMensuel / (1 - Math.pow(1 + tauxMensuel, -n));
+  }
+  if (!isFinite(mensualiteHA) || isNaN(mensualiteHA)) mensualiteHA = 0;
+  result.mensualiteHorsAssurance = mensualiteHA;
+
+  var crd = montant;
+  var interetsTotal = 0, assuranceTotal = 0, capitalTotal = 0;
+
+  for (var m = 1; m <= n; m++) {
+    var interet = crd * tauxMensuel;
+    var capital = mensualiteHA - interet;
+    if (m === n || capital > crd || capital < 0) capital = crd;
+
+    var assuranceMois = (assuranceBase === "crd" ? crd : montant) * tauxAssuranceMensuelCombine;
+    var crdApres = crd - capital;
+    if (crdApres < 0.005) crdApres = 0;
+
+    var mensualiteMois = capital + interet + assuranceMois;
+    result.schedule.push({ mois: m, mensualite: mensualiteMois, capital: capital, interets: interet, assurance: assuranceMois, crd: crdApres });
+
+    interetsTotal += interet;
+    assuranceTotal += assuranceMois;
+    capitalTotal += capital;
+    crd = crdApres;
+  }
+
+  result.interetsTotal = interetsTotal;
+  result.assuranceTotal = assuranceTotal;
+  result.capitalTotal = capitalTotal;
+  result.coutCredit = interetsTotal + assuranceTotal;
+  result.mensualiteInitiale = result.schedule.length ? result.schedule[0].mensualite : 0;
+  return result;
+}
+
+/* ============================================================
+   MOTEUR CENTRAL — calculateSimulation(params)
+   Point d'entree UNIQUE utilise par tous les composants.
+   ============================================================ */
+function calculateSimulation(params) {
+  var p = params;
+
+  var tauxAcquisitionEffectif = p.utiliserTauxAcquisitionPersonnalise
+    ? (p.fraisAcquisitionPct || 0)
+    : (FRAIS_ACQUISITION_HYPOTHESES[p.typeBien] !== undefined ? FRAIS_ACQUISITION_HYPOTHESES[p.typeBien] : FRAIS_ACQUISITION_HYPOTHESES.ancien);
+
+  var fraisAgenceACharge = (p.agenceCharge === "acquereur") ? (p.fraisAgenceMontant || 0) : 0;
+  var assietteFraisAcquisition = Math.max(0, p.prixBien - fraisAgenceACharge);
+  var fraisAcquisitionMontant = assietteFraisAcquisition * (tauxAcquisitionEffectif / 100);
+
+  var feeItems = [
+    { key: "fraisAcquisition", label: "Frais d'acquisition", montant: fraisAcquisitionMontant, financer: !!p.financerFraisAcquisition },
+    { key: "fraisAgence", label: "Frais d'agence", montant: fraisAgenceACharge, financer: !!p.financerFraisAgence },
+    { key: "fraisDossier", label: "Frais de dossier", montant: p.fraisDossier || 0, financer: !!p.financerFraisDossier },
+    { key: "fraisGarantie", label: "Frais de garantie", montant: p.fraisGarantie || 0, financer: !!p.financerFraisGarantie },
+    { key: "fraisCourtage", label: "Frais de courtage", montant: p.fraisCourtage || 0, financer: !!p.financerFraisCourtage },
+    { key: "autresFrais", label: "Autres frais", montant: p.autresFrais || 0, financer: !!p.financerAutresFrais }
+  ];
+  var fraisTotal = 0, fraisFinances = 0, fraisNonFinances = 0;
+  for (var f = 0; f < feeItems.length; f++) {
+    fraisTotal += feeItems[f].montant;
+    if (feeItems[f].financer) fraisFinances += feeItems[f].montant; else fraisNonFinances += feeItems[f].montant;
+  }
+
+  var coutProjetHorsCredit = p.prixBien + (p.travaux || 0) + fraisTotal;
+
+  var baseAFinancer = p.prixBien + (p.travaux || 0);
+  var apport = Math.max(0, p.apport || 0);
+  var apportInsuffisantPourFrais = Math.max(0, fraisNonFinances - apport);
+  var apportDisponiblePourBase = Math.max(0, apport - fraisNonFinances);
+  var besoinFinancement = baseAFinancer + fraisFinances;
+  var montantEmprunte = Math.max(0, besoinFinancement - apportDisponiblePourBase);
+  var apportExcedentaire = Math.max(0, apportDisponiblePourBase - besoinFinancement);
+  var apportUtilise = apport - apportExcedentaire;
+
+  var emprunteurs = [{ taux: p.emprunteur1TauxAssurance || 0, quotite: p.emprunteur1Quotite || 0 }];
+  if (p.nombreEmprunteurs === 2) emprunteurs.push({ taux: p.emprunteur2TauxAssurance || 0, quotite: p.emprunteur2Quotite || 0 });
+  var loan = computeLoanSchedule(montantEmprunte, p.tauxCredit, p.dureeAnnees, emprunteurs, p.assuranceBase);
+
+  var coutCreditTotal = loan.interetsTotal + loan.assuranceTotal;
+  var coutTotalProjet = coutProjetHorsCredit + coutCreditTotal;
+
+  var coefLocatif = (p.coefficientRevenuLocatif !== undefined ? p.coefficientRevenuLocatif : 70) / 100;
+  var revenusRetenus = (p.revenuPrincipal || 0) + (p.revenuCoemprunteur || 0) + (p.revenuLocatif || 0) * coefLocatif;
+  var chargesRetenues = p.chargesMensuelles || 0;
+  var mensualiteNouveauCredit = loan.mensualiteInitiale;
+  var autresCreditsMensuel = p.autresCredits || 0;
+  var totalChargesCredit = mensualiteNouveauCredit + autresCreditsMensuel;
+  var tauxEffort = revenusRetenus > 0 ? (totalChargesCredit / revenusRetenus) * 100 : 0;
+  var resteAVivre = revenusRetenus - totalChargesCredit - chargesRetenues;
+
+  var assuranceMensuelle1 = loan.schedule.length ? loan.schedule[0].assurance : 0;
+
+  // Indicateur de comparaison financiere (section 8) : cout du credit
+  // ramene a 100 000 € empruntes, calcule avec les memes taux/duree/
+  // assurance que la simulation actuelle — jamais une valeur figee.
+  var loanPour100k = computeLoanSchedule(100000, p.tauxCredit, p.dureeAnnees, emprunteurs, p.assuranceBase);
+  var coutCreditPour100k = loanPour100k.coutCredit;
+
+  return {
+    params: p,
+    tauxAcquisitionEffectif: tauxAcquisitionEffectif,
+    fraisAcquisitionMontant: fraisAcquisitionMontant,
+    assietteFraisAcquisition: assietteFraisAcquisition,
+    fraisAgenceACharge: fraisAgenceACharge,
+    feeItems: feeItems,
+    fraisTotal: fraisTotal,
+    fraisFinances: fraisFinances,
+    fraisNonFinances: fraisNonFinances,
+    coutProjetHorsCredit: coutProjetHorsCredit,
+    apportInsuffisantPourFrais: apportInsuffisantPourFrais,
+    apportUtilise: apportUtilise,
+    apportExcedentaire: apportExcedentaire,
+    besoinFinancement: besoinFinancement,
+    montantEmprunte: montantEmprunte,
+    loan: loan,
+    coutCreditTotal: coutCreditTotal,
+    coutTotalProjet: coutTotalProjet,
+    coutCreditPour100k: coutCreditPour100k,
+    mensualiteHorsAssurance: loan.mensualiteHorsAssurance,
+    assuranceMensuelle1: assuranceMensuelle1,
+    mensualiteTotale1: loan.mensualiteInitiale,
+    revenusRetenus: revenusRetenus,
+    chargesRetenues: chargesRetenues,
+    mensualiteNouveauCredit: mensualiteNouveauCredit,
+    autresCreditsMensuel: autresCreditsMensuel,
+    tauxEffort: tauxEffort,
+    resteAVivre: resteAVivre
+  };
+}
+
+/* --- Plages centrees sur la valeur courante (graphiques + sensibilite) --- */
+function buildCenteredRange(current, pas, nombreParCote, min, max, decimals) {
+  var values = [];
+  for (var i = -nombreParCote; i <= nombreParCote; i++) {
+    var v = current + i * pas;
+    if (decimals !== undefined) v = Math.round(v * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    if (v >= min - 1e-9 && v <= max + 1e-9) values.push(Math.max(min, Math.min(max, v)));
+  }
+  var seen = {}, out = [];
+  for (var j = 0; j < values.length; j++) { var k = values[j].toFixed(6); if (!seen[k]) { seen[k] = true; out.push(values[j]); } }
+  out.sort(function (a, b) { return a - b; });
+  return out;
+}
+function buildTauxRange(p, n) { var d = findDef("tauxCredit"); return buildCenteredRange(p.tauxCredit, p.tauxPlagePas, n, d.min, d.max, 2); }
+function buildDureeRange(p, n) { var d = findDef("dureeAnnees"); return buildCenteredRange(p.dureeAnnees, p.dureePlagePas, n, d.min, d.max, 0); }
+function buildApportRange(p, n) { var d = findDef("apport"); return buildCenteredRange(p.apport, p.apportPlagePas, n, d.min, d.max, 0); }
+
+/* --- Validation interne du moteur (section 16) --- */
+function runInternalValidation() {
+  var results = [];
+  function check(name, cond, detail) { results.push({ name: name, pass: !!cond, detail: detail || "" }); }
+  var EPS = 0.5;
+  var l1 = computeLoanSchedule(120000, 0, 10, [{ taux: 0, quotite: 100 }], "initial");
+  check("Test1_pret_sans_interet", Math.abs(l1.capitalTotal - 120000) < EPS && l1.interetsTotal === 0);
+  var l2 = computeLoanSchedule(200000, 3.2, 25, [{ taux: 0, quotite: 100 }], "initial");
+  check("Test2_pret_standard", Math.abs(l2.mensualiteHorsAssurance - 968.8) < 1 && Math.abs(l2.capitalTotal - 200000) < EPS && l2.schedule[l2.schedule.length - 1].crd === 0);
+  var p3 = defaultParams(); p3.prixBien = 100000; p3.apport = 500000; p3.travaux = 0;
+  var s3 = calculateSimulation(p3);
+  check("Test3_apport_eleve", s3.montantEmprunte === 0 && s3.apportExcedentaire > 0);
+  var p4 = defaultParams(); p4.prixBien = 0; p4.apport = 0; p4.travaux = 0; p4.fraisAgenceMontant = 0; p4.autresFrais = 0; p4.fraisDossier = 0; p4.fraisGarantie = 0; p4.fraisCourtage = 0;
+  var s4 = calculateSimulation(p4);
+  check("Test4_montant_nul", s4.loan.mensualiteInitiale === 0 && !isNaN(s4.coutTotalProjet) && isFinite(s4.coutTotalProjet));
+  var l5 = computeLoanSchedule(150000, 2, 20, [{ taux: 0, quotite: 100 }], "initial");
+  check("Test5_assurance_zero", l5.assuranceTotal === 0);
+  var lInitial = computeLoanSchedule(150000, 2, 20, [{ taux: 0.3, quotite: 100 }], "initial");
+  var lCrd = computeLoanSchedule(150000, 2, 20, [{ taux: 0.3, quotite: 100 }], "crd");
+  check("Test6_assurance_crd", lCrd.assuranceTotal < lInitial.assuranceTotal);
+  var lD5050 = computeLoanSchedule(150000, 2, 20, [{ taux: 0.3, quotite: 50 }, { taux: 0.3, quotite: 50 }], "initial");
+  var lS100 = computeLoanSchedule(150000, 2, 20, [{ taux: 0.3, quotite: 100 }], "initial");
+  check("Test7_deux_emprunteurs_5050", Math.abs(lD5050.assuranceTotal - lS100.assuranceTotal) < EPS);
+  var lD100100 = computeLoanSchedule(150000, 2, 20, [{ taux: 0.3, quotite: 100 }, { taux: 0.3, quotite: 100 }], "initial");
+  check("Test8_deux_emprunteurs_100100", Math.abs(lD100100.assuranceTotal - 2 * lS100.assuranceTotal) < EPS);
+  var l9 = computeLoanSchedule(237654.37, 3.87, 22, [{ taux: 0.28, quotite: 100 }], "initial");
+  check("Test9_dernier_arrondi", l9.schedule[l9.schedule.length - 1].crd === 0 && Math.abs(l9.capitalTotal - 237654.37) < EPS);
+
+  // --- Tests complementaires (V2.1) : financement, agence, type de bien, cas limites ---
+  var pAcq = defaultParams(); pAcq.prixBien = 200000; pAcq.fraisAgenceMontant = 10000; pAcq.agenceCharge = "acquereur";
+  var sAcq = calculateSimulation(pAcq);
+  check("Test10_agence_acquereur", sAcq.fraisAgenceACharge === 10000 && Math.abs(sAcq.assietteFraisAcquisition - 190000) < EPS && Math.abs(sAcq.fraisAcquisitionMontant - 14250) < EPS,
+    "fraisAgenceACharge=" + sAcq.fraisAgenceACharge + " assiette=" + sAcq.assietteFraisAcquisition.toFixed(2));
+
+  var pVen = defaultParams(); pVen.prixBien = 200000; pVen.fraisAgenceMontant = 10000; pVen.agenceCharge = "vendeur";
+  var sVen = calculateSimulation(pVen);
+  check("Test11_agence_vendeur", sVen.fraisAgenceACharge === 0 && Math.abs(sVen.assietteFraisAcquisition - 200000) < EPS && Math.abs(sVen.fraisAcquisitionMontant - 15000) < EPS,
+    "fraisAgenceACharge=" + sVen.fraisAgenceACharge + " assiette=" + sVen.assietteFraisAcquisition.toFixed(2));
+
+  var pAnc = defaultParams(); pAnc.prixBien = 200000; pAnc.typeBien = "ancien";
+  var sAnc = calculateSimulation(pAnc);
+  check("Test12_type_ancien", Math.abs(sAnc.tauxAcquisitionEffectif - 7.5) < 1e-6 && Math.abs(sAnc.fraisAcquisitionMontant - 15000) < EPS);
+
+  var pNeu = defaultParams(); pNeu.prixBien = 200000; pNeu.typeBien = "neuf";
+  var sNeu = calculateSimulation(pNeu);
+  check("Test13_type_neuf", Math.abs(sNeu.tauxAcquisitionEffectif - 2.5) < 1e-6 && Math.abs(sNeu.fraisAcquisitionMontant - 5000) < EPS);
+
+  var pFin = defaultParams(); pFin.prixBien = 200000; pFin.apport = 50000;
+  pFin.financerFraisAcquisition = true; pFin.financerFraisDossier = true; pFin.financerFraisGarantie = true; pFin.financerFraisCourtage = true; pFin.financerAutresFrais = true; pFin.financerFraisAgence = true;
+  var sFinAll = calculateSimulation(pFin);
+  check("Test14_frais_tous_finances", Math.abs(sFinAll.fraisNonFinances) < EPS && Math.abs(sFinAll.fraisFinances - sFinAll.fraisTotal) < EPS,
+    "fraisNonFinances=" + sFinAll.fraisNonFinances.toFixed(2));
+
+  var pNonFin = deepClone(pFin);
+  pNonFin.financerFraisAcquisition = false; pNonFin.financerFraisDossier = false; pNonFin.financerFraisGarantie = false; pNonFin.financerFraisCourtage = false; pNonFin.financerAutresFrais = false; pNonFin.financerFraisAgence = false;
+  var sFinNone = calculateSimulation(pNonFin);
+  check("Test15_frais_non_finances", Math.abs(sFinNone.fraisFinances) < EPS && Math.abs(sFinNone.fraisNonFinances - sFinNone.fraisTotal) < EPS,
+    "fraisFinances=" + sFinNone.fraisFinances.toFixed(2));
+  check("Test15b_somme_frais_finances_non_finances", Math.abs(sFinAll.fraisFinances + sFinAll.fraisNonFinances - sFinAll.fraisTotal) < EPS && Math.abs(sFinNone.fraisFinances + sFinNone.fraisNonFinances - sFinNone.fraisTotal) < EPS);
+
+  var pApportNul = defaultParams(); pApportNul.apport = 0;
+  var sApportNul = calculateSimulation(pApportNul);
+  check("Test16_apport_nul", sApportNul.apportUtilise === 0 && sApportNul.montantEmprunte >= 0 && !isNaN(sApportNul.montantEmprunte) && isFinite(sApportNul.montantEmprunte),
+    "montantEmprunte=" + sApportNul.montantEmprunte.toFixed(2));
+
+  var pApportSup = defaultParams(); pApportSup.prixBien = 150000; pApportSup.travaux = 0; pApportSup.apport = 400000;
+  var sApportSup = calculateSimulation(pApportSup);
+  check("Test17_apport_superieur_au_projet", sApportSup.montantEmprunte === 0 && sApportSup.apportExcedentaire > 0 && sApportSup.loan.mensualiteInitiale === 0,
+    "montantEmprunte=" + sApportSup.montantEmprunte + " excedent=" + sApportSup.apportExcedentaire.toFixed(2));
+
+  var pDeux = defaultParams(); pDeux.nombreEmprunteurs = 2; pDeux.emprunteur1TauxAssurance = 0.3; pDeux.emprunteur1Quotite = 100; pDeux.emprunteur2TauxAssurance = 0.3; pDeux.emprunteur2Quotite = 100;
+  var sDeux = calculateSimulation(pDeux);
+  check("Test18_deux_emprunteurs", sDeux.assuranceMensuelle1 > 0 && !isNaN(sDeux.assuranceMensuelle1), "assuranceMensuelle1=" + sDeux.assuranceMensuelle1.toFixed(2));
+
+  var lTauxDiff = computeLoanSchedule(150000, 2, 20, [{ taux: 0.25, quotite: 100 }, { taux: 0.40, quotite: 100 }], "initial");
+  var assuranceMensuelleAttendue = 150000 * ((0.25 / 100 / 12) + (0.40 / 100 / 12));
+  check("Test19_taux_assurance_differents", Math.abs(lTauxDiff.schedule[0].assurance - assuranceMensuelleAttendue) < 0.01,
+    "obtenu=" + lTauxDiff.schedule[0].assurance.toFixed(4) + " attendu=" + assuranceMensuelleAttendue.toFixed(4));
+
+  var lAssInit = computeLoanSchedule(150000, 2, 20, [{ taux: 0.3, quotite: 100 }], "initial");
+  check("Test20_assurance_capital_initial", Math.abs(lAssInit.schedule[0].assurance - 37.5) < 0.01 && Math.abs(lAssInit.schedule[lAssInit.schedule.length - 1].assurance - 37.5) < 0.01,
+    "premier=" + lAssInit.schedule[0].assurance.toFixed(2) + " dernier=" + lAssInit.schedule[lAssInit.schedule.length - 1].assurance.toFixed(2));
+
+  var lAssCrd = computeLoanSchedule(150000, 2, 20, [{ taux: 0.3, quotite: 100 }], "crd");
+  check("Test21_assurance_crd", Math.abs(lAssCrd.schedule[0].assurance - 37.5) < 0.01 && lAssCrd.schedule[lAssCrd.schedule.length - 1].assurance < 37.5,
+    "premier=" + lAssCrd.schedule[0].assurance.toFixed(2) + " dernier=" + lAssCrd.schedule[lAssCrd.schedule.length - 1].assurance.toFixed(2));
+
+  // --- Cas limites additionnels : jamais de NaN / Infinity ---
+  var edgeCases = [
+    { label: "taux_tres_faible", patch: { tauxCredit: findDef("tauxCredit").min } },
+    { label: "taux_tres_eleve", patch: { tauxCredit: findDef("tauxCredit").max } },
+    { label: "duree_min", patch: { dureeAnnees: findDef("dureeAnnees").min } },
+    { label: "duree_max", patch: { dureeAnnees: findDef("dureeAnnees").max } },
+    { label: "revenus_nuls", patch: { revenuPrincipal: 0, revenuCoemprunteur: 0, revenuLocatif: 0 } },
+    { label: "charges_superieures_aux_revenus", patch: { revenuPrincipal: 500, chargesMensuelles: 3000, autresCredits: 1000 } },
+    { label: "frais_tres_eleves", patch: { fraisAgenceMontant: 50000, autresFrais: 50000, fraisDossier: 5000, fraisGarantie: 5000, fraisCourtage: 5000 } },
+    { label: "assurance_nulle", patch: { emprunteur1TauxAssurance: 0 } }
+  ];
+  for (var ec = 0; ec < edgeCases.length; ec++) {
+    var pEdge = defaultParams();
+    for (var key in edgeCases[ec].patch) pEdge[key] = edgeCases[ec].patch[key];
+    var sEdge = calculateSimulation(pEdge);
+    var fieldsToCheck = [sEdge.montantEmprunte, sEdge.mensualiteTotale1, sEdge.loan.interetsTotal, sEdge.coutCreditTotal, sEdge.coutTotalProjet, sEdge.tauxEffort, sEdge.resteAVivre];
+    var allFinite = true;
+    for (var fi = 0; fi < fieldsToCheck.length; fi++) { if (isNaN(fieldsToCheck[fi]) || !isFinite(fieldsToCheck[fi])) allFinite = false; }
+    check("Test22_cas_limite_" + edgeCases[ec].label, allFinite, "valeurs=" + JSON.stringify(fieldsToCheck.map(function (v) { return Math.round(v * 100) / 100; })));
+  }
+
+  var allPass = true;
+  for (var i = 0; i < results.length; i++) if (!results[i].pass) allPass = false;
+  return { pass: allPass, results: results };
+}
+
+/* ============================================================
+   ETAT DE L'APPLICATION
+   ============================================================ */
+/* STORAGE_KEY reste volontairement "axelSimImmo_v1" malgre le passage
+   a la V2 (et V2.1) du simulateur. Ce nom est un identifiant de
+   stockage technique (cle localStorage + nom de fichier sur Google
+   Drive), pas un numero de version fonctionnelle : le changer casserait
+   la synchronisation avec les donnees deja presentes sur Google Drive
+   et sur cet appareil. Le versionnage reel des donnees est gere par le
+   champ `state.version` (voir defaultState/applyMigrationIfNeeded
+   ci-dessous), qui pilote la migration automatique des anciennes
+   structures de parametres (V1 -> V2) sans jamais perdre les
+   scenarios ni la reference enregistree. */
+var STORAGE_KEY = "axelSimImmo_v1";
+var state = null;
+
+function defaultState() {
+  return {
+    version: 2,
+    params: defaultParams(),
+    referenceParams: null,
+    scenarios: [],
+    theme: "dark",
+    currentTab: "simulateur",
+    tableView: "annuel",
+    tableSearch: "",
+    chartTauxMetric: "mensualite",
+    chartDureeMetric: "mensualite",
+    chartApportMetric: "montantEmprunte",
+    sensAxes: "taux-duree",
+    sensMetric: "mensualite",
+    selectedYear: null
+  };
+}
+
+function applyMigrationIfNeeded() {
+  var needsMigration = !state.version || state.version < 2 || !state.params || state.params.typeBien === undefined;
+  if (needsMigration) {
+    state.params = migrateParamsV1toV2(state.params || {});
+    if (state.referenceParams) state.referenceParams = migrateParamsV1toV2(state.referenceParams);
+    if (Array.isArray(state.scenarios)) {
+      for (var i = 0; i < state.scenarios.length; i++) state.scenarios[i].params = migrateParamsV1toV2(state.scenarios[i].params);
+    }
+    state.version = 2;
+  } else {
+    state.params = mergeParams(state.params);
+    if (state.referenceParams) state.referenceParams = mergeParams(state.referenceParams);
+  }
+  if (!Array.isArray(state.scenarios)) state.scenarios = [];
+  for (var j = 0; j < state.scenarios.length; j++) state.scenarios[j].params = mergeParams(state.scenarios[j].params);
+}
+
+function loadState() {
+  var raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+  if (raw) { try { state = JSON.parse(raw); } catch (e) { state = defaultState(); } }
+  else { state = defaultState(); }
+  var d = defaultState();
+  for (var k in d) { if (state[k] === undefined) state[k] = d[k]; }
+  applyMigrationIfNeeded();
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (window.__driveNotifySave) window.__driveNotifySave();
+  } catch (e) { /* stockage indisponible ou plein */ }
+}
+
+function currentSim() { return calculateSimulation(state.params); }
+
+/* ============================================================
+   CONSTRUCTION DU PANNEAU DE PARAMETRES (une seule fois)
+   ============================================================ */
+function paramRowHtml(def, value) {
+  var decimals = decimalsFor(def);
+  return '' +
+    '<div class="param-row" data-key="' + def.key + '">' +
+      '<label class="param-label" for="number-' + def.key + '">' + def.label + '</label>' +
+      '<div class="param-controls">' +
+        '<input type="range" class="param-slider" data-key="' + def.key + '" id="slider-' + def.key + '" min="' + def.min + '" max="' + def.max + '" step="' + def.step + '" value="' + value + '">' +
+        '<div class="param-input-wrap">' +
+          '<input type="number" class="param-number" data-key="' + def.key + '" id="number-' + def.key + '" min="' + def.min + '" max="' + def.max + '" step="' + def.step + '" value="' + numToStr(value, decimals) + '">' +
+          '<span class="param-unit">' + def.unit + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+function choiceRowHtml(cdef) {
+  var id = "choice-" + cdef.key;
+  var html = '<div class="param-row"><label class="param-label" for="' + id + '">' + cdef.label + '</label>' +
+    '<select class="param-select param-choice" data-key="' + cdef.key + '" id="' + id + '">';
+  for (var i = 0; i < cdef.options.length; i++) {
+    var opt = cdef.options[i];
+    var sel = (state.params[cdef.key] === opt.v) ? " selected" : "";
+    html += '<option value="' + opt.v + '"' + sel + ">" + opt.l + "</option>";
+  }
+  html += "</select></div>";
+  return html;
+}
+function flagRowHtml(fdef) {
+  var id = "flag-" + fdef.key;
+  return '<label class="param-checkbox-row"><input type="checkbox" class="param-flag" data-key="' + fdef.key + '" id="' + id + '"' + (state.params[fdef.key] ? " checked" : "") + "> " + fdef.label + "</label>";
+}
+function findChoice(key) { for (var i = 0; i < CHOICE_DEFS.length; i++) if (CHOICE_DEFS[i].key === key) return CHOICE_DEFS[i]; return null; }
+function findFlag(key) { for (var i = 0; i < FLAG_DEFS.length; i++) if (FLAG_DEFS[i].key === key) return FLAG_DEFS[i]; return null; }
+
+function buildParamsPanel() {
+  var container = document.getElementById("params-column");
+  var html = "";
+
+  /* ---------- Projet immobilier ---------- */
+  html += '<div class="panel-card"><h2>Projet immobilier</h2>';
+  html += paramRowHtml(findDef("prixBien"), state.params.prixBien);
+  html += choiceRowHtml(findChoice("typeBien"));
+  html += paramRowHtml(findDef("apport"), state.params.apport);
+  html += paramRowHtml(findDef("travaux"), state.params.travaux);
+  html += '<div class="computed-line"><span>Co\u00FBt du projet (hors cr\u00E9dit)</span><b id="out-coutProjetHorsCredit">\u2014</b></div>';
+  html += '<button type="button" class="advanced-toggle" data-toggle="adv-projet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>Param\u00E8tres avanc\u00E9s</button>';
+  html += '<div class="advanced-body" id="adv-projet">';
+  html += paramRowHtml(findDef("fraisAgenceMontant"), state.params.fraisAgenceMontant);
+  html += choiceRowHtml(findChoice("agenceCharge"));
+  html += '<div class="param-hint" id="hint-agence"></div>';
+  html += flagRowHtml(findFlag("financerFraisAgence"));
+  html += '<div class="param-hint" id="hint-acquisition"></div>';
+  html += flagRowHtml(findFlag("utiliserTauxAcquisitionPersonnalise"));
+  html += paramRowHtml(findDef("fraisAcquisitionPct"), state.params.fraisAcquisitionPct);
+  html += flagRowHtml(findFlag("financerFraisAcquisition"));
+  html += paramRowHtml(findDef("autresFrais"), state.params.autresFrais);
+  html += flagRowHtml(findFlag("financerAutresFrais"));
+  html += '<div class="computed-line"><span>Frais financ\u00E9s par le cr\u00E9dit</span><b id="out-fraisFinances">\u2014</b></div>';
+  html += '<div class="computed-line"><span>Frais pay\u00E9s par l\'apport</span><b id="out-fraisNonFinances">\u2014</b></div>';
+  html += '<div class="param-hint" id="hint-apport-insuffisant"></div>';
+  html += "</div></div>";
+
+  /* ---------- Credit ---------- */
+  html += '<div class="panel-card"><h2>Cr\u00E9dit</h2>';
+  html += paramRowHtml(findDef("tauxCredit"), state.params.tauxCredit);
+  html += paramRowHtml(findDef("dureeAnnees"), state.params.dureeAnnees);
+  html += paramRowHtml(findDef("emprunteur1TauxAssurance"), state.params.emprunteur1TauxAssurance);
+  html += '<div class="computed-line"><span>Montant emprunt\u00E9</span><b id="out-montantEmprunte">\u2014</b></div>';
+  html += '<div class="computed-line"><span>Mensualit\u00E9 totale</span><b id="out-mensualiteTotale">\u2014</b></div>';
+  html += '<button type="button" class="advanced-toggle" data-toggle="adv-credit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>Param\u00E8tres avanc\u00E9s</button>';
+  html += '<div class="advanced-body" id="adv-credit">';
+  html += choiceRowHtml(findChoice("nombreEmprunteurs"));
+  html += paramRowHtml(findDef("emprunteur1Quotite"), state.params.emprunteur1Quotite);
+  html += '<div id="emprunteur2-wrap">';
+  html += paramRowHtml(findDef("emprunteur2TauxAssurance"), state.params.emprunteur2TauxAssurance);
+  html += paramRowHtml(findDef("emprunteur2Quotite"), state.params.emprunteur2Quotite);
+  html += "</div>";
+  html += choiceRowHtml(findChoice("assuranceBase"));
+  html += paramRowHtml(findDef("fraisDossier"), state.params.fraisDossier);
+  html += flagRowHtml(findFlag("financerFraisDossier"));
+  html += paramRowHtml(findDef("fraisGarantie"), state.params.fraisGarantie);
+  html += flagRowHtml(findFlag("financerFraisGarantie"));
+  html += paramRowHtml(findDef("fraisCourtage"), state.params.fraisCourtage);
+  html += flagRowHtml(findFlag("financerFraisCourtage"));
+  html += "</div></div>";
+
+  /* ---------- Situation financiere ---------- */
+  html += '<div class="panel-card"><h2>Situation financi\u00E8re</h2>';
+  html += paramRowHtml(findDef("revenuPrincipal"), state.params.revenuPrincipal);
+  html += '<div class="computed-line"><span>Taux d\'endettement cr\u00E9dit estim\u00E9</span><b id="out-tauxEffort">\u2014</b></div>';
+  html += '<p class="param-hint">Calcul : (mensualit\u00E9 du nouveau cr\u00E9dit + autres cr\u00E9dits) / revenus retenus. Les charges mensuelles n\'entrent pas dans ce taux : elles sont prises en compte dans le reste \u00E0 vivre ci-dessous. Indicateur estimatif : les m\u00E9thodes de calcul peuvent varier selon les banques.</p>';
+  html += '<button type="button" class="advanced-toggle" data-toggle="adv-situation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>Param\u00E8tres avanc\u00E9s</button>';
+  html += '<div class="advanced-body" id="adv-situation">';
+  html += paramRowHtml(findDef("revenuCoemprunteur"), state.params.revenuCoemprunteur);
+  html += paramRowHtml(findDef("revenuLocatif"), state.params.revenuLocatif);
+  html += paramRowHtml(findDef("coefficientRevenuLocatif"), state.params.coefficientRevenuLocatif);
+  html += paramRowHtml(findDef("chargesMensuelles"), state.params.chargesMensuelles);
+  html += paramRowHtml(findDef("autresCredits"), state.params.autresCredits);
+  html += "</div></div>";
+
+  /* ---------- Plages des graphiques ---------- */
+  html += '<div class="panel-card"><h2>Affichage des graphiques</h2>';
+  html += '<p class="param-hint">Ces pas d\u00E9terminent l\'\u00E9cartement des points affich\u00E9s autour de votre situation actuelle dans les graphiques et les matrices de sensibilit\u00E9.</p>';
+  html += '<button type="button" class="advanced-toggle" data-toggle="adv-plages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>Param\u00E8tres avanc\u00E9s</button>';
+  html += '<div class="advanced-body" id="adv-plages">';
+  html += paramRowHtml(findDef("tauxPlagePas"), state.params.tauxPlagePas);
+  html += paramRowHtml(findDef("dureePlagePas"), state.params.dureePlagePas);
+  html += paramRowHtml(findDef("apportPlagePas"), state.params.apportPlagePas);
+  html += "</div></div>";
+
+  container.innerHTML = html;
+  updateEmprunteur2Visibility();
+}
+
+function updateEmprunteur2Visibility() {
+  var wrap = document.getElementById("emprunteur2-wrap");
+  if (wrap) wrap.style.display = (state.params.nombreEmprunteurs === 2) ? "" : "none";
+}
+
+function syncAllControlsForKey(key) {
+  var def = findDef(key);
+  var els = document.querySelectorAll('[data-key="' + key + '"]');
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    if (document.activeElement === el) continue;
+    if (el.classList.contains("param-slider")) el.value = state.params[key];
+    else if (el.classList.contains("param-number")) el.value = numToStr(state.params[key], decimalsFor(def));
+  }
+}
+
+/* ============================================================
+   PILOTAGE RAPIDE (section 12 — 3 sliders : taux, duree, apport)
+   ============================================================ */
+var PILOT_KEYS = ["tauxCredit", "dureeAnnees", "apport"];
+function pilotRowHtml(key) {
+  var def = findDef(key);
+  var decimals = decimalsFor(def);
+  var value = state.params[key];
+  return '' +
+    '<div class="param-row" data-key="' + key + '">' +
+      '<label class="param-label">' + def.label + '</label>' +
+      '<div class="param-controls">' +
+        '<input type="range" class="param-slider" data-key="' + key + '" id="pilot-slider-' + key + '" min="' + def.min + '" max="' + def.max + '" step="' + def.step + '" value="' + value + '">' +
+        '<div class="param-input-wrap">' +
+          '<input type="number" class="param-number" data-key="' + key + '" id="pilot-number-' + key + '" min="' + def.min + '" max="' + def.max + '" step="' + def.step + '" value="' + numToStr(value, decimals) + '">' +
+          '<span class="param-unit">' + def.unit + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+function buildPilotagePanel() {
+  var el = document.getElementById("pilotage-panel");
+  if (!el) return;
+  var html = '<h2>Pilotage rapide</h2><p class="chart-desc">Ajustez le taux, la dur\u00E9e et l\'apport : tous les r\u00E9sultats se mettent \u00E0 jour instantan\u00E9ment.</p>';
+  html += '<div class="pilot-grid">';
+  for (var i = 0; i < PILOT_KEYS.length; i++) html += pilotRowHtml(PILOT_KEYS[i]);
+  html += "</div>";
+  html += '<div class="pilot-readouts" id="pilot-readouts"></div>';
+  el.innerHTML = html;
+}
+function renderPilotReadouts(sim) {
+  var el = document.getElementById("pilot-readouts");
+  if (!el) return;
+  var cards = [
+    { label: "Montant emprunt\u00E9", value: fmtEUR(sim.montantEmprunte) },
+    { label: "Mensualit\u00E9 totale", value: fmtEUR(sim.mensualiteTotale1) },
+    { label: "Int\u00E9r\u00EAts totaux", value: fmtEUR(sim.loan.interetsTotal) },
+    { label: "Co\u00FBt total du cr\u00E9dit", value: fmtEUR(sim.coutCreditTotal) },
+    { label: "Co\u00FBt total du projet", value: fmtEUR(sim.coutTotalProjet) }
+  ];
+  var html = "";
+  for (var i = 0; i < cards.length; i++) html += '<div class="stat-card"><div class="stat-label">' + cards[i].label + '</div><div class="stat-value">' + cards[i].value + "</div></div>";
+
+  var refSim = state.referenceParams ? calculateSimulation(state.referenceParams) : null;
+  if (refSim) {
+    var dCout = sim.coutTotalProjet - refSim.coutTotalProjet;
+    var isEconomie = dCout < -0.5;
+    var isSurcout = dCout > 0.5;
+    var label = isEconomie ? "\u00C9conomie vs r\u00E9f\u00E9rence" : (isSurcout ? "Surco\u00FBt vs r\u00E9f\u00E9rence" : "\u00C9cart vs r\u00E9f\u00E9rence");
+    var accent = isEconomie ? "a-moss" : (isSurcout ? "a-brick" : "");
+    html += '<div class="stat-card ' + accent + '"><div class="stat-label">' + label + '</div><div class="stat-value">' + fmtDeltaEUR(dCout) + "</div><div class=\"stat-sub\">co\u00FBt total du projet</div></div>";
+  }
+  el.innerHTML = html;
+}
+
+var QUICK_ACTIONS = [
+  { label: "Taux \u2212 0,25 %", key: "tauxCredit", delta: -0.25 },
+  { label: "Taux + 0,25 %", key: "tauxCredit", delta: 0.25 },
+  { label: "Apport + 10 000 \u20AC", key: "apport", delta: 10000 },
+  { label: "Apport \u2212 10 000 \u20AC", key: "apport", delta: -10000 },
+  { label: "Dur\u00E9e \u2212 5 ans", key: "dureeAnnees", delta: -5 },
+  { label: "Dur\u00E9e + 5 ans", key: "dureeAnnees", delta: 5 }
+];
+function buildQuickActions() {
+  var el = document.getElementById("quickactions");
+  var html = "";
+  for (var i = 0; i < QUICK_ACTIONS.length; i++) html += '<button type="button" class="btn btn-ghost btn-sm" data-quick="' + i + '">' + QUICK_ACTIONS[i].label + "</button>";
+  el.innerHTML = html;
+}
+
+/* ============================================================
+   HELPERS GRAPHIQUES (SVG maison, sans dependance externe)
+   ============================================================ */
+function buildLineChartSVG(config) {
+  var W = config.width || 560, H = config.height || 230;
+  var padL = 54, padR = 14, padT = 14, padB = 32;
+  var innerW = W - padL - padR, innerH = H - padT - padB;
+  var xMin = config.xMin, xMax = config.xMax, yMin = config.yMin, yMax = config.yMax;
+  if (xMax === xMin) xMax = xMin + 1;
+  if (yMax === yMin) yMax = yMin + 1;
+  function sx(x) { return padL + (x - xMin) / (xMax - xMin) * innerW; }
+  function sy(y) { return padT + innerH - (y - yMin) / (yMax - yMin) * innerH; }
+
+  var svg = '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg">';
+  var gridCount = 4;
+  for (var g = 0; g <= gridCount; g++) {
+    var gy = padT + innerH * g / gridCount;
+    var val = yMax - (yMax - yMin) * g / gridCount;
+    svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (padL + innerW) + '" y2="' + gy + '" stroke="var(--line)" stroke-width="1"></line>';
+    svg += '<text x="' + (padL - 8) + '" y="' + (gy + 4) + '" font-size="9.5" text-anchor="end" fill="var(--ink-soft)" font-family="var(--font-mono)">' + (config.yTickFormatter ? config.yTickFormatter(val) : Math.round(val)) + "</text>";
+  }
+  if (config.xTicks) {
+    for (var xt = 0; xt < config.xTicks.length; xt++) {
+      var xv = config.xTicks[xt];
+      var xx = sx(xv);
+      svg += '<text x="' + xx.toFixed(1) + '" y="' + (H - 8) + '" font-size="9.5" text-anchor="middle" fill="var(--ink-soft)" font-family="var(--font-mono)">' + (config.xTickFormatter ? config.xTickFormatter(xv) : xv) + "</text>";
+    }
+  }
+  for (var s = 0; s < config.series.length; s++) {
+    var ser = config.series[s];
+    var d = "";
+    for (var i = 0; i < ser.points.length; i++) {
+      var pt = ser.points[i];
+      d += (i === 0 ? "M" : "L") + sx(pt.x).toFixed(1) + "," + sy(pt.y).toFixed(1) + " ";
+    }
+    svg += '<path d="' + d + '" fill="none" stroke="' + ser.color + '" stroke-width="2.2"></path>';
+  }
+  if (config.refX !== undefined && config.refX !== null) {
+    var rx = sx(config.refX);
+    svg += '<line x1="' + rx.toFixed(1) + '" y1="' + padT + '" x2="' + rx.toFixed(1) + '" y2="' + (padT + innerH) + '" stroke="var(--indigo)" stroke-width="1.5" stroke-dasharray="4,3"></line>';
+  }
+  if (config.currentPoint) {
+    svg += '<circle cx="' + sx(config.currentPoint.x).toFixed(1) + '" cy="' + sy(config.currentPoint.y).toFixed(1) + '" r="5.5" fill="var(--indigo)" stroke="var(--card)" stroke-width="2"></circle>';
+  }
+  if (config.markers) {
+    for (var mi = 0; mi < config.markers.length; mi++) {
+      var mk = config.markers[mi];
+      svg += '<circle class="chart-pt" cx="' + sx(mk.x).toFixed(1) + '" cy="' + sy(mk.y).toFixed(1) + '" r="3.5" fill="' + (mk.color || "var(--ochre)") + '" data-action="' + config.markerAction + '" data-value="' + mk.value + '"></circle>';
+    }
+  }
+  svg += "</svg>";
+  return svg;
+}
+
+function buildBarChartSVG(config) {
+  var W = config.width || 560, H = config.height || 220;
+  var padL = 54, padR = 14, padT = 14, padB = 32;
+  var innerW = W - padL - padR, innerH = H - padT - padB;
+  var values = [];
+  for (var v = 0; v < config.categories.length; v++) values.push(config.categories[v].value);
+  var yMax = Math.max.apply(null, values.concat([0]));
+  if (yMax <= 0) yMax = 1;
+  var n = config.categories.length;
+  var gap = 12;
+  var barW = (innerW - gap * (n - 1)) / n;
+  var svg = '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg">';
+  var gridCount = 4;
+  for (var g = 0; g <= gridCount; g++) {
+    var gy = padT + innerH * g / gridCount;
+    var val = yMax * (1 - g / gridCount);
+    svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (padL + innerW) + '" y2="' + gy + '" stroke="var(--line)" stroke-width="1"></line>';
+    svg += '<text x="' + (padL - 8) + '" y="' + (gy + 4) + '" font-size="9.5" text-anchor="end" fill="var(--ink-soft)" font-family="var(--font-mono)">' + (config.yTickFormatter ? config.yTickFormatter(val) : Math.round(val)) + "</text>";
+  }
+  for (var i = 0; i < n; i++) {
+    var c = config.categories[i];
+    var bx = padL + i * (barW + gap);
+    var bh = (c.value / yMax) * innerH;
+    var by = padT + innerH - bh;
+    var isRef = config.refIndex === i;
+    svg += '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + Math.max(0, bh).toFixed(1) + '" fill="' + (isRef ? "var(--ochre)" : (config.color || "var(--indigo)")) + '" rx="3"></rect>';
+    svg += '<text x="' + (bx + barW / 2).toFixed(1) + '" y="' + (H - 8) + '" font-size="9.5" text-anchor="middle" fill="var(--ink-soft)" font-family="var(--font-mono)">' + c.label + "</text>";
+  }
+  svg += "</svg>";
+  return svg;
+}
+
+function buildCompositionChart(sim) {
+  var segs = [
+    { label: "Prix du bien", value: sim.params.prixBien, color: "var(--ochre)" },
+    { label: "Travaux", value: sim.params.travaux, color: "var(--teal)" },
+    { label: "Frais d'acquisition", value: sim.fraisAcquisitionMontant, color: "var(--gold)" },
+    { label: "Frais d'agence, dossier, garantie, courtage, autres", value: sim.fraisTotal - sim.fraisAcquisitionMontant, color: "var(--card-dim)" },
+    { label: "Int\u00E9r\u00EAts", value: sim.loan.interetsTotal, color: "var(--brick)" },
+    { label: "Assurance", value: sim.loan.assuranceTotal, color: "var(--indigo)" }
+  ];
+  var total = sim.coutTotalProjet || 1;
+  var barHtml = '<div style="display:flex;width:100%;height:26px;border-radius:8px;overflow:hidden;">';
+  for (var i = 0; i < segs.length; i++) {
+    var pct = total > 0 ? (segs[i].value / total * 100) : 0;
+    if (pct <= 0) continue;
+    barHtml += '<div style="width:' + pct.toFixed(2) + "%;background:" + segs[i].color + ';" title="' + escapeHtml(segs[i].label) + '"></div>';
+  }
+  barHtml += "</div>";
+  var legendHtml = '<div class="chart-legend">';
+  for (var j = 0; j < segs.length; j++) {
+    var pct2 = total > 0 ? (segs[j].value / total * 100) : 0;
+    legendHtml += '<span><span class="legend-dot" style="background:' + segs[j].color + '"></span>' + escapeHtml(segs[j].label) + " \u2014 " + fmtEUR(segs[j].value) + " (" + pct2.toFixed(1) + " %)</span>";
+  }
+  legendHtml += "</div>";
+  return barHtml + legendHtml;
+}
+
+function pickXTicks(nMonths) {
+  var nYears = Math.round(nMonths / 12);
+  if (nYears <= 0) return [0];
+  var step = Math.max(1, Math.ceil(nYears / 6));
+  var ticks = [];
+  for (var y = 0; y <= nYears; y += step) ticks.push(y * 12);
+  if (ticks[ticks.length - 1] !== nYears * 12) ticks.push(nYears * 12);
+  return ticks;
+}
+
+function buildYearlyAggregates(schedule) {
+  var years = [];
+  var cumCapital = 0, cumInterets = 0, cumAssurance = 0;
+  var nYears = Math.ceil(schedule.length / 12);
+  for (var y = 1; y <= nYears; y++) {
+    var startIdx = (y - 1) * 12, endIdx = Math.min(y * 12, schedule.length);
+    for (var m = startIdx; m < endIdx; m++) { cumCapital += schedule[m].capital; cumInterets += schedule[m].interets; cumAssurance += schedule[m].assurance; }
+    var crdEnd = endIdx > 0 ? schedule[endIdx - 1].crd : 0;
+    years.push({ year: y, capitalCum: cumCapital, interetsCum: cumInterets, assuranceCum: cumAssurance, crd: crdEnd, totalPaidCum: cumCapital + cumInterets + cumAssurance });
+  }
+  return years;
+}
+
+function renderYearDetail(containerId, years, selectedYear) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  if (!selectedYear || selectedYear < 1 || selectedYear > years.length) {
+    el.innerHTML = '<p class="param-hint">Cliquez sur un point du graphique pour afficher le d\u00E9tail d\'une ann\u00E9e.</p>';
+    return;
+  }
+  var y = years[selectedYear - 1];
+  el.innerHTML = '<div class="detail-panel">' +
+    '<div class="dp-item"><div class="dp-label">Ann\u00E9e</div><div class="dp-value">' + y.year + "</div></div>" +
+    '<div class="dp-item"><div class="dp-label">Capital rembours\u00E9</div><div class="dp-value">' + fmtEUR(y.capitalCum) + "</div></div>" +
+    '<div class="dp-item"><div class="dp-label">Int\u00E9r\u00EAts cumul\u00E9s</div><div class="dp-value">' + fmtEUR(y.interetsCum) + "</div></div>" +
+    '<div class="dp-item"><div class="dp-label">Capital restant d\u00FB</div><div class="dp-value">' + fmtEUR(y.crd) + "</div></div>" +
+    '<div class="dp-item"><div class="dp-label">Total pay\u00E9</div><div class="dp-value">' + fmtEUR(y.totalPaidCum) + "</div></div>" +
+    "</div>";
+}
+
+function renderChartCRD(sim) {
+  var schedule = sim.loan.schedule;
+  var el = document.getElementById("chart-crd");
+  if (!schedule.length) { el.innerHTML = emptyStateHtml("Pas de cr\u00E9dit \u00E0 afficher (montant nul)."); document.getElementById("detail-crd").innerHTML = ""; return; }
+  var years = buildYearlyAggregates(schedule);
+  var points = [{ x: 0, y: sim.montantEmprunte }];
+  for (var i = 0; i < schedule.length; i++) points.push({ x: schedule[i].mois, y: schedule[i].crd });
+  var markers = [];
+  for (var yi = 0; yi < years.length; yi++) markers.push({ x: years[yi].year * 12, y: years[yi].crd, value: years[yi].year, color: "var(--ochre)" });
+  var cfg = {
+    series: [{ points: points, color: "var(--brick)" }],
+    xMin: 0, xMax: schedule.length, yMin: 0, yMax: sim.montantEmprunte,
+    xTicks: pickXTicks(schedule.length), xTickFormatter: function (v) { return Math.round(v / 12) + "a"; },
+    yTickFormatter: fmtEURShort, markers: markers, markerAction: "select-year-crd"
+  };
+  el.innerHTML = buildLineChartSVG(cfg);
+  // Verification visuelle de coherence (section 15) : somme capital = montant emprunte
+  var sommeCapital = 0; for (var sc = 0; sc < schedule.length; sc++) sommeCapital += schedule[sc].capital;
+  var ecart = Math.abs(sommeCapital - sim.montantEmprunte);
+  if (ecart > 1 && window.console) console.warn("Incoherence detectee : somme du capital rembourse (" + sommeCapital.toFixed(2) + ") != montant emprunte (" + sim.montantEmprunte.toFixed(2) + ")");
+  renderYearDetail("detail-crd", years, state.selectedYear);
+}
+
+function renderChartCapInt(sim) {
+  var schedule = sim.loan.schedule;
+  var el = document.getElementById("chart-capint");
+  if (!schedule.length) { el.innerHTML = emptyStateHtml("Pas de cr\u00E9dit \u00E0 afficher."); document.getElementById("detail-capint").innerHTML = ""; return; }
+  var years = buildYearlyAggregates(schedule);
+  var capPoints = [{ x: 0, y: 0 }], intPoints = [{ x: 0, y: 0 }];
+  var cumCap = 0, cumInt = 0;
+  for (var i = 0; i < schedule.length; i++) { cumCap += schedule[i].capital; cumInt += schedule[i].interets; capPoints.push({ x: schedule[i].mois, y: cumCap }); intPoints.push({ x: schedule[i].mois, y: cumInt }); }
+  var maxY = Math.max(cumCap, cumInt) || 1;
+  var markers = [];
+  for (var yi = 0; yi < years.length; yi++) {
+    markers.push({ x: years[yi].year * 12, y: years[yi].capitalCum, value: years[yi].year, color: "var(--moss)" });
+    markers.push({ x: years[yi].year * 12, y: years[yi].interetsCum, value: years[yi].year, color: "var(--brick)" });
+  }
+  var cfg = {
+    series: [{ points: capPoints, color: "var(--moss)" }, { points: intPoints, color: "var(--brick)" }],
+    xMin: 0, xMax: schedule.length, yMin: 0, yMax: maxY,
+    xTicks: pickXTicks(schedule.length), xTickFormatter: function (v) { return Math.round(v / 12) + "a"; },
+    yTickFormatter: fmtEURShort, markers: markers, markerAction: "select-year-capint"
+  };
+  el.innerHTML = buildLineChartSVG(cfg) + '<div class="chart-legend"><span><span class="legend-dot" style="background:var(--moss)"></span>Capital rembours\u00E9</span><span><span class="legend-dot" style="background:var(--brick)"></span>Int\u00E9r\u00EAts pay\u00E9s</span></div>';
+  renderYearDetail("detail-capint", years, state.selectedYear);
+}
+
+var METRICS = [{ key: "mensualite", label: "Mensualit\u00E9" }, { key: "interets", label: "Int\u00E9r\u00EAts totaux" }, { key: "coutTotal", label: "Co\u00FBt total cr\u00E9dit" }];
+var METRICS_APPORT = [{ key: "montantEmprunte", label: "Montant emprunt\u00E9" }].concat(METRICS);
+function buildMetricSelector(containerId, stateKey, metricsList) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var list = metricsList || METRICS;
+  var html = "";
+  for (var i = 0; i < list.length; i++) html += '<button type="button" class="metric-btn' + (state[stateKey] === list[i].key ? " active" : "") + '" data-metric-target="' + stateKey + '" data-metric-value="' + list[i].key + '">' + list[i].label + "</button>";
+  el.innerHTML = html;
+}
+function computeMetricValue(sim, metricKey) {
+  if (metricKey === "mensualite") return sim.mensualiteTotale1;
+  if (metricKey === "interets") return sim.loan.interetsTotal;
+  if (metricKey === "coutTotal") return sim.coutCreditTotal;
+  if (metricKey === "montantEmprunte") return sim.montantEmprunte;
+  return 0;
+}
+function metricLabel(metricKey, list) {
+  var l = list || METRICS;
+  for (var i = 0; i < l.length; i++) if (l[i].key === metricKey) return l[i].label;
+  return metricKey;
+}
+
+function buildAnnotationHtml(currentLabel, currentValueLabel, metricLabelStr, metricValue, refDelta) {
+  var html = '<div class="chart-annotation param-hint">Valeur actuelle : <b>' + currentValueLabel + "</b> \u2192 " + metricLabelStr + " : <b>" + fmtEUR(metricValue) + "</b>";
+  if (refDelta !== null && refDelta !== undefined) html += " \u00B7 \u00E9cart vs r\u00E9f\u00E9rence : <b>" + fmtDeltaEUR(refDelta) + "</b>";
+  html += "</div>";
+  return html;
+}
+
+function renderChartTaux(sim) {
+  buildMetricSelector("metric-taux", "chartTauxMetric", METRICS);
+  var el = document.getElementById("chart-taux");
+  var tauxList = buildTauxRange(sim.params, RANGE_POINTS.chartTaux);
+  var points = [];
+  for (var i = 0; i < tauxList.length; i++) {
+    var p2 = deepClone(sim.params); p2.tauxCredit = tauxList[i];
+    var s2 = calculateSimulation(mergeParams(p2));
+    points.push({ x: tauxList[i], y: computeMetricValue(s2, state.chartTauxMetric) });
+  }
+  var ys = []; for (var k = 0; k < points.length; k++) ys.push(points[k].y);
+  var currentValue = computeMetricValue(sim, state.chartTauxMetric);
+  var cfg = {
+    series: [{ points: points, color: "var(--ochre)" }],
+    xMin: tauxList[0], xMax: tauxList[tauxList.length - 1],
+    yMin: 0, yMax: (Math.max.apply(null, ys.concat([currentValue])) || 1) * 1.05,
+    xTicks: tauxList, xTickFormatter: function (v) { return fmtPct(v, 2); },
+    yTickFormatter: fmtEURShort, refX: sim.params.tauxCredit,
+    currentPoint: { x: sim.params.tauxCredit, y: currentValue }
+  };
+  var refSim = state.referenceParams ? calculateSimulation(state.referenceParams) : null;
+  var delta = refSim ? currentValue - computeMetricValue(refSim, state.chartTauxMetric) : null;
+  el.innerHTML = buildLineChartSVG(cfg) + buildAnnotationHtml("taux", fmtPct(sim.params.tauxCredit, 2), metricLabel(state.chartTauxMetric), currentValue, delta);
+}
+
+function renderChartDuree(sim) {
+  buildMetricSelector("metric-duree", "chartDureeMetric", METRICS);
+  var el = document.getElementById("chart-duree");
+  var dureeList = buildDureeRange(sim.params, RANGE_POINTS.chartDuree);
+  var cats = [];
+  var refIndex = -1;
+  for (var i = 0; i < dureeList.length; i++) {
+    var p2 = deepClone(sim.params); p2.dureeAnnees = dureeList[i];
+    var s2 = calculateSimulation(mergeParams(p2));
+    cats.push({ label: dureeList[i] + "a", value: computeMetricValue(s2, state.chartDureeMetric) });
+    if (dureeList[i] === sim.params.dureeAnnees) refIndex = i;
+  }
+  var currentValue = computeMetricValue(sim, state.chartDureeMetric);
+  var refSim = state.referenceParams ? calculateSimulation(state.referenceParams) : null;
+  var delta = refSim ? currentValue - computeMetricValue(refSim, state.chartDureeMetric) : null;
+  el.innerHTML = buildBarChartSVG({ categories: cats, color: "var(--indigo)", yTickFormatter: fmtEURShort, refIndex: refIndex }) +
+    buildAnnotationHtml("duree", sim.params.dureeAnnees + " ans", metricLabel(state.chartDureeMetric), currentValue, delta);
+}
+
+function renderChartApport(sim) {
+  buildMetricSelector("metric-apport", "chartApportMetric", METRICS_APPORT);
+  var el = document.getElementById("chart-apport");
+  var apportList = buildApportRange(sim.params, RANGE_POINTS.chartApport);
+  var points = [];
+  for (var i = 0; i < apportList.length; i++) {
+    var p2 = deepClone(sim.params); p2.apport = apportList[i];
+    var s2 = calculateSimulation(mergeParams(p2));
+    points.push({ x: apportList[i], y: computeMetricValue(s2, state.chartApportMetric) });
+  }
+  var ys = []; for (var k = 0; k < points.length; k++) ys.push(points[k].y);
+  var currentValue = computeMetricValue(sim, state.chartApportMetric);
+  var cfg = {
+    series: [{ points: points, color: "var(--teal)" }],
+    xMin: apportList[0], xMax: apportList[apportList.length - 1],
+    yMin: 0, yMax: (Math.max.apply(null, ys.concat([currentValue])) || 1) * 1.05,
+    xTicks: apportList, xTickFormatter: fmtEURShort,
+    yTickFormatter: fmtEURShort, refX: sim.params.apport,
+    currentPoint: { x: sim.params.apport, y: currentValue }
+  };
+  var refSim = state.referenceParams ? calculateSimulation(state.referenceParams) : null;
+  var delta = refSim ? currentValue - computeMetricValue(refSim, state.chartApportMetric) : null;
+  el.innerHTML = buildLineChartSVG(cfg) + buildAnnotationHtml("apport", fmtEUR(sim.params.apport), metricLabel(state.chartApportMetric, METRICS_APPORT), currentValue, delta);
+}
+
+/* ============================================================
+   ANALYSE AUTOMATIQUE
+   ============================================================ */
+function generateReferenceDeltaLines(sim, refSim) {
+  var out = [];
+  if (!refSim) return out;
+  var p = sim.params, rp = refSim.params;
+  if (Math.abs(rp.tauxCredit - p.tauxCredit) > 0.001) {
+    var dMens = sim.mensualiteTotale1 - refSim.mensualiteTotale1;
+    var dInt = sim.loan.interetsTotal - refSim.loan.interetsTotal;
+    out.push("Le taux a " + (p.tauxCredit < rp.tauxCredit ? "diminu\u00E9" : "augment\u00E9") + " de " + fmtPct(rp.tauxCredit, 2) + " \u00E0 " + fmtPct(p.tauxCredit, 2) + ".");
+    out.push("Mensualit\u00E9 : " + fmtDeltaEUR(dMens) + "/mois.");
+    out.push("Int\u00E9r\u00EAts totaux : " + fmtDeltaEUR(dInt) + ".");
+  }
+  if (rp.dureeAnnees !== p.dureeAnnees) {
+    var dMens2 = sim.mensualiteTotale1 - refSim.mensualiteTotale1;
+    var dInt2 = sim.loan.interetsTotal - refSim.loan.interetsTotal;
+    out.push("La dur\u00E9e est pass\u00E9e de " + rp.dureeAnnees + " \u00E0 " + p.dureeAnnees + " ans : mensualit\u00E9 " + fmtDeltaEUR(dMens2) + ", int\u00E9r\u00EAts " + fmtDeltaEUR(dInt2) + ".");
+  }
+  if (Math.abs(rp.apport - p.apport) > 0.5) {
+    var dEmp = sim.montantEmprunte - refSim.montantEmprunte;
+    out.push("L'apport est pass\u00E9 de " + fmtEUR(rp.apport) + " \u00E0 " + fmtEUR(p.apport) + " : montant emprunt\u00E9 " + fmtDeltaEUR(dEmp) + ".");
+  }
+  if (Math.abs(rp.prixBien - p.prixBien) > 0.5) {
+    var dCout = sim.coutTotalProjet - refSim.coutTotalProjet;
+    out.push("Le prix du bien est pass\u00E9 de " + fmtEUR(rp.prixBien) + " \u00E0 " + fmtEUR(p.prixBien) + " : co\u00FBt total du projet " + fmtDeltaEUR(dCout) + ".");
+  }
+  var dAssurance = sim.assuranceMensuelle1 - refSim.assuranceMensuelle1;
+  if (Math.abs(dAssurance) > 0.5) out.push("Assurance mensuelle : " + fmtDeltaEUR(dAssurance) + "/mois.");
+  var dCoutTotal = sim.coutTotalProjet - refSim.coutTotalProjet;
+  if (Math.abs(dCoutTotal) > 0.5) out.push("Co\u00FBt total du projet : " + fmtDeltaEUR(dCoutTotal) + ".");
+  return out;
+}
+
+function generateAnalysis(sim, refSim) {
+  var out = generateReferenceDeltaLines(sim, refSim);
+  var p = sim.params;
+
+  // Insights generiques toujours calcules dynamiquement (jamais de valeur inventee)
+  if (p.dureeAnnees > 5) {
+    var pDuree = deepClone(p); pDuree.dureeAnnees = Math.max(5, p.dureeAnnees - 5);
+    var sDuree = calculateSimulation(mergeParams(pDuree));
+    var dMensDuree = sDuree.mensualiteTotale1 - sim.mensualiteTotale1;
+    var dIntDuree = sim.loan.interetsTotal - sDuree.loan.interetsTotal;
+    out.push("R\u00E9duire la dur\u00E9e de " + p.dureeAnnees + " \u00E0 " + pDuree.dureeAnnees + " ans augmenterait la mensualit\u00E9 de " + fmtEUR(Math.abs(dMensDuree)) + " mais r\u00E9duirait les int\u00E9r\u00EAts de " + fmtEUR(Math.abs(dIntDuree)) + ".");
+  }
+  var pApport = deepClone(p); pApport.apport = clampParam("apport", p.apport + 20000);
+  if (pApport.apport !== p.apport) {
+    var sApport = calculateSimulation(mergeParams(pApport));
+    var dEmpApport = sim.montantEmprunte - sApport.montantEmprunte;
+    out.push("Augmenter l'apport de " + fmtEUR(pApport.apport - p.apport) + " r\u00E9duirait le montant emprunt\u00E9 de " + fmtEUR(Math.abs(dEmpApport)) + ".");
+  }
+  var pTaux = deepClone(p); pTaux.tauxCredit = clampParam("tauxCredit", p.tauxCredit - 0.3);
+  if (Math.abs(pTaux.tauxCredit - p.tauxCredit) > 0.001) {
+    var sTaux = calculateSimulation(mergeParams(pTaux));
+    var dIntTaux = sim.loan.interetsTotal - sTaux.loan.interetsTotal;
+    out.push("Une baisse du taux de " + (p.tauxCredit - pTaux.tauxCredit).toFixed(2).replace(".", ",") + " point r\u00E9duirait le co\u00FBt des int\u00E9r\u00EAts de " + fmtEUR(Math.abs(dIntTaux)) + ".");
+  }
+
+  if (sim.coutCreditTotal > 0) {
+    var partInterets = sim.loan.interetsTotal / sim.coutCreditTotal * 100;
+    out.push("Les int\u00E9r\u00EAts repr\u00E9sentent " + fmtPct(partInterets, 0) + " du co\u00FBt total du cr\u00E9dit, soit " + fmtEUR(sim.loan.interetsTotal) + " sur " + p.dureeAnnees + " ans.");
+  }
+  if (sim.params.prixBien > 0) {
+    var surcout = (sim.coutTotalProjet / sim.params.prixBien - 1) * 100;
+    out.push("Le co\u00FBt total du projet (" + fmtEUR(sim.coutTotalProjet) + ") repr\u00E9sente " + fmtPct(surcout, 0) + " de plus que le prix d'achat du bien.");
+  }
+  if (sim.revenusRetenus > 0) {
+    out.push("Avec les revenus retenus, le taux d'endettement cr\u00E9dit estim\u00E9 de cette simulation (nouveau cr\u00E9dit + autres cr\u00E9dits, hors charges mensuelles) est de " + fmtPct(sim.tauxEffort, 1) + (sim.tauxEffort > 35 ? " \u2014 au-dessus du seuil de 35 % souvent utilis\u00E9 comme rep\u00E8re." : " \u2014 sous le seuil de 35 % souvent utilis\u00E9 comme rep\u00E8re.") + " Les m\u00E9thodes de calcul peuvent varier selon les banques.");
+  }
+  if (!out.length) out.push("Renseignez vos param\u00E8tres pour obtenir une analyse d\u00E9taill\u00E9e de votre simulation.");
+  return out;
+}
+
+function renderAnalysis(sim) {
+  var refSim = state.referenceParams ? calculateSimulation(state.referenceParams) : null;
+  var lines = generateAnalysis(sim, refSim);
+  var html = "";
+  for (var i = 0; i < lines.length; i++) html += "<li>" + escapeHtml(lines[i]) + "</li>";
+  document.getElementById("analysis-list").innerHTML = html;
+}
+
+/* ============================================================
+   TABLEAU D'AMORTISSEMENT
+   ============================================================ */
+function updateSegActive(containerId, attr, value) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var buttons = container.querySelectorAll("button");
+  for (var i = 0; i < buttons.length; i++) buttons[i].classList.toggle("active", buttons[i].getAttribute(attr) === value);
+}
+
+function renderTable(sim) {
+  updateSegActive("seg-view", "data-view", state.tableView);
+  var schedule = sim.loan.schedule;
+  var container = document.getElementById("amort-table");
+  if (!schedule.length) { container.innerHTML = ""; return; }
+  var search = (state.tableSearch || "").trim();
+
+  if (state.tableView === "mensuel") {
+    var header = "<thead><tr><th>Mois</th><th>Mensualit\u00E9</th><th>Capital</th><th>Int\u00E9r\u00EAts</th><th>Assurance</th><th>CRD</th></tr></thead>";
+    var totCap = 0, totInt = 0, totAss = 0, totMens = 0;
+    var body = "";
+    for (var i = 0; i < schedule.length; i++) {
+      var r = schedule[i];
+      totCap += r.capital; totInt += r.interets; totAss += r.assurance; totMens += r.mensualite;
+      if (search && String(r.mois).indexOf(search) === -1) continue;
+      var yearEnd = r.mois % 12 === 0;
+      body += "<tr" + (yearEnd ? ' class="row-year-end"' : "") + "><td>" + r.mois + "</td><td>" + fmtEUR(r.mensualite) + "</td><td>" + fmtEUR(r.capital) + "</td><td>" + fmtEUR(r.interets) + "</td><td>" + fmtEUR(r.assurance) + "</td><td>" + fmtEUR(r.crd) + "</td></tr>";
+    }
+    var foot = "<tfoot><tr><td>Total</td><td>" + fmtEUR(totMens) + "</td><td>" + fmtEUR(totCap) + "</td><td>" + fmtEUR(totInt) + "</td><td>" + fmtEUR(totAss) + "</td><td>\u2014</td></tr></tfoot>";
+    container.innerHTML = header + "<tbody>" + body + "</tbody>" + foot;
+  } else {
+    var years = buildYearlyAggregates(schedule);
+    var header2 = "<thead><tr><th>Ann\u00E9e</th><th>Capital rembours\u00E9</th><th>Int\u00E9r\u00EAts</th><th>Assurance</th><th>Total pay\u00E9</th><th>CRD</th></tr></thead>";
+    var body2 = "";
+    var prevCap = 0, prevInt = 0, prevAss = 0, prevTotal = 0;
+    for (var y = 0; y < years.length; y++) {
+      var yr = years[y];
+      var capY = yr.capitalCum - prevCap, intY = yr.interetsCum - prevInt, assY = yr.assuranceCum - prevAss, totY = yr.totalPaidCum - prevTotal;
+      if (!search || String(yr.year).indexOf(search) !== -1) {
+        body2 += "<tr><td>" + yr.year + "</td><td>" + fmtEUR(capY) + "</td><td>" + fmtEUR(intY) + "</td><td>" + fmtEUR(assY) + "</td><td>" + fmtEUR(totY) + "</td><td>" + fmtEUR(yr.crd) + "</td></tr>";
+      }
+      prevCap = yr.capitalCum; prevInt = yr.interetsCum; prevAss = yr.assuranceCum; prevTotal = yr.totalPaidCum;
+    }
+    var lastY = years[years.length - 1];
+    var foot2 = "<tfoot><tr><td>Total</td><td>" + fmtEUR(lastY ? lastY.capitalCum : 0) + "</td><td>" + fmtEUR(lastY ? lastY.interetsCum : 0) + "</td><td>" + fmtEUR(lastY ? lastY.assuranceCum : 0) + "</td><td>" + fmtEUR(lastY ? lastY.totalPaidCum : 0) + "</td><td>\u2014</td></tr></tfoot>";
+    container.innerHTML = header2 + "<tbody>" + body2 + "</tbody>" + foot2;
+  }
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard(sim) {
+  var p = sim.params;
+  var cards = [
+    { label: "Prix du projet", value: fmtEUR(p.prixBien), accent: "" },
+    { label: "Apport utilis\u00E9", value: fmtEUR(sim.apportUtilise), accent: "a-moss" },
+    { label: "Montant emprunt\u00E9", value: fmtEUR(sim.montantEmprunte), accent: "a-indigo" },
+    { label: "Mensualit\u00E9 hors assurance", value: fmtEUR(sim.mensualiteHorsAssurance), accent: "" },
+    { label: "Assurance / mois", value: fmtEUR(sim.assuranceMensuelle1), accent: "" },
+    { label: "Mensualit\u00E9 totale", value: fmtEUR(sim.mensualiteTotale1), accent: "a-gold" },
+    { label: "Int\u00E9r\u00EAts totaux", value: fmtEUR(sim.loan.interetsTotal), accent: "a-brick" },
+    { label: "Co\u00FBt total du cr\u00E9dit", value: fmtEUR(sim.coutCreditTotal), accent: "a-brick" },
+    { label: "Co\u00FBt total du projet", value: fmtEUR(sim.coutTotalProjet), accent: "a-brick" },
+    { label: "Dur\u00E9e", value: p.dureeAnnees + " ans", accent: "" },
+    { label: "Taux d'endettement cr\u00E9dit estim\u00E9", value: fmtPct(sim.tauxEffort, 1), accent: sim.tauxEffort > 35 ? "a-brick" : "a-moss" },
+    { label: "Reste \u00E0 vivre", value: fmtEUR(sim.resteAVivre), accent: sim.resteAVivre < 0 ? "a-brick" : "" },
+    { label: "Co\u00FBt du cr\u00E9dit pour 100 000 \u20AC emprunt\u00E9s", value: fmtEUR(sim.coutCreditPour100k), accent: "a-indigo" }
+  ];
+  var html = "";
+  for (var i = 0; i < cards.length; i++) html += '<div class="stat-card ' + cards[i].accent + '"><div class="stat-label">' + cards[i].label + '</div><div class="stat-value">' + cards[i].value + "</div></div>";
+  document.getElementById("dashboard").innerHTML = html;
+
+  setText("out-coutProjetHorsCredit", fmtEUR(sim.coutProjetHorsCredit));
+  setText("out-montantEmprunte", fmtEUR(sim.montantEmprunte));
+  setText("out-mensualiteTotale", fmtEUR(sim.mensualiteTotale1));
+  setText("out-fraisFinances", fmtEUR(sim.fraisFinances));
+  setText("out-fraisNonFinances", fmtEUR(sim.fraisNonFinances));
+  setText("out-tauxEffort", fmtPct(sim.tauxEffort, 1) + " = (nouveau cr\u00E9dit " + fmtEUR(sim.mensualiteNouveauCredit) + " + autres cr\u00E9dits " + fmtEUR(sim.autresCreditsMensuel) + ") / revenus retenus " + fmtEUR(sim.revenusRetenus));
+
+  var hintAcq = document.getElementById("hint-acquisition");
+  if (hintAcq) {
+    hintAcq.innerHTML = "<b>Estimation des frais d'acquisition</b> : " + fmtEUR(sim.fraisAcquisitionMontant) + " sur la base d'un taux de " + fmtPct(sim.tauxAcquisitionEffectif, 2) + " (" + escapeHtml(FRAIS_ACQUISITION_LABELS[p.typeBien] || "") + ")." +
+      "<br>Cette valeur est une hypoth\u00E8se de simulation, pas un calcul notarial d\u00E9finitif.";
+  }
+  var hintAgence = document.getElementById("hint-agence");
+  if (hintAgence) {
+    hintAgence.textContent = p.fraisAgenceMontant > 0
+      ? (p.agenceCharge === "acquereur"
+          ? "Les frais d'agence (" + fmtEUR(p.fraisAgenceMontant) + ") sont \u00E0 votre charge : ils sont inclus dans le co\u00FBt total du projet."
+          : "Les frais d'agence (" + fmtEUR(p.fraisAgenceMontant) + ") sont \u00E0 la charge du vendeur : ils n'augmentent pas le co\u00FBt support\u00E9 par l'acheteur.")
+      : "";
+  }
+  var hintInsuff = document.getElementById("hint-apport-insuffisant");
+  if (hintInsuff) {
+    hintInsuff.textContent = sim.apportInsuffisantPourFrais > 0.5
+      ? "\u26A0 L'apport ne couvre pas les frais non financ\u00E9s : il manque " + fmtEUR(sim.apportInsuffisantPourFrais) + " (envisagez de financer ces frais ou d'augmenter l'apport)."
+      : "";
+  }
+
+  renderPilotReadouts(sim);
+}
+function setText(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+
+/* ============================================================
+   ET SI ?
+   ============================================================ */
+function renderEtSi(sim) {
+  var el = document.getElementById("etsi-content");
+  if (!state.referenceParams) {
+    el.innerHTML = emptyStateHtml("Aucune r\u00E9f\u00E9rence enregistr\u00E9e. Ajustez vos param\u00E8tres dans l'onglet Simulateur, puis cliquez sur \u00AB Enregistrer la simulation actuelle comme r\u00E9f\u00E9rence \u00BB.");
+    return;
+  }
+  var refSim = calculateSimulation(state.referenceParams);
+
+  var dMensSynth = sim.mensualiteTotale1 - refSim.mensualiteTotale1;
+  var dIntSynth = sim.loan.interetsTotal - refSim.loan.interetsTotal;
+  var dCoutSynth = sim.coutTotalProjet - refSim.coutTotalProjet;
+  function synthClass(d) { return Math.abs(d) < 0.5 ? "delta-flat" : (d < 0 ? "delta-pos" : "delta-neg"); }
+  var synthHtml = '<div class="pilot-readouts" style="margin-bottom:16px;">' +
+    '<div class="stat-card"><div class="stat-label">Mensualit\u00E9</div><div class="stat-value">' + fmtEUR(sim.mensualiteTotale1) + '</div><div class="stat-sub ' + synthClass(dMensSynth) + '">' + fmtDeltaEUR(dMensSynth) + "/mois</div></div>" +
+    '<div class="stat-card"><div class="stat-label">Int\u00E9r\u00EAts</div><div class="stat-value">' + fmtEUR(sim.loan.interetsTotal) + '</div><div class="stat-sub ' + synthClass(dIntSynth) + '">' + fmtDeltaEUR(dIntSynth) + "</div></div>" +
+    '<div class="stat-card"><div class="stat-label">Co\u00FBt total</div><div class="stat-value">' + fmtEUR(sim.coutTotalProjet) + '</div><div class="stat-sub ' + synthClass(dCoutSynth) + '">' + fmtDeltaEUR(dCoutSynth) + "</div></div>" +
+    "</div>";
+
+  var rows = [
+    { label: "Prix du bien", ref: fmtEUR(refSim.params.prixBien), cur: fmtEUR(sim.params.prixBien), delta: sim.params.prixBien - refSim.params.prixBien, fmtDelta: fmtDeltaEUR, favorable: "neutral" },
+    { label: "Apport", ref: fmtEUR(refSim.apportUtilise), cur: fmtEUR(sim.apportUtilise), delta: sim.apportUtilise - refSim.apportUtilise, fmtDelta: fmtDeltaEUR, favorable: "neutral" },
+    { label: "Montant emprunt\u00E9", ref: fmtEUR(refSim.montantEmprunte), cur: fmtEUR(sim.montantEmprunte), delta: sim.montantEmprunte - refSim.montantEmprunte, fmtDelta: fmtDeltaEUR, favorable: "neutral" },
+    { label: "Taux", ref: fmtPct(refSim.params.tauxCredit, 2), cur: fmtPct(sim.params.tauxCredit, 2), delta: sim.params.tauxCredit - refSim.params.tauxCredit, fmtDelta: function (d) { return (d >= 0 ? "+" : "") + d.toFixed(2).replace(".", ",") + " pt"; }, favorable: "neutral" },
+    { label: "Dur\u00E9e", ref: refSim.params.dureeAnnees + " ans", cur: sim.params.dureeAnnees + " ans", delta: sim.params.dureeAnnees - refSim.params.dureeAnnees, fmtDelta: function (d) { return (d >= 0 ? "+" : "") + d + " ans"; }, favorable: "neutral" },
+    { label: "Mensualit\u00E9", ref: fmtEUR(refSim.mensualiteTotale1), cur: fmtEUR(sim.mensualiteTotale1), delta: sim.mensualiteTotale1 - refSim.mensualiteTotale1, fmtDelta: fmtDeltaEUR, favorable: "lower" },
+    { label: "Assurance", ref: fmtEUR(refSim.assuranceMensuelle1), cur: fmtEUR(sim.assuranceMensuelle1), delta: sim.assuranceMensuelle1 - refSim.assuranceMensuelle1, fmtDelta: fmtDeltaEUR, favorable: "lower" },
+    { label: "Int\u00E9r\u00EAts totaux", ref: fmtEUR(refSim.loan.interetsTotal), cur: fmtEUR(sim.loan.interetsTotal), delta: sim.loan.interetsTotal - refSim.loan.interetsTotal, fmtDelta: fmtDeltaEUR, favorable: "lower" },
+    { label: "Co\u00FBt du cr\u00E9dit", ref: fmtEUR(refSim.coutCreditTotal), cur: fmtEUR(sim.coutCreditTotal), delta: sim.coutCreditTotal - refSim.coutCreditTotal, fmtDelta: fmtDeltaEUR, favorable: "lower" },
+    { label: "Co\u00FBt total", ref: fmtEUR(refSim.coutTotalProjet), cur: fmtEUR(sim.coutTotalProjet), delta: sim.coutTotalProjet - refSim.coutTotalProjet, fmtDelta: fmtDeltaEUR, favorable: "lower" },
+    { label: "Taux d'endettement cr\u00E9dit estim\u00E9", ref: fmtPct(refSim.tauxEffort, 1), cur: fmtPct(sim.tauxEffort, 1), delta: sim.tauxEffort - refSim.tauxEffort, fmtDelta: fmtDeltaPct, favorable: "lower" }
+  ];
+  var html = '<table class="comparison-table"><thead><tr><th>Indicateur</th><th>R\u00E9f\u00E9rence</th><th>Actuel</th><th>\u00C9cart</th></tr></thead><tbody>';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var cls = "delta-flat";
+    if (r.favorable === "lower" && Math.abs(r.delta) > 0.0005) cls = r.delta < 0 ? "delta-pos" : "delta-neg";
+    html += "<tr><td>" + r.label + "</td><td>" + r.ref + "</td><td>" + r.cur + "</td><td class=\"" + cls + "\">" + r.fmtDelta(r.delta) + "</td></tr>";
+  }
+  html += "</tbody></table>";
+
+  var impactLines = generateReferenceDeltaLines(sim, refSim);
+  var impactHtml = '<div class="panel-card" style="margin-top:16px;"><h3>Impact de la modification</h3><ul class="analysis-list">';
+  if (impactLines.length) { for (var li = 0; li < impactLines.length; li++) impactHtml += "<li>" + escapeHtml(impactLines[li]) + "</li>"; }
+  else impactHtml += "<li>Aucun \u00E9cart avec la r\u00E9f\u00E9rence pour le moment.</li>";
+  impactHtml += "</ul></div>";
+
+  el.innerHTML = synthHtml + html + impactHtml;
+}
+
+/* ============================================================
+   SCENARIOS
+   ============================================================ */
+function findScenario(id) { for (var i = 0; i < state.scenarios.length; i++) { if (state.scenarios[i].id === id) return state.scenarios[i]; } return null; }
+
+function formatScenarioDate(ts) {
+  if (!ts) return "";
+  var d = new Date(ts);
+  if (isNaN(d.getTime())) return "";
+  return pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear();
+}
+function renderScenarios(sim) {
+  var grid = document.getElementById("scenario-grid");
+  if (!state.scenarios.length) {
+    grid.innerHTML = emptyStateHtml("Aucun sc\u00E9nario enregistr\u00E9. Ajustez vos param\u00E8tres puis enregistrez-les ci-dessus.");
+  } else {
+    var html = "";
+    for (var i = 0; i < state.scenarios.length; i++) {
+      var sc = state.scenarios[i];
+      var sSim = calculateSimulation(sc.params);
+      html += '<div class="scenario-card"><h4>' + escapeHtml(sc.name) + "</h4>" +
+        (sc.createdAt ? '<div class="sc-line"><span>Cr\u00E9\u00E9 le</span><b>' + formatScenarioDate(sc.createdAt) + "</b></div>" : "") +
+        '<div class="sc-line"><span>Taux</span><b>' + fmtPct(sc.params.tauxCredit, 2) + "</b></div>" +
+        '<div class="sc-line"><span>Dur\u00E9e</span><b>' + sc.params.dureeAnnees + " ans</b></div>" +
+        '<div class="sc-line"><span>Apport</span><b>' + fmtEUR(sc.params.apport) + "</b></div>" +
+        '<div class="sc-line"><span>Mensualit\u00E9</span><b>' + fmtEUR(sSim.mensualiteTotale1) + "</b></div>" +
+        '<div class="sc-line"><span>Co\u00FBt total</span><b>' + fmtEUR(sSim.coutTotalProjet) + "</b></div>" +
+        '<div class="sc-actions">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-action="load-scenario" data-id="' + sc.id + '">Charger</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-action="ref-scenario" data-id="' + sc.id + '">Comme r\u00E9f\u00E9rence</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-action="duplicate-scenario" data-id="' + sc.id + '">Dupliquer</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-action="rename-scenario" data-id="' + sc.id + '">Renommer</button>' +
+          '<button type="button" class="btn btn-danger btn-sm" data-action="delete-scenario" data-id="' + sc.id + '">Supprimer</button>' +
+        "</div></div>";
+    }
+    grid.innerHTML = html;
+  }
+  renderScenarioComparison(sim);
+}
+
+function crdAtYears(sim2, years) {
+  var idx = years * 12 - 1;
+  var sch = sim2.loan.schedule;
+  return (idx >= 0 && idx < sch.length) ? sch[idx].crd : null;
+}
+
+function highlightMinMax(cols, values) {
+  // Ne definit pas de "meilleur" scenario : marque mecaniquement le min et le max de la ligne.
+  if (cols.length < 2) return { minIdx: -1, maxIdx: -1 };
+  var minIdx = 0, maxIdx = 0;
+  for (var i = 1; i < values.length; i++) {
+    if (values[i] < values[minIdx]) minIdx = i;
+    if (values[i] > values[maxIdx]) maxIdx = i;
+  }
+  if (values[minIdx] === values[maxIdx]) return { minIdx: -1, maxIdx: -1 };
+  return { minIdx: minIdx, maxIdx: maxIdx };
+}
+
+function renderScenarioComparison(sim) {
+  var el = document.getElementById("scenario-comparison");
+  var chk = document.getElementById("chk-include-current");
+  var includeCurrent = chk ? chk.checked : true;
+  var cols = [];
+  for (var i = 0; i < state.scenarios.length; i++) cols.push({ name: state.scenarios[i].name, sim: calculateSimulation(state.scenarios[i].params) });
+  if (includeCurrent) cols.push({ name: "Sc\u00E9nario actuel", sim: sim });
+  if (!cols.length) { el.innerHTML = '<p class="param-hint" style="padding:12px;">Rien \u00E0 comparer pour le moment.</p>'; return; }
+
+  var metricRows = [
+    { label: "Apport", numeric: true, get: function (c) { return c.sim.apportUtilise; }, fmt: fmtEUR },
+    { label: "Montant emprunt\u00E9", numeric: true, get: function (c) { return c.sim.montantEmprunte; }, fmt: fmtEUR },
+    { label: "Taux", numeric: true, get: function (c) { return c.sim.params.tauxCredit; }, fmt: function (v) { return fmtPct(v, 2); } },
+    { label: "Dur\u00E9e", numeric: false, get: function (c) { return c.sim.params.dureeAnnees + " ans"; } },
+    { label: "Mensualit\u00E9", numeric: true, get: function (c) { return c.sim.mensualiteTotale1; }, fmt: fmtEUR },
+    { label: "Assurance / mois", numeric: true, get: function (c) { return c.sim.assuranceMensuelle1; }, fmt: fmtEUR },
+    { label: "Int\u00E9r\u00EAts totaux", numeric: true, get: function (c) { return c.sim.loan.interetsTotal; }, fmt: fmtEUR },
+    { label: "Co\u00FBt total cr\u00E9dit", numeric: true, get: function (c) { return c.sim.coutCreditTotal; }, fmt: fmtEUR },
+    { label: "Co\u00FBt total projet", numeric: true, get: function (c) { return c.sim.coutTotalProjet; }, fmt: fmtEUR },
+    { label: "CRD \u00E0 5 ans", numeric: false, get: function (c) { var v = crdAtYears(c.sim, 5); return v === null ? "\u2014" : fmtEUR(v); } },
+    { label: "CRD \u00E0 10 ans", numeric: false, get: function (c) { var v = crdAtYears(c.sim, 10); return v === null ? "\u2014" : fmtEUR(v); } },
+    { label: "CRD \u00E0 15 ans", numeric: false, get: function (c) { var v = crdAtYears(c.sim, 15); return v === null ? "\u2014" : fmtEUR(v); } }
+  ];
+  var html = '<table class="comparison-table"><thead><tr><th>Indicateur</th>';
+  for (var c = 0; c < cols.length; c++) html += "<th>" + escapeHtml(cols[c].name) + "</th>";
+  html += "</tr></thead><tbody>";
+  for (var r = 0; r < metricRows.length; r++) {
+    html += "<tr><td>" + metricRows[r].label + "</td>";
+    if (metricRows[r].numeric) {
+      var vals = []; for (var ci = 0; ci < cols.length; ci++) vals.push(metricRows[r].get(cols[ci]));
+      var mm = highlightMinMax(cols, vals);
+      for (var c2 = 0; c2 < cols.length; c2++) {
+        var cls = c2 === mm.minIdx ? ' class="cell-min"' : (c2 === mm.maxIdx ? ' class="cell-max"' : "");
+        html += "<td" + cls + ">" + metricRows[r].fmt(vals[c2]) + "</td>";
+      }
+    } else {
+      for (var c3 = 0; c3 < cols.length; c3++) html += "<td>" + metricRows[r].get(cols[c3]) + "</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody></table>";
+  el.innerHTML = html;
+}
+
+/* ============================================================
+   SENSIBILITE
+   ============================================================ */
+var SENS_AXES = {
+  "taux-duree": { xKey: "tauxCredit", yKey: "dureeAnnees" },
+  "apport-taux": { xKey: "tauxCredit", yKey: "apport" },
+  "apport-duree": { xKey: "dureeAnnees", yKey: "apport" }
+};
+
+function rangeForKey(key, params, pointsKey) {
+  if (key === "tauxCredit") return buildTauxRange(params, RANGE_POINTS[pointsKey] !== undefined ? RANGE_POINTS[pointsKey] : RANGE_POINTS.sensTaux);
+  if (key === "dureeAnnees") return buildDureeRange(params, RANGE_POINTS[pointsKey] !== undefined ? RANGE_POINTS[pointsKey] : RANGE_POINTS.sensDuree);
+  if (key === "apport") return buildApportRange(params, RANGE_POINTS[pointsKey] !== undefined ? RANGE_POINTS[pointsKey] : RANGE_POINTS.sensApport);
+  return [];
+}
+
+function formatAxisValue(key, v) {
+  if (key === "tauxCredit") return fmtPct(v, 2);
+  if (key === "dureeAnnees") return v + " ans";
+  if (key === "apport") return fmtEUR(v);
+  return v;
+}
+function nearestIndex(arr, val) {
+  var bi = 0, bd = Infinity;
+  for (var i = 0; i < arr.length; i++) { var d = Math.abs(arr[i] - val); if (d < bd) { bd = d; bi = i; } }
+  return bi;
+}
+function heatColor(v, min, max) {
+  var t = max > min ? (v - min) / (max - min) : 0;
+  var c1 = [91, 122, 74], c2 = [156, 59, 46];
+  var r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+  var g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+  var b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+  return "rgba(" + r + "," + g + "," + b + ",0.35)";
+}
+
+function renderSensitivity(sim) {
+  buildMetricSelector("metric-sensibilite", "sensMetric", METRICS);
+  updateSegActive("seg-sens-axes", "data-axes", state.sensAxes);
+  var axesDef = SENS_AXES[state.sensAxes];
+  var xKeyPointsKey = axesDef.xKey === "tauxCredit" ? "sensTaux" : (axesDef.xKey === "dureeAnnees" ? "sensDuree" : "sensApport");
+  var yKeyPointsKey = axesDef.yKey === "tauxCredit" ? "sensTaux" : (axesDef.yKey === "dureeAnnees" ? "sensDuree" : "sensApport");
+  var xValues = rangeForKey(axesDef.xKey, sim.params, xKeyPointsKey);
+  var yValues = rangeForKey(axesDef.yKey, sim.params, yKeyPointsKey);
+  var matrix = [], allValues = [];
+  for (var yi = 0; yi < yValues.length; yi++) {
+    var row = [];
+    for (var xi = 0; xi < xValues.length; xi++) {
+      var pClone = deepClone(sim.params);
+      pClone[axesDef.xKey] = xValues[xi];
+      pClone[axesDef.yKey] = yValues[yi];
+      var s2 = calculateSimulation(mergeParams(pClone));
+      var v = computeMetricValue(s2, state.sensMetric);
+      row.push(v);
+      allValues.push(v);
+    }
+    matrix.push(row);
+  }
+  var minV = Math.min.apply(null, allValues), maxV = Math.max.apply(null, allValues);
+  var curXIdx = nearestIndex(xValues, sim.params[axesDef.xKey]);
+  var curYIdx = nearestIndex(yValues, sim.params[axesDef.yKey]);
+
+  var html = '<table class="sensitivity-table"><thead><tr><th></th>';
+  for (var xi2 = 0; xi2 < xValues.length; xi2++) html += "<th>" + formatAxisValue(axesDef.xKey, xValues[xi2]) + "</th>";
+  html += "</tr></thead><tbody>";
+  for (var yi2 = 0; yi2 < yValues.length; yi2++) {
+    html += "<tr><th>" + formatAxisValue(axesDef.yKey, yValues[yi2]) + "</th>";
+    for (var xi3 = 0; xi3 < xValues.length; xi3++) {
+      var val = matrix[yi2][xi3];
+      var bg = heatColor(val, minV, maxV);
+      var isCurrent = yi2 === curYIdx && xi3 === curXIdx;
+      html += "<td" + (isCurrent ? ' class="current-cell"' : "") + ' style="background:' + bg + ';">' + fmtEURShort(val) + "</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody></table><p class=\"param-hint\">La cellule entour\u00E9e correspond \u00E0 votre situation actuelle.</p>";
+  document.getElementById("sensitivity-table-wrap").innerHTML = html;
+}
+
+/* ============================================================
+   ORCHESTRATEUR DE RENDU
+   ============================================================ */
+function renderResults() {
+  var sim = currentSim();
+  renderDashboard(sim);
+  renderChartCRD(sim);
+  renderChartCapInt(sim);
+  document.getElementById("chart-composition").innerHTML = buildCompositionChart(sim);
+  renderChartTaux(sim);
+  renderChartDuree(sim);
+  renderChartApport(sim);
+  renderAnalysis(sim);
+  renderTable(sim);
+  renderEtSi(sim);
+  renderScenarios(sim);
+  renderSensitivity(sim);
+  return sim;
+}
+/* Regroupement des mises a jour par frame d'animation : pendant un
+   glissement rapide de slider, plusieurs evenements "input" peuvent se
+   declencher entre deux rendus ecran. On ne recalcule et on ne
+   sauvegarde qu'une seule fois par frame (~60x/s max), jamais plus —
+   ce qui elimine les recalculs redondants sans rien retarder de
+   perceptible ni changer le resultat final affiche. */
+var paramsUpdateScheduled = false;
+function scheduleParamsUpdate() {
+  if (paramsUpdateScheduled) return;
+  paramsUpdateScheduled = true;
+  var raf = window.requestAnimationFrame || function (cb) { return setTimeout(cb, 16); };
+  raf(function () {
+    paramsUpdateScheduled = false;
+    saveState();
+    renderResults();
+  });
+}
+function onParamsChanged() { scheduleParamsUpdate(); }
+
+/* ============================================================
+   IMPORT / EXPORT JSON
+   ============================================================ */
+function exportFileName() { var d = new Date(); return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + "_Simulateur Immobilier - " + APP_VERSION + ".json"; }
+function doExport() {
+  var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = exportFileName();
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+function doImport(file) {
+  var reader = new FileReader();
+  reader.onload = function () {
+    try {
+      var data = JSON.parse(reader.result);
+      if (!data || !data.params) { alert("Fichier invalide : structure inattendue."); return; }
+      if (!confirm("Importer ce fichier remplacera toutes les donn\u00E9es actuelles. Continuer ?")) return;
+      state = data;
+      var d = defaultState();
+      for (var k in d) { if (state[k] === undefined) state[k] = d[k]; }
+      applyMigrationIfNeeded();
+      saveState();
+      buildParamsPanel();
+      buildPilotagePanel();
+      applyTheme(state.theme, false);
+      renderResults();
+      switchTab(state.currentTab || "simulateur");
+    } catch (err) { alert("Impossible de lire ce fichier JSON."); }
+  };
+  reader.readAsText(file);
+}
+
+/* ============================================================
+   THEME / ONGLETS
+   ============================================================ */
+var ICONS = {
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>'
+};
+function applyTheme(theme, persist) {
+  state.theme = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", state.theme);
+  var btn = document.getElementById("btn-theme-toggle");
+  if (btn) {
+    btn.innerHTML = state.theme === "dark" ? ICONS.sun : ICONS.moon;
+    var label = state.theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre";
+    btn.title = label; btn.setAttribute("aria-label", label);
+  }
+  if (persist) saveState();
+}
+function switchTab(tabKey) {
+  state.currentTab = tabKey; saveState();
+  var tabs = document.querySelectorAll("#tabs .tab");
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.toggle("active", tabs[i].getAttribute("data-tab") === tabKey);
+  var panels = document.querySelectorAll(".tab-panel");
+  for (var j = 0; j < panels.length; j++) panels[j].classList.toggle("active", panels[j].id === "tab-" + tabKey);
+}
+
+/* ============================================================
+   ACTIONS
+   ============================================================ */
+function handleParamInput(el) {
+  var key = el.getAttribute("data-key");
+  if (!key) return;
+  var raw = parseFloat(el.value);
+  if (isNaN(raw)) return;
+  state.params[key] = raw;
+  syncAllControlsForKey(key);
+  onParamsChanged();
+}
+function handleParamBlur(el) {
+  var key = el.getAttribute("data-key");
+  if (!key) return;
+  var raw = parseFloat(el.value);
+  var clamped = clampParam(key, raw);
+  state.params[key] = clamped;
+  syncAllControlsForKey(key);
+  el.value = numToStr(clamped, decimalsFor(findDef(key)));
+  onParamsChanged();
+}
+function handleQuickAction(t) {
+  var idx = parseInt(t.getAttribute("data-quick"), 10);
+  var qa = QUICK_ACTIONS[idx];
+  if (!qa) return;
+  var newVal = clampParam(qa.key, (state.params[qa.key] || 0) + qa.delta);
+  state.params[qa.key] = newVal;
+  syncAllControlsForKey(qa.key);
+  onParamsChanged();
+}
+function toggleAdvanced(t) {
+  var id = t.getAttribute("data-toggle");
+  var body = document.getElementById(id);
+  if (!body) return;
+  var open = body.classList.toggle("open");
+  t.classList.toggle("open", open);
+}
+function handleSwapReference() {
+  if (!state.referenceParams) { alert("Aucune r\u00E9f\u00E9rence enregistr\u00E9e pour le moment."); return; }
+  var tmp = deepClone(state.params);
+  state.params = mergeParams(state.referenceParams);
+  state.referenceParams = tmp;
+  saveState();
+  buildParamsPanel();
+  buildPilotagePanel();
+  renderResults();
+}
+function handleSaveScenario() {
+  var nameInput = document.getElementById("scenario-name-input");
+  var name = nameInput.value.trim();
+  if (!name) { alert("Merci de donner un nom au sc\u00E9nario."); return; }
+  state.scenarios.push({ id: uid(), name: name, params: deepClone(state.params), createdAt: Date.now() });
+  nameInput.value = "";
+  saveState();
+  renderResults();
+}
+function handleLoadScenario(id) {
+  var sc = findScenario(id);
+  if (!sc) return;
+  state.params = mergeParams(sc.params);
+  saveState();
+  buildParamsPanel();
+  buildPilotagePanel();
+  renderResults();
+  switchTab("simulateur");
+}
+function handleRefScenario(id) {
+  var sc = findScenario(id);
+  if (!sc) return;
+  state.referenceParams = deepClone(mergeParams(sc.params));
+  saveState();
+  renderResults();
+}
+function handleDeleteScenario(id) {
+  if (!confirm("Supprimer ce sc\u00E9nario ?")) return;
+  state.scenarios = state.scenarios.filter(function (s) { return s.id !== id; });
+  saveState();
+  renderResults();
+}
+function handleDuplicateScenario(id) {
+  var sc = findScenario(id);
+  if (!sc) return;
+  state.scenarios.push({ id: uid(), name: sc.name + " (copie)", params: deepClone(sc.params), createdAt: Date.now() });
+  saveState();
+  renderResults();
+}
+function handleRenameScenario(id) {
+  var sc = findScenario(id);
+  if (!sc) return;
+  var name = prompt("Nouveau nom du sc\u00E9nario :", sc.name);
+  if (name === null) return;
+  name = name.trim();
+  if (!name) return;
+  sc.name = name;
+  saveState();
+  renderResults();
+}
+
+/* ============================================================
+   DELEGATION D'EVENEMENTS (globale)
+   ============================================================ */
+function onGlobalInput(e) {
+  var el = e.target;
+  if (!el || !el.classList) return;
+  if (el.classList.contains("param-slider") || el.classList.contains("param-number")) { handleParamInput(el); return; }
+  if (el.id === "table-search") { state.tableSearch = el.value; renderTable(currentSim()); }
+}
+function onGlobalChange(e) {
+  var el = e.target;
+  if (!el) return;
+  if (el.classList && el.classList.contains("param-choice")) {
+    var key = el.getAttribute("data-key");
+    var choiceDef = findChoice(key);
+    var raw = el.value;
+    if (choiceDef && typeof choiceDef.def === "number") raw = parseInt(raw, 10);
+    state.params[key] = raw;
+    if (key === "nombreEmprunteurs") updateEmprunteur2Visibility();
+    onParamsChanged();
+    return;
+  }
+  if (el.classList && el.classList.contains("param-flag")) {
+    var fkey = el.getAttribute("data-key");
+    state.params[fkey] = el.checked;
+    onParamsChanged();
+    return;
+  }
+  if (el.classList && el.classList.contains("param-number")) { handleParamBlur(el); return; }
+  if (el.id === "chk-include-current") { renderScenarioComparison(currentSim()); return; }
+}
+function onGlobalClick(e) {
+  var t = e.target.closest ? e.target.closest(".advanced-toggle") : null;
+  if (t) { toggleAdvanced(t); return; }
+
+  t = e.target.closest ? e.target.closest("[data-quick]") : null;
+  if (t) { handleQuickAction(t); return; }
+
+  t = e.target.closest ? e.target.closest("[data-metric-target]") : null;
+  if (t) { state[t.getAttribute("data-metric-target")] = t.getAttribute("data-metric-value"); saveState(); renderResults(); return; }
+
+  t = e.target.closest ? e.target.closest('[data-action="select-year-crd"],[data-action="select-year-capint"]') : null;
+  if (t) { state.selectedYear = parseInt(t.getAttribute("data-value"), 10); renderResults(); return; }
+
+  t = e.target.closest ? e.target.closest(".tab") : null;
+  if (t && t.parentElement && t.parentElement.id === "tabs") { switchTab(t.getAttribute("data-tab")); return; }
+
+  t = e.target.closest ? e.target.closest("#seg-view button") : null;
+  if (t) { state.tableView = t.getAttribute("data-view"); saveState(); renderTable(currentSim()); return; }
+
+  t = e.target.closest ? e.target.closest("#seg-sens-axes button") : null;
+  if (t) { state.sensAxes = t.getAttribute("data-axes"); saveState(); renderSensitivity(currentSim()); return; }
+
+  if (e.target.id === "btn-theme-toggle" || (e.target.closest && e.target.closest("#btn-theme-toggle"))) { applyTheme(state.theme === "dark" ? "light" : "dark", true); return; }
+  if (e.target.id === "btn-export") { doExport(); return; }
+  if (e.target.id === "btn-save-reference") { state.referenceParams = deepClone(state.params); saveState(); renderResults(); return; }
+  if (e.target.id === "btn-swap-reference") { handleSwapReference(); return; }
+  if (e.target.id === "btn-clear-reference") { state.referenceParams = null; saveState(); renderResults(); return; }
+  if (e.target.id === "btn-save-scenario") { handleSaveScenario(); return; }
+
+  t = e.target.closest ? e.target.closest('[data-action="load-scenario"]') : null;
+  if (t) { handleLoadScenario(t.getAttribute("data-id")); return; }
+  t = e.target.closest ? e.target.closest('[data-action="ref-scenario"]') : null;
+  if (t) { handleRefScenario(t.getAttribute("data-id")); return; }
+  t = e.target.closest ? e.target.closest('[data-action="duplicate-scenario"]') : null;
+  if (t) { handleDuplicateScenario(t.getAttribute("data-id")); return; }
+  t = e.target.closest ? e.target.closest('[data-action="rename-scenario"]') : null;
+  if (t) { handleRenameScenario(t.getAttribute("data-id")); return; }
+  t = e.target.closest ? e.target.closest('[data-action="delete-scenario"]') : null;
+  if (t) { handleDeleteScenario(t.getAttribute("data-id")); return; }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  loadState();
+  var validation = runInternalValidation();
+  if (!validation.pass && window.console) {
+    var failed = validation.results.filter(function (r) { return !r.pass; });
+    console.warn("Validation interne du moteur : " + failed.length + " test(s) en echec :");
+    for (var vi = 0; vi < failed.length; vi++) console.warn("  \u2717 " + failed[vi].name + (failed[vi].detail ? " (" + failed[vi].detail + ")" : ""));
+  }
+  buildParamsPanel();
+  buildPilotagePanel();
+  buildQuickActions();
+  document.addEventListener("input", onGlobalInput);
+  document.addEventListener("change", onGlobalChange);
+  document.addEventListener("click", onGlobalClick);
+  document.getElementById("file-input").addEventListener("change", function (e) {
+    if (e.target.files && e.target.files[0]) doImport(e.target.files[0]);
+    e.target.value = "";
+  });
+  applyTheme(state.theme, false);
+  switchTab(state.currentTab || "simulateur");
+  renderResults();
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+
+/* Exposed for testing only (harmless in browser) */
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    calculateSimulation: calculateSimulation, computeLoanSchedule: computeLoanSchedule, defaultParams: defaultParams,
+    PARAM_DEFS: PARAM_DEFS, CHOICE_DEFS: CHOICE_DEFS, FLAG_DEFS: FLAG_DEFS, migrateParamsV1toV2: migrateParamsV1toV2,
+    mergeParams: mergeParams, buildTauxRange: buildTauxRange, buildDureeRange: buildDureeRange, buildApportRange: buildApportRange,
+    runInternalValidation: runInternalValidation
+  };
+}
+
+})();
+
+</script>
+</body>
+</html>
