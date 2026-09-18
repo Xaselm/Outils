@@ -1,664 +1,522 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="dark"><head>
+<html lang="fr" data-theme="light">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suivi PDCA</title>
-<meta name="description" content="Pilotage PDCA — sujets, étapes Plan/Do/Check/Act, avancement, délais et replanification.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-  :root {
-    --bg: #14211C;
-    --card: #F2EAD3;
-    --ink: #241C14;
-    --moss: #5B7A4A;
-    --ochre: #B8842E;
-    --brick: #9C3B2E;
-    --indigo: #3F5D7A;
-    --gold: #C9A227;
-    --teal: #3F7A6B;
-
-    --bg-raised: #1C2C25;
-    --card-dim: #C9BB98;
-    --text-strong: #F2EAD3;
-    --ink-soft: #5B5041;
-    --moss-ink: #3A4E2F;
-    --ochre-ink: #7A551C;
-    --brick-ink: #6E2A20;
-    --indigo-ink: #25384A;
-    --gold-ink: #8C6D14;
-    --teal-ink: #2A5147;
-    --line: rgba(36,28,20,0.16);
-    --line-dark: rgba(242,234,211,0.14);
-    --input-bg: #FBF5E4;
-    --chip-bg: rgba(242,234,211,0.12);
-    --chip-bg-card: rgba(36,28,20,0.05);
-    --ghost-hover-bg: rgba(242,234,211,0.06);
-
-    --moss-bg: rgba(91,122,74,0.16);
-    --ochre-bg: rgba(184,132,46,0.16);
-    --brick-bg: rgba(156,59,46,0.16);
-    --indigo-bg: rgba(63,93,122,0.16);
-    --gold-bg: rgba(201,162,39,0.16);
-
-    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
-    --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
-
-    --radius-s: 4px; --radius-m: 8px; --radius-l: 14px;
-
-    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-    --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-
-    --shadow-card: 0 1px 2px rgba(10,16,13,.4), 0 8px 20px -10px rgba(10,16,13,.55);
-    --shadow-modal: 0 24px 64px -20px rgba(0,0,0,.65);
+  :root{
+    --bg:#f2f4f8;
+    --surface:#ffffff;
+    --surface-alt:#f7f8fb;
+    --border:#dde2ea;
+    --ink:#1a2233;
+    --ink-muted:#647089;
+    --primary:#2955a3;
+    --primary-dark:#1f4280;
+    --primary-tint:#e7edf8;
+    --accent:#b8860b;
+    --accent-tint:#faf3e0;
+    --ok:#1f8a4c;
+    --ok-bg:#e3f6ea;
+    --warn:#b3760a;
+    --warn-bg:#fbf1dc;
+    --danger:#c0392b;
+    --danger-bg:#fbe6e3;
+    --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.05);
+    --shadow-hover:0 10px 24px rgba(20,30,50,.12);
+    --radius:12px;
+    --radius-sm:8px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --p1:#c0392b; --p1-bg:#fbe6e3;
+    --p2:#b3760a; --p2-bg:#fbf1dc;
+    --p3:#2955a3; --p3-bg:#e7edf8;
+    --p4:#1f8a4c; --p4-bg:#e3f6ea;
+    --gate-on:#1f8a4c; --gate-on-bg:#e3f6ea;
+    --gate-off:#b7c0cf; --gate-off-bg:#f2f4f8;
   }
-
-  [data-theme="light"] {
-    --bg: #E3D9BE;
-    --card: #FFFCF2;
-    --bg-raised: #EEE5CC;
-    --card-dim: #6B5D45;
-    --text-strong: #241C14;
-    --line-dark: rgba(36,28,20,0.14);
-    --chip-bg: rgba(36,28,20,0.08);
-    --chip-bg-card: rgba(36,28,20,0.05);
-    --ghost-hover-bg: rgba(36,28,20,0.05);
-    --moss-bg: rgba(91,122,74,0.12);
-    --ochre-bg: rgba(184,132,46,0.14);
-    --brick-bg: rgba(156,59,46,0.11);
-    --indigo-bg: rgba(63,93,122,0.12);
-    --gold-bg: rgba(201,162,39,0.14);
-    --shadow-card: 0 1px 2px rgba(60,48,24,.10), 0 8px 20px -10px rgba(60,48,24,.22);
-    --shadow-modal: 0 24px 64px -20px rgba(40,30,15,.35);
+  html[data-theme="dark"]{
+    --bg:#0f141c;
+    --surface:#171e28;
+    --surface-alt:#1d2531;
+    --border:#2b3444;
+    --ink:#e7ebf3;
+    --ink-muted:#8e9ab0;
+    --primary:#6f9ceb;
+    --primary-dark:#8fb4f0;
+    --primary-tint:#1c2940;
+    --accent:#e0b04a;
+    --accent-tint:#332a14;
+    --ok:#4bcf87;
+    --ok-bg:#123321;
+    --warn:#e0b04a;
+    --warn-bg:#332a14;
+    --danger:#e2685d;
+    --danger-bg:#3a1c1a;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+    --shadow-hover:0 10px 26px rgba(0,0,0,.45);
+    --p1:#e2685d; --p1-bg:#3a1c1a;
+    --p2:#e0b04a; --p2-bg:#332a14;
+    --p3:#6f9ceb; --p3-bg:#1c2940;
+    --p4:#4bcf87; --p4-bg:#123321;
+    --gate-on:#4bcf87; --gate-on-bg:#123321;
+    --gate-off:#3a4658; --gate-off-bg:#1d2531;
   }
-
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text-strong);
-    font-family: var(--font-body);
-    font-size: 14.5px;
-    line-height: 1.5;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    color-scheme: dark;
-    transition: background-color .2s ease, color .2s ease;
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:var(--sans); background:var(--bg); color:var(--ink);
+    padding:26px; -webkit-font-smoothing:antialiased;
   }
-  [data-theme="light"] body { color-scheme: light; }
-  .hidden { display: none !important; }
-  button, input, select, textarea { font: inherit; }
-  a { color: inherit; }
+  button, input, select, textarea{ font-family:inherit; color:inherit; }
+  .container{ max-width:1520px; margin:0 auto; }
+  input[type=file]{ display:none; }
 
-  .app { max-width: 1560px; margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-8); }
+  /* ---- Header ---- */
+  .app-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .app-header h1{ margin:0 0 4px; font-size:24px; font-weight:800; letter-spacing:-0.01em; }
+  .subtitle{ margin:0; color:var(--ink-muted); font-size:13.5px; }
+  .header-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
-  /* ---------- Header ---------- */
-  .header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-5); }
-  .header-title { display: flex; align-items: center; gap: var(--space-3); }
-  .logo { width: 34px; height: 34px; color: var(--ochre); flex-shrink: 0; }
-  .header-title h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(22px, 3vw, 30px); color: var(--text-strong); margin: 0; letter-spacing: -0.01em; }
-  .tagline { margin: 3px 0 0; color: var(--card-dim); font-size: 12.5px; font-family: var(--font-mono); letter-spacing: 0.01em; }
-  .header-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+  .btn-primary{ background:var(--primary); color:#fff; border:none; padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .btn-secondary{ background:var(--surface); color:var(--ink); border:1px solid var(--border); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; }
+  .btn-secondary:hover{ background:var(--surface-alt); }
+  .btn-outline-danger{ background:transparent; color:var(--danger); border:1px solid var(--danger); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; }
+  .btn-outline-danger:hover{ background:var(--danger-bg); }
+  .btn-danger{ background:var(--danger); color:#fff; border:none; padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; cursor:pointer; }
+  .btn-danger:hover{ background:#9c2d21; }
+  .btn-icon{ background:var(--surface); border:1px solid var(--border); color:var(--ink); width:36px; height:36px; border-radius:var(--radius-sm); cursor:pointer; font-size:16px; display:inline-flex; align-items:center; justify-content:center; }
+  .btn-icon:hover{ background:var(--surface-alt); }
+  .btn-tiny{ background:var(--surface-alt); border:1px solid var(--border); color:var(--ink); padding:4px 9px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .btn-tiny:hover{ background:var(--primary-tint); }
+  .btn-tiny.danger{ color:var(--danger); }
+  .btn-tiny.danger:hover{ background:var(--danger-bg); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
 
-  .btn { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: var(--radius-m); border: 1px solid transparent; cursor: pointer; transition: transform .12s ease, background .15s ease, border-color .15s ease; white-space: nowrap; }
-  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
-  .btn:active { transform: scale(0.97); }
-  .btn-primary { background: var(--ochre); color: #1B1206; }
-  .btn-primary:hover { background: #C6934A; }
-  .btn-ghost { background: transparent; border-color: var(--line-dark); color: var(--text-strong); }
-  .btn-ghost:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
-  .btn-danger { background: var(--brick); color: #F7ECE7; }
-  .btn-danger:hover { background: #B34838; }
-  .btn-sm { padding: 6px 10px; font-size: 12px; }
-  .btn[disabled] { opacity: .45; cursor: not-allowed; }
+  .drive-btn{ display:inline-flex; align-items:center; gap:7px; }
+  .drive-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--ink-muted); transition:background .2s ease; }
+  .drive-dot.is-connected{ background:var(--ok); }
+  .drive-dot.is-syncing{ background:var(--warn); animation:drive-pulse 1s ease-in-out infinite; }
+  .drive-dot.is-error{ background:var(--danger); }
+  @keyframes drive-pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  #driveToast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(12px); background:var(--ink); color:var(--bg); font-size:13px; font-weight:500; padding:10px 18px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:999; }
+  #driveToast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  .drive-btn { position: relative; }
-  .drive-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--card-dim); transition: background .2s ease; }
-  .drive-dot.is-connected { background: var(--moss); }
-  .drive-dot.is-syncing { background: var(--ochre); animation: drive-pulse 1s ease-in-out infinite; }
-  .drive-dot.is-error { background: var(--brick); }
-  @keyframes drive-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
-
-  .theme-toggle { width: 37px; height: 37px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: transparent; color: var(--text-strong); cursor: pointer; flex-shrink: 0; }
-  .theme-toggle:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
-  .theme-toggle svg { width: 17px; height: 17px; }
-
-  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
-
-  /* ---------- Info bar (date / semaine) ---------- */
-  .info-bar { display: flex; gap: var(--space-5); flex-wrap: wrap; align-items: center; margin-bottom: var(--space-4); font-family: var(--font-mono); font-size: 12.5px; color: var(--card-dim); }
-  .info-bar b { color: var(--text-strong); font-weight: 700; }
-
-  /* ---------- Dashboard ---------- */
-  .dashboard { display: grid; grid-template-columns: 300px 1fr; gap: var(--space-5); margin-bottom: var(--space-5); align-items: stretch; }
-  @media (max-width: 1080px) { .dashboard { grid-template-columns: 1fr; } }
-
-  .gauge-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); padding: 18px 20px 16px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; align-items: center; }
-  .gauge-card h2 { font-family: var(--font-display); font-size: 15px; margin: 0 0 6px; align-self: flex-start; }
-  .gauge-wrap { position: relative; width: 100%; max-width: 220px; }
-  .gauge-pct { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: 30px; color: var(--ink); }
-  .gauge-sub { font-size: 11px; color: var(--ink-soft); text-align: center; margin-top: -4px; }
-  .gauge-legend { display: flex; gap: 14px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
-  .gauge-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
-  .gauge-legend-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
-
-  .dash-right { display: flex; flex-direction: column; gap: var(--space-4); }
-  .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-  @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2,1fr); } }
-  .stat-card { background: var(--card); color: var(--ink); border-radius: var(--radius-m); padding: 12px 14px; box-shadow: var(--shadow-card); border-left: 4px solid var(--ochre); }
-  .stat-card .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); font-weight: 700; }
-  .stat-card .stat-value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.1; }
-  .stat-card.a-moss { border-left-color: var(--moss); }
-  .stat-card.a-brick { border-left-color: var(--brick); }
-  .stat-card.a-indigo { border-left-color: var(--indigo); }
-  .stat-card.a-gold { border-left-color: var(--gold); }
-
-  .dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-  @media (max-width: 900px) { .dist-grid { grid-template-columns: 1fr; } }
-  .dist-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); padding: 14px 18px; box-shadow: var(--shadow-card); }
-  .dist-card h3 { margin: 0 0 10px; font-size: 13px; font-family: var(--font-display); font-weight: 600; }
-  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 12px; }
-  .bar-row:last-child { margin-bottom: 0; }
-  .bar-label { width: 118px; flex-shrink: 0; color: var(--ink-soft); font-weight: 600; }
-  .bar-track { flex: 1; height: 9px; background: var(--chip-bg-card); border-radius: 5px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 5px; transition: width .3s ease; }
-  .bar-count { width: 26px; text-align: right; font-family: var(--font-mono); font-weight: 700; flex-shrink: 0; }
-
-  /* ---------- Toolbar / filters ---------- */
-  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
-  .toolbar h2 { font-family: var(--font-display); font-size: 17px; margin: 0; }
-
-  .filters-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); padding: 14px 16px; box-shadow: var(--shadow-card); margin-bottom: var(--space-4); }
-  .filters-grid { display: grid; grid-template-columns: repeat(6, 1fr) 1.4fr; gap: 10px; align-items: end; }
-  @media (max-width: 1300px) { .filters-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 640px) { .filters-grid { grid-template-columns: repeat(2, 1fr); } }
-  .filter-field label { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); font-weight: 700; margin-bottom: 4px; }
-  .filter-field select, .filter-field input { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--input-bg); color: var(--ink); font-size: 12.5px; }
-  .filters-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 10px; flex-wrap: wrap; }
-  .filters-count { font-size: 12px; color: var(--ink-soft); }
-  .link-btn { background: none; border: none; color: var(--indigo-ink); font-weight: 700; font-size: 12px; cursor: pointer; padding: 4px 0; text-decoration: underline; }
-
-  /* ---------- Priority chip ---------- */
-  .prio-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-  .prio-1 { background: var(--brick-bg); color: var(--brick-ink); }
-  .prio-2 { background: var(--ochre-bg); color: var(--ochre-ink); }
-  .prio-3 { background: var(--indigo-bg); color: var(--indigo-ink); }
-  .prio-4 { background: var(--moss-bg); color: var(--moss-ink); }
-  .prio-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .prio-1 .prio-dot { background: var(--brick); }
-  .prio-2 .prio-dot { background: var(--ochre); }
-  .prio-3 .prio-dot { background: var(--indigo); }
-  .prio-4 .prio-dot { background: var(--moss); }
-
-  select.prio-select-1, .prio-radio-1.checked { border-color: var(--brick) !important; }
-
-  /* ---------- Table ---------- */
-  .table-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); box-shadow: var(--shadow-card); overflow: hidden; }
-  .table-scroll { overflow: auto; max-width: 100%; }
-  table.pdca-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 1280px; }
-  table.pdca-table th, table.pdca-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
-  table.pdca-table thead th { position: sticky; top: 0; background: var(--card); color: var(--ink-soft); font-size: 10.5px; text-transform: uppercase; letter-spacing: .02em; z-index: 2; cursor: pointer; user-select: none; white-space: nowrap; }
-  table.pdca-table thead th:hover { color: var(--ink); }
-  table.pdca-table thead th.sorted .sort-arrow { opacity: 1; }
-  .sort-arrow { opacity: .25; font-size: 9px; margin-left: 3px; }
-  table.pdca-table tbody tr { transition: background .12s ease; }
-  table.pdca-table tbody tr:hover { background: var(--chip-bg-card); }
-  table.pdca-table tbody tr.row-late { background: var(--brick-bg); }
-  table.pdca-table tbody tr.row-late-severe { background: rgba(156,59,46,0.28); }
-  table.pdca-table tbody tr.row-soon { background: var(--gold-bg); }
-  table.pdca-table tbody tr.row-done { opacity: .68; }
-  table.pdca-table td.col-num { font-family: var(--font-mono); color: var(--ink-soft); width: 34px; }
-  table.pdca-table td.col-prio-bar { border-left: 3px solid transparent; }
-  td.bl-1 { border-left-color: var(--brick); }
-  td.bl-2 { border-left-color: var(--ochre); }
-  td.bl-3 { border-left-color: var(--indigo); }
-  td.bl-4 { border-left-color: var(--moss); }
-  table.pdca-table td.col-sujet { font-weight: 700; min-width: 150px; }
-  table.pdca-table td.col-desc { color: var(--ink-soft); max-width: 260px; white-space: pre-wrap; font-size: 12px; }
-  table.pdca-table td.col-semaine, table.pdca-table td.col-pilote { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
-  table.pdca-table td.col-delai { font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }
-  .delai-struck { text-decoration: line-through; color: var(--ink-soft); font-size: 11px; }
-  .delai-replan { display: block; font-weight: 700; }
-  .retard-badge { display: inline-block; margin-top: 2px; font-size: 10px; font-weight: 700; color: var(--brick-ink); background: var(--brick-bg); padding: 1px 6px; border-radius: 999px; }
-  .soon-badge { display: inline-block; margin-top: 2px; font-size: 10px; font-weight: 700; color: var(--ochre-ink); background: var(--ochre-bg); padding: 1px 6px; border-radius: 999px; }
-
-  .pdca-cell-btn { width: 26px; height: 26px; border-radius: 7px; border: 1.5px solid var(--line); background: var(--input-bg); color: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; }
-  .pdca-cell-btn:hover:not([disabled]) { border-color: var(--card-dim); }
-  .pdca-cell-btn.done { color: #fff; }
-  .pdca-cell-btn.done.step-p { background: var(--indigo); border-color: var(--indigo); }
-  .pdca-cell-btn.done.step-d { background: var(--ochre); border-color: var(--ochre); }
-  .pdca-cell-btn.done.step-c { background: var(--teal); border-color: var(--teal); }
-  .pdca-cell-btn.done.step-a { background: var(--moss); border-color: var(--moss); }
-  .pdca-cell-btn[disabled] { opacity: .3; cursor: not-allowed; }
-
-  .adv-cell { display: flex; align-items: center; gap: 7px; min-width: 92px; }
-  .adv-track { flex: 1; height: 8px; border-radius: 5px; background: var(--chip-bg-card); overflow: hidden; }
-  .adv-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--brick), var(--ochre), var(--gold), var(--moss)); }
-  .adv-pct { font-family: var(--font-mono); font-weight: 700; font-size: 11.5px; width: 32px; text-align: right; }
-
-  .row-actions { display: flex; gap: 4px; }
-  .icon-btn { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--line); background: var(--input-bg); color: var(--ink-soft); cursor: pointer; }
-  .icon-btn:hover { color: var(--ink); border-color: var(--card-dim); }
-  .icon-btn svg { width: 13px; height: 13px; }
-  .icon-btn.danger:hover { color: var(--brick-ink); border-color: var(--brick); }
-
-  .empty-state { text-align: center; padding: 50px 20px; color: var(--ink-soft); }
-  .empty-state svg { width: 40px; height: 40px; margin-bottom: 10px; opacity: .5; }
-
-  footer.app-footer { text-align: center; color: var(--card-dim); font-size: 12px; padding: 22px 0 0; }
-  #file-input { display: none; }
-
-  /* ---------- Modal ---------- */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(10,14,11,.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow: auto; z-index: 1000; }
-  .modal-overlay.hidden { display: none; }
-  .modal { background: var(--card); color: var(--ink); border-radius: var(--radius-l); box-shadow: var(--shadow-modal); width: 100%; max-width: 640px; padding: 22px 24px 20px; }
-  .modal.modal-wide { max-width: 820px; }
-  .modal.modal-narrow { max-width: 440px; }
-  .modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 10px; }
-  .modal-head h3 { font-family: var(--font-display); font-size: 18px; margin: 0; }
-  .modal-head p { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-soft); }
-  .modal-close { background: none; border: none; color: var(--ink-soft); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 4px; }
-  .modal-close:hover { color: var(--ink); }
-  .modal-body { max-height: 68vh; overflow: auto; padding: 2px 2px 4px; }
-  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-  .modal-footer .footer-left { margin-right: auto; }
-
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .form-row.single { grid-template-columns: 1fr; }
-  .form-row.cols-4 { grid-template-columns: repeat(4,1fr); }
-  @media (max-width: 560px) { .form-row, .form-row.cols-4 { grid-template-columns: 1fr; } }
-  .field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .02em; }
-  .field input, .field select, .field textarea { width: 100%; padding: 9px 10px; border-radius: var(--radius-s); border: 1px solid var(--line); background: var(--input-bg); color: var(--ink); font-size: 13.5px; }
-  .field textarea { min-height: 64px; resize: vertical; font-family: inherit; }
-  .field-hint { font-size: 11px; color: var(--ink-soft); margin-top: 3px; }
-  .prio-radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
-  .prio-radio { flex: 1 1 auto; min-width: 130px; }
-  .prio-radio input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .prio-radio-label { display: block; padding: 8px 10px; border-radius: var(--radius-s); border: 1.5px solid var(--line); cursor: pointer; font-size: 11.5px; font-weight: 600; }
-  .prio-radio input:checked + .prio-radio-label { border-color: currentColor; }
-  .prio-radio.p1 .prio-radio-label { color: var(--brick-ink); background: var(--brick-bg); }
-  .prio-radio.p2 .prio-radio-label { color: var(--ochre-ink); background: var(--ochre-bg); }
-  .prio-radio.p3 .prio-radio-label { color: var(--indigo-ink); background: var(--indigo-bg); }
-  .prio-radio.p4 .prio-radio-label { color: var(--moss-ink); background: var(--moss-bg); }
-
-  .replan-box { background: var(--chip-bg-card); border-radius: var(--radius-s); padding: 10px 12px; margin-top: 4px; }
-  .replan-history-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
-  .replan-history-list li { font-size: 11.5px; color: var(--ink-soft); background: var(--input-bg); border-radius: 6px; padding: 5px 9px; display: flex; justify-content: space-between; gap: 8px; }
-  .drift-warning { background: var(--ochre-bg); color: var(--ochre-ink); border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 700; margin-top: 8px; }
-
-  /* PDCA gate stepper inside form */
-  .pdca-stepper { display: flex; flex-direction: column; gap: 8px; }
-  .pdca-gate { border: 1.5px solid var(--line); border-radius: var(--radius-m); padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .pdca-gate.locked { opacity: .5; }
-  .pdca-gate.done { border-color: transparent; }
-  .pdca-gate.done.gate-p { background: var(--indigo-bg); }
-  .pdca-gate.done.gate-d { background: var(--ochre-bg); }
-  .pdca-gate.done.gate-c { background: var(--teal-ink); background: rgba(63,122,107,0.16); }
-  .pdca-gate.done.gate-a { background: var(--moss-bg); }
-  .pdca-gate-left { display: flex; align-items: center; gap: 10px; }
-  .pdca-gate-badge { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-family: var(--font-display); font-size: 14px; flex-shrink: 0; color: #fff; }
-  .gate-p .pdca-gate-badge { background: var(--indigo); }
-  .gate-d .pdca-gate-badge { background: var(--ochre); }
-  .gate-c .pdca-gate-badge { background: var(--teal); }
-  .gate-a .pdca-gate-badge { background: var(--moss); }
-  .pdca-gate-title { font-weight: 700; font-size: 13.5px; }
-  .pdca-gate-desc { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
-  .pdca-gate-meta { font-size: 11px; color: var(--ink-soft); font-family: var(--font-mono); margin-top: 2px; }
-
-  .step-form-block { background: var(--chip-bg-card); border-radius: var(--radius-m); padding: 12px 14px; margin-top: 10px; }
-  .act-type-group { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-  .act-type-option { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: var(--radius-s); border: 1.5px solid var(--line); cursor: pointer; }
-  .act-type-option input { margin-top: 2px; }
-  .act-type-option b { display: block; font-size: 12.5px; }
-  .act-type-option span.d { font-size: 11px; color: var(--ink-soft); }
-  .act-type-option:has(input:checked) { border-color: var(--moss); background: var(--moss-bg); }
-
-  .history-list { list-style: none; margin: 0; padding: 0; }
-  .history-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
-  .history-item:last-child { border-bottom: none; }
-  .history-date { font-family: var(--font-mono); color: var(--ink-soft); white-space: nowrap; flex-shrink: 0; width: 84px; }
-
-  .cycle-tag { display: inline-block; font-size: 10px; font-weight: 700; background: var(--indigo-bg); color: var(--indigo-ink); padding: 1px 7px; border-radius: 999px; margin-left: 6px; }
-
-  /* ---------- Toasts ---------- */
-  #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 2000; max-width: 320px; }
-  .toast { background: var(--text-strong); color: var(--bg); padding: 11px 16px; border-radius: 8px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; transform: translateY(8px); animation: toastIn .2s ease forwards; }
-  .toast.toast-error { background: var(--brick); color: #fff; }
-  .toast.toast-success { background: var(--moss); color: #fff; }
-  .toast.toast-warning { background: var(--gold); color: #3a2a00; }
-  @keyframes toastIn { to { opacity: 1; transform: translateY(0); } }
-
-  /* ---------- Print ---------- */
-  @media print {
-    @page { size: landscape; margin: 10mm; }
-    body { background: #fff !important; color: #000 !important; }
-    .header-actions, .info-bar .live-clock, .filters-card, .toolbar .btn, .row-actions, .theme-toggle,
-    #toast-container, .modal-overlay, .dist-grid, .app-footer { display: none !important; }
-    .app { max-width: none; padding: 0; }
-    .gauge-card, .stat-card, .table-card { box-shadow: none !important; border: 1px solid #999; background: #fff !important; color: #000 !important; }
-    .stat-card .stat-value, .stat-card .stat-label { color: #000 !important; }
-    table.pdca-table { min-width: 0; font-size: 10.5px; }
-    table.pdca-table tbody tr.row-late, table.pdca-table tbody tr.row-late-severe, table.pdca-table tbody tr.row-soon { background: #f3f3f3 !important; }
-    .pdca-cell-btn { border: 1px solid #999 !important; color: #000 !important; }
-    .pdca-cell-btn.done { background: #ddd !important; color: #000 !important; }
-    .dashboard { grid-template-columns: 260px 1fr; }
+  /* ---- PDCA bar (sélection de document) ---- */
+  .pdca-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+  .pdca-bar .field{ display:flex; flex-direction:column; gap:3px; }
+  .pdca-bar label{ font-size:11.5px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.03em; }
+  select, input[type=text], input[type=date], input[type=number], textarea{
+    background:var(--surface); border:1px solid var(--border); color:var(--ink);
+    padding:8px 10px; border-radius:var(--radius-sm); font-size:13.5px;
   }
+  select{ min-width:200px; }
+  .spacer{ flex:1; }
 
-  @media (max-width: 640px) {
-    .stat-grid { grid-template-columns: repeat(2,1fr); }
+  /* ---- Info bar : date / semaine / jour + jauge globale ---- */
+  .info-bar{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; margin-bottom:18px; box-shadow:var(--shadow); }
+  .info-chip{ display:flex; flex-direction:column; gap:2px; min-width:90px; }
+  .info-chip .chip-label{ font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.04em; }
+  .info-chip .chip-value{ font-size:19px; font-weight:800; }
+  .gauge-block{ display:flex; align-items:center; gap:14px; margin-left:auto; }
+  .gauge-text{ display:flex; flex-direction:column; align-items:flex-end; }
+  .gauge-text .gauge-pct{ font-size:26px; font-weight:900; line-height:1; }
+  .gauge-text .gauge-label{ font-size:12px; color:var(--ink-muted); font-weight:600; }
+
+  /* ---- Panneau priorités (réglages) ---- */
+  .settings-panel{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:18px; overflow:hidden; }
+  .settings-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; user-select:none; }
+  .settings-header h3{ margin:0; font-size:14px; font-weight:700; }
+  .settings-body{ padding:0 16px 16px; display:none; }
+  .settings-body.open{ display:block; }
+  .priority-rows{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; }
+  .priority-row{ display:flex; align-items:center; gap:8px; }
+  .priority-row .pnum{ width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12.5px; flex-shrink:0; }
+  .priority-row input{ flex:1; }
+
+  /* ---- Toolbar ---- */
+  .toolbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .toolbar h2{ margin:0; font-size:17px; font-weight:800; }
+  .filter-select{ min-width:160px; }
+  .count-badge{ background:var(--primary-tint); color:var(--primary); font-weight:700; font-size:12px; padding:3px 9px; border-radius:20px; }
+
+  /* ---- Tableau des sujets ---- */
+  .table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); }
+  table.subjects{ border-collapse:collapse; width:100%; min-width:1360px; font-size:13px; }
+  table.subjects thead th{ position:sticky; top:0; background:var(--surface-alt); color:var(--ink-muted); font-size:11px; text-transform:uppercase; letter-spacing:.03em; font-weight:700; text-align:left; padding:10px 10px; border-bottom:1px solid var(--border); white-space:nowrap; z-index:1; }
+  table.subjects tbody td{ padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  table.subjects tbody tr:last-child td{ border-bottom:none; }
+  table.subjects tbody tr.closed-row{ opacity:.62; }
+  .cell-num{ font-weight:800; color:var(--ink-muted); text-align:center; width:34px; }
+  .cell-week{ white-space:nowrap; }
+  .week-badge{ display:inline-block; background:var(--primary-tint); color:var(--primary); font-weight:700; font-size:12px; padding:3px 8px; border-radius:7px; }
+  .cell-subject{ min-width:240px; }
+  .subject-textarea{ width:100%; font-weight:600; resize:none; overflow:hidden; line-height:1.4; min-height:34px; font-family:inherit; font-size:13px; }
+  .cell-pilote{ min-width:130px; }
+  .cell-pilote input{ width:100%; }
+  .cell-priority{ min-width:180px; }
+  .priority-badge{ display:flex; align-items:center; gap:7px; width:100%; background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:6px 9px; cursor:pointer; text-align:left; }
+  .priority-badge:hover{ background:var(--primary-tint); }
+  .priority-badge .pb-num{ width:20px; height:20px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; }
+  .priority-badge .pb-label{ font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .priority-popover{ position:fixed; z-index:1500; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-hover); padding:6px; min-width:220px; }
+  .priority-popover.hidden{ display:none; }
+  .priority-popover-item{ display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:7px; cursor:pointer; font-size:13px; }
+  .priority-popover-item:hover{ background:var(--surface-alt); }
+  .priority-popover-item .pb-num{ width:20px; height:20px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; }
+  .cell-dates{ white-space:nowrap; font-size:12.5px; }
+  .cell-gates{ white-space:nowrap; }
+  .gate{ width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; background:var(--gate-off-bg); color:var(--gate-off); border:1px solid var(--border); cursor:help; }
+  .gate.on{ background:var(--gate-on-bg); color:var(--gate-on); border-color:transparent; }
+  .cell-avancement{ min-width:190px; }
+  .progress-track{ background:var(--surface-alt); border:1px solid var(--border); border-radius:20px; height:9px; overflow:hidden; margin-bottom:4px; }
+  .progress-fill{ height:100%; border-radius:20px; transition:width .2s ease; }
+  .avancement-pct-text{ font-size:11.5px; font-weight:700; color:var(--ink-muted); }
+  .cell-remaining{ font-size:12.5px; font-weight:700; white-space:nowrap; }
+  .subactions-inline{ margin-top:6px; display:flex; flex-direction:column; gap:3px; max-width:220px; }
+  .subaction-inline-item{ display:flex; align-items:baseline; gap:5px; font-size:11.5px; }
+  .subaction-inline-item input[type=checkbox]{ width:13px; height:13px; margin:0; flex-shrink:0; accent-color:var(--ok); position:relative; top:1px; }
+  .subaction-inline-text{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
+  .subaction-inline-item.sa-done .subaction-inline-text{ text-decoration:line-through; color:var(--ink-muted); }
+  .subaction-inline-date{ color:var(--ink-muted); font-size:10.5px; white-space:nowrap; }
+  .subaction-more-link{ background:none; border:none; color:var(--primary); font-size:11px; font-weight:700; cursor:pointer; padding:0; text-align:left; }
+  .remaining-safe{ color:var(--ok); }
+  .remaining-warning{ color:var(--warn); }
+  .remaining-urgent{ color:var(--danger); }
+  .remaining-overdue{ color:var(--danger); }
+  .remaining-closed{ color:var(--ink-muted); font-weight:600; }
+  .cell-actions{ white-space:nowrap; }
+  .row-actions{ display:flex; gap:4px; }
+  .replan-history-hint{ font-size:11px; color:var(--ink-muted); display:block; margin-top:2px; }
+
+  .empty-state{ text-align:center; padding:40px 20px; color:var(--ink-muted); font-size:14px; }
+
+  .no-pdca-state{ text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:60px 24px; box-shadow:var(--shadow); }
+  .no-pdca-state h2{ margin:0 0 8px; font-size:18px; }
+  .no-pdca-state p{ margin:0 0 18px; color:var(--ink-muted); font-size:13.5px; }
+
+  .guide-cycle-line{ text-align:center; font-weight:800; font-size:14px; color:var(--primary); background:var(--primary-tint); border-radius:9px; padding:10px; margin-bottom:16px; }
+  .guide-row{ display:grid; grid-template-columns:70px 1fr; gap:14px; padding:12px 0; border-top:1px solid var(--border); }
+  .guide-row:first-of-type{ border-top:none; }
+  .guide-step{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .guide-step .gate{ width:32px; height:32px; font-size:14px; cursor:default; }
+  .guide-step span.step-name{ font-size:11px; font-weight:700; color:var(--ink-muted); text-align:center; }
+  .guide-what{ font-size:13px; margin:0 0 6px; }
+  .guide-when{ font-size:12.5px; color:var(--ink-muted); margin:0; }
+  .guide-when strong{ color:var(--ink); }
+
+  .modal-hint{ background:var(--primary-tint); color:var(--primary-dark); border-radius:9px; padding:9px 12px; font-size:12.5px; font-weight:600; margin-bottom:12px; }
+  .modal-hint.warn{ background:var(--warn-bg); color:var(--warn); }
+
+  /* ---- Modales ---- */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(10,14,22,.5); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000; }
+  .modal-overlay.hidden{ display:none; }
+  .modal{ background:var(--surface); border-radius:var(--radius); max-width:560px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-hover); }
+  .modal-small{ max-width:420px; }
+  .modal-wide{ max-width:640px; }
+  .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .modal-header h2{ margin:0; font-size:16.5px; font-weight:800; }
+  .close-btn{ background:none; border:none; font-size:20px; color:var(--ink-muted); cursor:pointer; line-height:1; padding:4px; }
+  .close-btn:hover{ color:var(--ink); }
+  .modal form, .modal-body{ padding:18px 22px 22px; }
+  .form-group{ margin-bottom:14px; }
+  .form-group label{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-muted); margin-bottom:5px; }
+  .form-group input, .form-group select, .form-group textarea{ width:100%; }
+  .form-row{ display:flex; gap:12px; }
+  .form-row .form-group{ flex:1; }
+  .form-hint{ font-size:12px; color:var(--ink-muted); margin-top:4px; }
+  .form-error{ color:var(--danger); font-size:12.5px; margin:-4px 0 12px; }
+  .form-error.hidden{ display:none; }
+  .modal-footer{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+
+  .checklist{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .checklist-item{ display:flex; align-items:flex-start; gap:8px; background:var(--surface-alt); border:1px solid var(--border); border-radius:9px; padding:8px 10px; }
+  .checklist-item input[type=checkbox]{ margin-top:3px; width:16px; height:16px; flex-shrink:0; accent-color:var(--ok); }
+  .checklist-item.done .item-text{ text-decoration:line-through; color:var(--ink-muted); }
+  .item-text{ flex:1; font-size:13.5px; line-height:1.4; word-break:break-word; }
+  .remove-item-btn{ background:none; border:none; color:var(--ink-muted); font-size:16px; cursor:pointer; line-height:1; padding:2px 4px; }
+  .remove-item-btn:hover{ color:var(--danger); }
+  .add-item-row{ display:flex; gap:8px; margin-top:10px; }
+  .add-item-row input{ flex:1; }
+
+  .replan-history-list{ list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .replan-history-list li{ font-size:12.5px; color:var(--ink-muted); background:var(--surface-alt); border-radius:7px; padding:6px 10px; display:flex; justify-content:space-between; }
+  .drift-warning{ background:var(--warn-bg); color:var(--warn); border-radius:8px; padding:8px 10px; font-size:12.5px; font-weight:600; margin-top:10px; }
+
+  #toastContainer{ position:fixed; bottom:20px; right:20px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
+  .toast{ background:var(--ink); color:var(--bg); padding:11px 16px; border-radius:8px; font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; transform:translateY(8px); animation:toastIn .2s ease forwards; }
+  .toast.toast-error{ background:var(--danger); color:#fff; }
+  .toast.toast-success{ background:var(--ok); color:#fff; }
+  .toast.toast-warning{ background:var(--warn); color:#3a2a00; }
+  @keyframes toastIn{ to{ opacity:1; transform:translateY(0); } }
+
+  footer{ text-align:center; color:var(--ink-muted); font-size:12px; padding:26px 0 6px; }
+
+  @media (max-width: 720px){
+    body{ padding:14px; }
+    .info-bar{ flex-direction:column; align-items:stretch; }
+    .gauge-block{ margin-left:0; justify-content:center; }
+    .form-row{ flex-direction:column; gap:0; }
+    .pdca-bar{ flex-direction:column; align-items:stretch; }
+    select{ min-width:0; width:100%; }
   }
 </style>
 </head>
 <body>
-<div class="app">
+<div class="container">
 
-  <header class="header">
-    <div class="header-title">
-      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
-      <div>
-        <h1>Suivi PDCA</h1>
-        <p class="tagline">Plan · Do · Check · Act — pilotage des sujets d'amélioration continue</p>
-      </div>
+  <header class="app-header">
+    <div>
+      <h1>🔄 Suivi PDCA</h1>
+      <p class="subtitle">Plan / Do / Check / Act — suivi des sujets et de leur avancement</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-ghost" id="btn-export" title="Exporter les données (JSON)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        JSON
+      <button id="pdcaGuideBtn" class="btn-icon" title="Guide du cycle PDCA">❔</button>
+      <button id="themeToggleBtn" class="btn-icon" title="Changer de thème">🌙</button>
+      <button id="btn-drive-connect" class="btn-secondary drive-btn" title="Connecter Google Drive">
+        <span id="drive-dot" class="drive-dot"></span><span id="drive-status-label">Drive : non connecté</span>
       </button>
-      <label class="btn btn-ghost" title="Importer des données (JSON)" for="file-input">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        Importer
-      </label>
-      <input type="file" id="file-input" accept="application/json">
-      <button class="btn btn-ghost" id="btn-export-csv" title="Exporter au format CSV (Excel)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="9" x2="9" y2="21"></line></svg>
-        CSV
-      </button>
-      <button class="btn btn-ghost" id="btn-print" title="Imprimer le tableau de pilotage">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        Imprimer
-      </button>
-      <button class="btn btn-ghost drive-btn" id="btn-drive-connect" title="Connecter Google Drive">
-        <span id="drive-dot" class="drive-dot"></span>
-        <span id="drive-status-label">Drive : non connecté</span>
-      </button>
-      <button class="btn btn-ghost btn-sm" id="btn-drive-force" title="Forcer la synchronisation">Forcer synchro</button>
-      <button id="btn-theme-toggle" class="theme-toggle" title="Passer en mode clair" aria-label="Passer en mode clair"></button>
+      <button id="btn-drive-force" class="btn-secondary" title="Forcer la synchro">Forcer synchro</button>
+      <button id="btnExport" class="btn-secondary">Exporter (JSON)</button>
+      <button id="btnImport" class="btn-secondary">Importer (JSON)</button>
+      <input type="file" id="importInput" accept="application/json">
     </div>
   </header>
 
+  <div class="pdca-bar">
+    <div class="field">
+      <label for="pdcaSelect">PDCA</label>
+      <select id="pdcaSelect"></select>
+    </div>
+    <button id="btnNewPdca" class="btn-secondary">➕ Nouveau PDCA</button>
+    <button id="btnRenamePdca" class="btn-secondary">✏️ Renommer</button>
+    <button id="btnDeletePdca" class="btn-outline-danger">🗑️ Supprimer</button>
+    <div class="spacer"></div>
+    <button id="btnDeleteAllPdca" class="btn-outline-danger" title="Supprimer tous les PDCA stockés dans ce navigateur">🧨 Supprimer tous les PDCA</button>
+  </div>
+
+  <div id="noPdcaState" class="no-pdca-state" style="display:none;">
+    <h2>Aucun PDCA</h2>
+    <p>Tous les PDCA ont été supprimés de ce navigateur. Crée-en un nouveau pour commencer le suivi.</p>
+    <button id="btnCreateFirstPdca" class="btn-primary">➕ Créer un PDCA</button>
+  </div>
+
+  <div id="mainContent">
+
   <div class="info-bar">
-    <span>Année : <b id="info-year">—</b></span>
-    <span>Semaine : <b id="info-week">—</b></span>
-    <span>Jour : <b id="info-today">—</b></span>
-    <span class="live-clock" id="info-clock"></span>
-  </div>
-
-  <!-- ===================== DASHBOARD ===================== -->
-  <div class="dashboard">
-    <div class="gauge-card">
-      <h2>Taux d'avancement global</h2>
-      <div class="gauge-wrap" id="gauge-wrap"></div>
-      <div class="gauge-legend">
-        <span class="gauge-legend-item"><span class="gauge-legend-dot" style="background:var(--brick)"></span>En retard</span>
-        <span class="gauge-legend-item"><span class="gauge-legend-dot" style="background:var(--ochre)"></span>En cours</span>
-        <span class="gauge-legend-item"><span class="gauge-legend-dot" style="background:var(--moss)"></span>Terminé</span>
-      </div>
-    </div>
-    <div class="dash-right">
-      <div class="stat-grid" id="stat-grid"></div>
-      <div class="dist-grid">
-        <div class="dist-card">
-          <h3>Répartition par étape</h3>
-          <div id="dist-etape"></div>
-        </div>
-        <div class="dist-card">
-          <h3>Répartition par priorité</h3>
-          <div id="dist-prio"></div>
-        </div>
+    <div class="info-chip"><span class="chip-label">Année</span><span class="chip-value" id="infoYear">—</span></div>
+    <div class="info-chip"><span class="chip-label">Semaine</span><span class="chip-value" id="infoWeek">—</span></div>
+    <div class="info-chip"><span class="chip-label">Jour</span><span class="chip-value" id="infoDay">—</span></div>
+    <div class="gauge-block">
+      <div id="gaugeSvgWrap"></div>
+      <div class="gauge-text">
+        <span class="gauge-pct" id="globalPctText">0%</span>
+        <span class="gauge-label">Taux d'avancement global</span>
       </div>
     </div>
   </div>
 
-  <!-- ===================== FILTRES ===================== -->
-  <div class="filters-card">
-    <div class="filters-grid">
-      <div class="filter-field">
-        <label for="f-semaine">Semaine</label>
-        <select id="f-semaine"><option value="">Toutes</option></select>
-      </div>
-      <div class="filter-field">
-        <label for="f-priorite">Priorité</label>
-        <select id="f-priorite">
-          <option value="">Toutes</option>
-          <option value="1">1 — Sécurité / Disponibilité</option>
-          <option value="2">2 — BPF / Obsolescence / Env.</option>
-          <option value="3">3 — Projets / Savings</option>
-          <option value="4">4 — Amélioration</option>
-        </select>
-      </div>
-      <div class="filter-field">
-        <label for="f-pilote">Pilote</label>
-        <select id="f-pilote"><option value="">Tous</option></select>
-      </div>
-      <div class="filter-field">
-        <label for="f-etape">Étape PDCA</label>
-        <select id="f-etape">
-          <option value="">Toutes</option>
-          <option value="P">P — Plan</option>
-          <option value="D">D — Do</option>
-          <option value="C">C — Check</option>
-          <option value="A">A — Act</option>
-          <option value="TERMINE">Terminé</option>
-        </select>
-      </div>
-      <div class="filter-field">
-        <label for="f-statut">Statut</label>
-        <select id="f-statut">
-          <option value="">Tous</option>
-          <option value="non_demarre">Non démarré</option>
-          <option value="en_cours">En cours</option>
-          <option value="termine">Terminé</option>
-        </select>
-      </div>
-      <div class="filter-field">
-        <label for="f-retard">Retard</label>
-        <select id="f-retard">
-          <option value="">Tous</option>
-          <option value="oui">En retard</option>
-          <option value="non">Dans les délais</option>
-        </select>
-      </div>
-      <div class="filter-field">
-        <label for="f-search">Recherche (sujet / description)</label>
-        <input type="text" id="f-search" placeholder="Rechercher…">
-      </div>
+  <div class="settings-panel">
+    <div class="settings-header" id="prioritySettingsHeader">
+      <h3>⚙️ Thèmes de priorité</h3>
+      <span id="prioritySettingsChevron">▼</span>
     </div>
-    <div class="filters-footer">
-      <span class="filters-count" id="filters-count"></span>
-      <button class="link-btn" id="btn-reset-filters">Réinitialiser les filtres</button>
+    <div class="settings-body" id="prioritySettingsBody">
+      <div class="priority-rows" id="priorityRows"></div>
+      <p class="form-hint">Ces libellés s'appliquent aux priorités 1 à 4 sélectionnables pour chaque sujet de ce PDCA.</p>
     </div>
   </div>
 
-  <!-- ===================== TABLEAU ===================== -->
   <div class="toolbar">
-    <h2>Sujets suivis</h2>
-    <button class="btn btn-primary" id="btn-new-action">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      Nouvelle action
-    </button>
-  </div>
-  <div class="table-card">
-    <div class="table-scroll">
-      <table class="pdca-table" id="pdca-table">
-        <thead>
-          <tr>
-            <th data-sort="numero">N° <span class="sort-arrow">▲</span></th>
-            <th data-sort="semaine">Semaine <span class="sort-arrow">▲</span></th>
-            <th data-sort="sujet">Sujet <span class="sort-arrow">▲</span></th>
-            <th>Commentaire / Description</th>
-            <th data-sort="priorite">Priorité <span class="sort-arrow">▲</span></th>
-            <th data-sort="pilote">Pilote <span class="sort-arrow">▲</span></th>
-            <th data-sort="delai">Délai <span class="sort-arrow">▲</span></th>
-            <th>Replanifié</th>
-            <th title="Plan">P</th>
-            <th title="Do">D</th>
-            <th title="Check">C</th>
-            <th title="Act">A</th>
-            <th data-sort="avancement">Avancement <span class="sort-arrow">▲</span></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-      </table>
-    </div>
-    <div class="empty-state hidden" id="empty-state">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg>
-      <div>Aucun sujet ne correspond aux filtres actuels.</div>
-    </div>
+    <h2>Sujets</h2>
+    <span class="count-badge" id="subjectsCount">0</span>
+    <div class="spacer"></div>
+    <select id="filterStatus" class="filter-select">
+      <option value="open">Sujets ouverts</option>
+      <option value="all">Tous les sujets</option>
+      <option value="closed">Sujets clôturés</option>
+    </select>
+    <select id="filterPriority" class="filter-select">
+      <option value="">Toutes priorités</option>
+    </select>
+    <button id="btnNewSubject" class="btn-primary">➕ Nouveau sujet</button>
   </div>
 
-  <footer class="app-footer">Outil autonome — données stockées dans ce navigateur (localStorage). Pense à exporter régulièrement pour sauvegarder / transférer tes données.</footer>
+  <div class="table-wrap">
+    <table class="subjects">
+      <thead>
+        <tr>
+          <th>N°</th>
+          <th>Semaine</th>
+          <th>Sujet</th>
+          <th>Avancement</th>
+          <th>Priorité</th>
+          <th>Pilote</th>
+          <th>Délai</th>
+          <th>Replanifié</th>
+          <th title="Plan — le sujet, le pilote et le délai sont renseignés">P</th>
+          <th title="Do — toutes les sous-actions sont validées">D</th>
+          <th title="Check — le sujet a été validé / clôturé">C</th>
+          <th title="Act — au moins un retour d'expérience ou une action pérenne est validé(e)">A</th>
+          <th>%</th>
+          <th>Temps restant</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="subjectsBody"></tbody>
+    </table>
+  </div>
+  <div id="emptyState" class="empty-state" style="display:none;">Aucun sujet pour le moment. Cliquez sur « Nouveau sujet » pour commencer.</div>
+
+  </div><!-- /#mainContent -->
+
+  <footer>Outil autonome — données stockées dans ce navigateur (localStorage). Pense à exporter régulièrement pour sauvegarder / transférer tes données.</footer>
 </div>
 
-<!-- ===================== MODAL : FORMULAIRE SUJET ===================== -->
-<div class="modal-overlay hidden" id="modal-form">
-  <div class="modal modal-wide">
-    <div class="modal-head">
-      <div>
-        <h3 id="form-modal-title">Nouvelle action</h3>
-        <p id="form-modal-sub">Sujet suivi dans le cadre du PDCA</p>
-      </div>
-      <button class="modal-close" data-close="modal-form" aria-label="Fermer">&times;</button>
+<!-- ============ Modal : Nouveau / Modifier sujet ============ -->
+<div id="subjectModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="subjectModalTitle">Nouveau sujet</h2>
+      <button type="button" class="close-btn" id="closeSubjectModalBtn" aria-label="Fermer">×</button>
     </div>
-    <div class="modal-body">
-      <div class="form-row cols-4">
-        <div class="field"><label>N°</label><input type="text" id="ff-numero" disabled></div>
-        <div class="field"><label for="ff-semaine">Semaine</label><input type="text" id="ff-semaine" placeholder="S38/2026"></div>
-        <div class="field"><label for="ff-pilote">Pilote</label><input type="text" id="ff-pilote" list="dl-pilotes" placeholder="Nom du pilote"><datalist id="dl-pilotes"></datalist></div>
-        <div class="field"><label>Statut</label><input type="text" id="ff-statut-display" disabled></div>
-      </div>
-      <div class="form-row single">
-        <div class="field"><label for="ff-sujet">Sujet *</label><input type="text" id="ff-sujet" placeholder="Ex : Audit documentaire"></div>
-      </div>
-      <div class="form-row single">
-        <div class="field"><label for="ff-description">Commentaire / Description</label><textarea id="ff-description" placeholder="Détail du sujet, contexte, plan d'action…"></textarea></div>
-      </div>
-      <div class="form-row single">
-        <div class="field">
-          <label>Priorité</label>
-          <div class="prio-radio-group">
-            <div class="prio-radio p1"><input type="radio" name="ff-prio" id="ff-prio-1" value="1"><label class="prio-radio-label" for="ff-prio-1">1 — Sécurité / Disponibilité</label></div>
-            <div class="prio-radio p2"><input type="radio" name="ff-prio" id="ff-prio-2" value="2"><label class="prio-radio-label" for="ff-prio-2">2 — BPF / Obsolescence / Env.</label></div>
-            <div class="prio-radio p3"><input type="radio" name="ff-prio" id="ff-prio-3" value="3"><label class="prio-radio-label" for="ff-prio-3">3 — Projets / Savings</label></div>
-            <div class="prio-radio p4"><input type="radio" name="ff-prio" id="ff-prio-4" value="4"><label class="prio-radio-label" for="ff-prio-4">4 — Amélioration</label></div>
-          </div>
+    <form id="subjectForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fWeekDate">Date de référence (semaine)</label>
+          <input type="date" id="fWeekDate">
+          <div class="form-hint" id="fWeekLabelHint">Semaine —</div>
         </div>
+        <div class="form-group">
+          <label for="fPriority">Priorité</label>
+          <select id="fPriority"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="fSubject">Sujet</label>
+        <input type="text" id="fSubject" maxlength="200" placeholder="Ex : CDC LSM Opella">
       </div>
       <div class="form-row">
-        <div class="field"><label for="ff-delai">Délai initial</label><input type="date" id="ff-delai"></div>
-        <div class="field"><label for="ff-replan">Date replanifiée</label><input type="date" id="ff-replan"></div>
-      </div>
-      <div class="replan-box hidden" id="replan-box">
-        <div class="field-hint">Historique de replanification</div>
-        <ul class="replan-history-list" id="replan-history-list"></ul>
-        <div class="drift-warning hidden" id="drift-warning">⚠️ Ce sujet a déjà été replanifié plusieurs fois — délai potentiellement fragile.</div>
-      </div>
-
-      <div class="step-form-block" style="margin-top:16px;">
-        <div class="field-hint" style="margin-bottom:8px; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.03em;">Étapes PDCA</div>
-        <div class="pdca-stepper" id="form-pdca-stepper"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost footer-left" id="btn-form-history" type="button">Historique</button>
-      <button class="btn btn-ghost" id="btn-form-close-direct" type="button">Clôturer directement</button>
-      <button class="btn btn-ghost" data-close="modal-form" type="button">Annuler</button>
-      <button class="btn btn-primary" id="btn-form-save" type="button">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== MODAL : ÉTAPE PDCA ===================== -->
-<div class="modal-overlay hidden" id="modal-step">
-  <div class="modal modal-narrow">
-    <div class="modal-head">
-      <div>
-        <h3 id="step-modal-title">Valider l'étape</h3>
-        <p id="step-modal-sub"></p>
-      </div>
-      <button class="modal-close" data-close="modal-step" aria-label="Fermer">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row single">
-        <div class="field"><label for="sf-date">Date de réalisation</label><input type="date" id="sf-date"></div>
-      </div>
-      <div class="form-row single">
-        <div class="field"><label for="sf-commentaire">Commentaire</label><textarea id="sf-commentaire" placeholder="Ce qui a été fait / constaté à cette étape…"></textarea></div>
-      </div>
-      <div class="form-row single">
-        <div class="field"><label for="sf-reference">Référence documentaire (optionnel)</label><input type="text" id="sf-reference" placeholder="N° de document, lien, fichier…"></div>
-      </div>
-      <div id="act-type-block" class="hidden">
-        <div class="field-hint" style="font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:.03em; margin-bottom:4px;">Issue de l'étape A</div>
-        <div class="act-type-group">
-          <label class="act-type-option"><input type="radio" name="sf-act-type" value="standardisation"><span><b>Standardisation</b><span class="d"> — le résultat est satisfaisant, la pratique est standardisée.</span></span></label>
-          <label class="act-type-option"><input type="radio" name="sf-act-type" value="corrective"><span><b>Action corrective</b><span class="d"> — une correction complémentaire est nécessaire.</span></span></label>
-          <label class="act-type-option"><input type="radio" name="sf-act-type" value="nouveau_cycle"><span><b>Nouveau cycle PDCA</b><span class="d"> — le sujet repart sur un nouveau cycle P→D→C→A, l'historique du cycle précédent est conservé.</span></span></label>
+        <div class="form-group">
+          <label for="fPilote">Pilote</label>
+          <input type="text" id="fPilote" list="pilotesDatalist" maxlength="60" placeholder="Ex : Projets">
+          <datalist id="pilotesDatalist"></datalist>
+        </div>
+        <div class="form-group">
+          <label for="fDelai">Délai</label>
+          <input type="date" id="fDelai">
         </div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost footer-left hidden" id="btn-step-undo" type="button">Réinitialiser l'étape</button>
-      <button class="btn btn-ghost" data-close="modal-step" type="button">Annuler</button>
-      <button class="btn btn-primary" id="btn-step-save" type="button">Valider</button>
-    </div>
+      <p id="subjectFormError" class="form-error hidden">Merci de renseigner au moins un sujet.</p>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelSubjectBtn">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
   </div>
 </div>
 
-<!-- ===================== MODAL : HISTORIQUE ===================== -->
-<div class="modal-overlay hidden" id="modal-history">
+<!-- ============ Modal : Avancement (sous-actions -> D) ============ -->
+<div id="avancementModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
   <div class="modal">
-    <div class="modal-head">
-      <div>
-        <h3>Historique du sujet</h3>
-        <p id="history-modal-sub"></p>
-      </div>
-      <button class="modal-close" data-close="modal-history" aria-label="Fermer">&times;</button>
+    <div class="modal-header">
+      <h2 id="avancementModalTitle">Avancement</h2>
+      <button type="button" class="close-btn" id="closeAvancementModalBtn" aria-label="Fermer">×</button>
     </div>
     <div class="modal-body">
-      <ul class="history-list" id="history-list"></ul>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" data-close="modal-history" type="button">Fermer</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== MODAL : CONFIRMATION ===================== -->
-<div class="modal-overlay hidden" id="modal-confirm">
-  <div class="modal modal-narrow">
-    <div class="modal-head">
-      <div><h3 id="confirm-title">Confirmer</h3></div>
-      <button class="modal-close" data-close="modal-confirm" aria-label="Fermer">&times;</button>
-    </div>
-    <div class="modal-body"><p id="confirm-message" style="font-size:13.5px;"></p></div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" data-close="modal-confirm" type="button">Annuler</button>
-      <button class="btn btn-danger" id="btn-confirm-ok" type="button">Confirmer</button>
+      <div id="avancementHint" class="modal-hint"></div>
+      <p class="form-hint">Le sous-critère « D » (Do) s'active automatiquement lorsque toutes les sous-actions ci-dessous sont validées.</p>
+      <div id="subActionsList" class="checklist"></div>
+      <div class="add-item-row">
+        <input type="text" id="newSubActionInput" maxlength="200" placeholder="Nouvelle sous-action…">
+        <button type="button" class="btn-secondary" id="addSubActionBtn">+ Ajouter</button>
+      </div>
     </div>
   </div>
 </div>
 
-<div id="toast-container"></div>
+<!-- ============ Modal : Replanification ============ -->
+<div id="replanModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal modal-small">
+    <div class="modal-header">
+      <h2 id="replanModalTitle">Replanifier</h2>
+      <button type="button" class="close-btn" id="closeReplanModalBtn" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="fReplanDate">Nouvelle date</label>
+        <input type="date" id="fReplanDate">
+      </div>
+      <div id="replanHistoryBlock"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="cancelReplanBtn">Annuler</button>
+        <button type="button" class="btn-primary" id="confirmReplanBtn">Replanifier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal : Clôture (retours d'expérience -> C / A) ============ -->
+<div id="clotureModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="clotureModalTitle">Validation du sujet</h2>
+      <button type="button" class="close-btn" id="closeClotureModalBtn" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="clotureHint" class="modal-hint"></div>
+      <p class="form-hint">Ajoutez et validez un ou plusieurs retours d'expérience / actions pérennes / routines : le sous-critère « A » (Act) s'active dès qu'au moins un élément est validé.</p>
+      <div id="lessonsList" class="checklist"></div>
+      <div class="add-item-row">
+        <input type="text" id="newLessonInput" maxlength="300" placeholder="Ex : routine de contrôle mensuelle mise en place…">
+        <button type="button" class="btn-secondary" id="addLessonBtn">+ Ajouter</button>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="reopenSubjectBtn" style="display:none;">↩️ Rouvrir le sujet</button>
+        <button type="button" class="btn-primary" id="closeSubjectBtn">✅ Valider le sujet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal : Guide du cycle PDCA ============ -->
+<div id="guideModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>Guide du cycle PDCA</h2>
+      <button type="button" class="close-btn" id="closeGuideModalBtn" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="guide-cycle-line">P → D → C → A → retour à P</div>
+      <p class="form-hint" style="margin-bottom:14px;">On passe d'une étape à l'autre quand on a réuni assez d'éléments pour valider la précédente.</p>
+      <div id="guideRows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Popover flottant pour le choix de priorité -->
+<div id="priorityPopover" class="priority-popover hidden"></div>
+
+<!-- ============ Modal : Confirmation générique ============ -->
+<div id="confirmOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal modal-small">
+    <div class="modal-body">
+      <p id="confirmMessage">Confirmer ?</p>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="confirmCancelBtn">Annuler</button>
+        <button type="button" class="btn-danger" id="confirmOkBtn">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
 <script>
 /* ===================================================================
    Module de synchronisation Google Drive — se branche sur la clé
-   localStorage existante de l'appli (APP_STORAGE_KEY) au lieu de la
-   remplacer. Réutilisable : changer APP_NS pour un autre outil.
+   localStorage de l'appli (STORAGE_KEY) au lieu de la remplacer.
    =================================================================== */
 (function () {
   'use strict';
@@ -666,7 +524,7 @@
   var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
   var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
   var APP_NS = 'pdca';
-  var APP_STORAGE_KEY = 'axelPdcaTracker_v2'; /* doit rester identique au STORAGE_KEY du script principal */
+  var APP_STORAGE_KEY = 'axelPdcaTracker_v1';
   var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
   var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
   var SILENT_REFRESH_MS = 45 * 60 * 1000;
@@ -697,7 +555,7 @@
     var label = document.getElementById('drive-status-label');
     if (!dot || !label) return;
     dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
-    var texts = { idle: 'Drive : non connect\u00E9', connected: 'Drive : connect\u00E9', ok: 'Drive : synchronis\u00E9', sync: 'Drive : synchro\u2026', error: 'Drive : erreur' };
+    var texts = { idle: 'Drive : non connecté', connected: 'Drive : connecté', ok: 'Drive : synchronisé', sync: 'Drive : synchro…', error: 'Drive : erreur' };
     label.textContent = texts[mode] || texts.idle;
   }
 
@@ -788,13 +646,13 @@
       tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
     });
     document.getElementById('btn-drive-force').addEventListener('click', function () {
-      if (!hasValidToken()) { alert('Connecte-toi d\'abord \u00E0 Drive (bouton "Drive : non connect\u00E9").'); return; }
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord à Drive (bouton "Drive : non connecté").'); return; }
       var local = getLocalRecord();
-      if (!local) { alert('Rien en local \u00E0 synchroniser.'); return; }
+      if (!local) { alert('Rien en local à synchroniser.'); return; }
       setSyncStatus('sync');
       drivePushRecord(local).then(function () {
         setSyncStatus('ok');
-        alert('Synchro forc\u00E9e : OK (' + Math.round(local.value.length / 1024) + ' Ko envoy\u00E9s)');
+        alert('Synchro forcée : OK (' + Math.round(local.value.length / 1024) + ' Ko envoyés)');
       }).catch(function (e) {
         setSyncStatus('error');
         alert('Erreur : ' + e.message);
@@ -814,1094 +672,1121 @@
       setSyncStatus('sync');
       drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
         setSyncStatus('error');
-        console.error('[DriveSync] \u00C9chec de la sauvegarde vers Drive :', e);
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive :', e);
       });
     }
   };
 })();
 </script>
+
 <script>
 (function () {
-'use strict';
+  'use strict';
 
-var APP_VERSION = 'v2';
-var STORAGE_KEY = 'axelPdcaTracker_v2';
+  var STORAGE_KEY = 'axelPdcaTracker_v1';
 
-var PRIORITES = {
-  1: { label: 'Sécurité / Disponibilité', full: '1 — Sécurité / Disponibilité' },
-  2: { label: 'BPF / Obsolescence / Env.', full: '2 — BPF / Obsolescence / Environnement' },
-  3: { label: 'Projets / Savings', full: '3 — Projets / Savings' },
-  4: { label: 'Amélioration', full: '4 — Amélioration' }
-};
+  var state = null;
+  var lastGoodSnapshot = null;
+  var editingSubjectId = null;   // null = création
+  var avancementSubjectId = null;
+  var replanSubjectId = null;
+  var clotureSubjectId = null;
+  var pendingDeleteAction = null;
 
-var GATES = [
-  { key: 'p', letter: 'P', title: 'PLAN', desc: "Définir le problème, l'objectif, les causes et le plan d'action." },
-  { key: 'd', letter: 'D', title: 'DO', desc: 'Mettre en œuvre les actions définies.' },
-  { key: 'c', letter: 'C', title: 'CHECK', desc: "Mesurer et vérifier les résultats par rapport à l'objectif." },
-  { key: 'a', letter: 'A', title: 'ACT', desc: 'Standardiser, corriger, ou relancer un nouveau cycle PDCA.' }
-];
-var GATE_ORDER = ['p', 'd', 'c', 'a'];
-
-var ACT_TYPE_LABELS = {
-  standardisation: 'Standardisation',
-  corrective: 'Action corrective',
-  nouveau_cycle: 'Nouveau cycle PDCA'
-};
-
-/* ============================================================
-   UTILITAIRES
-   ============================================================ */
-function pad2(n) { return n < 10 ? '0' + n : '' + n; }
-function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-function nowIso() { return new Date().toISOString(); }
-function fmtDateFR(iso) {
-  if (!iso) return '—';
-  var p = iso.split('-');
-  if (p.length !== 3) return iso;
-  return p[2] + '/' + p[1] + '/' + p[0];
-}
-function fmtDateTimeFR(iso) {
-  if (!iso) return '—';
-  var d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
-}
-function escapeHtml(s) {
-  if (s === null || s === undefined) return '';
-  return String(s).replace(/[&<>"']/g, function (c) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-  });
-}
-function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
-
-/* Semaine ISO 8601 à partir d'une date */
-function isoWeekParts(date) {
-  var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  var dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return { week: weekNo, year: d.getUTCFullYear() };
-}
-function isoWeekString(date) {
-  var wp = isoWeekParts(date);
-  return 'S' + pad2(wp.week) + '/' + wp.year;
-}
-
-var toastTimer = null;
-function showToast(message, type) {
-  var container = document.getElementById('toast-container');
-  if (!container) return;
-  var el = document.createElement('div');
-  el.className = 'toast' + (type ? ' toast-' + type : '');
-  el.textContent = message;
-  container.appendChild(el);
-  setTimeout(function () {
-    el.style.transition = 'opacity .25s ease';
-    el.style.opacity = '0';
-    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 260);
-  }, 3200);
-}
-
-/* ============================================================
-   MODELE DE DONNEES
-   ============================================================ */
-function defaultGate() { return { done: false, date: '', commentaire: '', reference: '', type: null }; }
-function defaultGates() { return { p: defaultGate(), d: defaultGate(), c: defaultGate(), a: defaultGate() }; }
-
-function newItem() {
-  return {
-    id: 0,
-    semaine: isoWeekString(new Date()),
-    sujet: '',
-    description: '',
-    priorite: 2,
-    pilote: '',
-    delaiInitial: '',
-    delaiReplanifie: '',
-    replanHistory: [],
-    cycle: 1,
-    cyclesArchive: [],
-    gates: defaultGates(),
-    historique: [],
-    createdAt: nowIso()
-  };
-}
-
-function defaultState() {
-  return {
-    theme: 'dark',
-    nextId: 1,
-    items: [],
-    filters: { semaine: '', priorite: '', pilote: '', etape: '', statut: '', retard: '', search: '' },
-    sort: { col: 'numero', dir: 1 }
-  };
-}
-
-function addHistorique(item, texte) {
-  item.historique.push({ date: nowIso(), texte: texte });
-}
-
-/* ============================================================
-   DONNEES DE DEMONSTRATION
-   ============================================================ */
-function buildDemoItems() {
-  var items = [];
-  var now = new Date();
-  var y = now.getFullYear();
-
-  function mk(opts) {
-    var it = newItem();
-    it.id = opts.id;
-    it.semaine = opts.semaine;
-    it.sujet = opts.sujet;
-    it.description = opts.description;
-    it.priorite = opts.priorite;
-    it.pilote = opts.pilote;
-    it.delaiInitial = opts.delaiInitial;
-    it.delaiReplanifie = opts.delaiReplanifie || '';
-    it.createdAt = opts.createdAt || nowIso();
-    addHistorique(it, 'Création');
-    if (opts.replan) {
-      it.replanHistory.push({ date: nowIso(), ancien: opts.delaiInitial, nouveau: opts.delaiReplanifie });
-      addHistorique(it, 'Date replanifiée : ' + fmtDateFR(opts.delaiInitial) + ' → ' + fmtDateFR(opts.delaiReplanifie));
-    }
-    var steps = opts.steps || [];
-    for (var i = 0; i < steps.length; i++) {
-      var g = steps[i];
-      it.gates[g] = { done: true, date: opts.stepDate || todayStr(), commentaire: opts.stepComment || 'Étape réalisée.', reference: '', type: g === 'a' ? (opts.actType || 'standardisation') : null };
-      addHistorique(it, GATES[GATE_ORDER.indexOf(g)].letter + ' validé' + (g === 'a' ? ' (' + ACT_TYPE_LABELS[it.gates.a.type] + ')' : ''));
-    }
-    return it;
-  }
-
-  function shiftDate(days) {
+  /* ================= Utilitaires date / semaine ================= */
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function todayStr() {
     var d = new Date();
-    d.setDate(d.getDate() + days);
     return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
-
-  items.push(mk({ id: 1, semaine: 'S35/' + y, sujet: 'Audit documentaire', description: "Revue des documents qualité vs disposition en place sur l'atelier.", priorite: 2, pilote: 'Julie M.', delaiInitial: shiftDate(-20), steps: [] }));
-  items.push(mk({ id: 2, semaine: 'S35/' + y, sujet: 'Remise en fonctionnement équipement', description: "Machine d'étiquetage à l'arrêt — devis de remise en service à lancer.", priorite: 1, pilote: 'Marc D.', delaiInitial: shiftDate(-15), delaiReplanifie: shiftDate(-3), replan: true, steps: ['p'] }));
-  items.push(mk({ id: 3, semaine: 'S36/' + y, sujet: 'Audit COV', description: "Cadrage d'un audit COV avec prestataire externe.", priorite: 2, pilote: 'Julie M.', delaiInitial: shiftDate(10), steps: ['p', 'd'] }));
-  items.push(mk({ id: 4, semaine: 'S36/' + y, sujet: 'Déshumidification atelier', description: 'Macrochiffrage location vs investissement pour la déshumidification.', priorite: 3, pilote: 'Sophie L.', delaiInitial: shiftDate(18), steps: ['p', 'd'] }));
-  items.push(mk({ id: 5, semaine: 'S37/' + y, sujet: 'Système de gestion des changements', description: "Enregistrement de la formation au processus Change Control — retour attendu.", priorite: 2, pilote: 'Marc D.', delaiInitial: shiftDate(-8), delaiReplanifie: shiftDate(4), replan: true, steps: ['p', 'd', 'c'] }));
-  items.push(mk({ id: 6, semaine: 'S37/' + y, sujet: 'Suivi fournisseur', description: 'Mise en place d\'une routine de suivi des demandes d\'achat et règlements fournisseur.', priorite: 3, pilote: 'Sophie L.', delaiInitial: shiftDate(25), steps: ['p', 'd', 'c', 'a'], actType: 'standardisation' }));
-  items.push(mk({ id: 7, semaine: 'S38/' + y, sujet: 'Hygrométrie', description: "Revue des seuils, analyses IV Tracer et construction des coûts CAPEX/OPEX.", priorite: 1, pilote: 'Julie M.', delaiInitial: shiftDate(9) }));
-  items.push(mk({ id: 8, semaine: 'S34/' + y, sujet: 'Énergie / COV — Scope 1&2', description: 'Organiser les RDV avec les prestataires énergie et engager le plan de comptage.', priorite: 2, pilote: 'Marc D.', delaiInitial: shiftDate(-2), steps: ['p'] }));
-
-  return items;
-}
-
-/* ============================================================
-   PERSISTENCE
-   ============================================================ */
-var state = null;
-
-function migrateItem(raw) {
-  var it = newItem();
-  for (var k in it) { if (raw[k] !== undefined) it[k] = raw[k]; }
-  it.gates = it.gates || defaultGates();
-  for (var i = 0; i < GATE_ORDER.length; i++) {
-    var gk = GATE_ORDER[i];
-    it.gates[gk] = it.gates[gk] || defaultGate();
-    if (it.gates[gk].type === undefined) it.gates[gk].type = null;
+  function parseLocalDate(dateStr) {
+    if (!dateStr) return null;
+    var parts = dateStr.split('-').map(Number);
+    if (parts.length !== 3 || !parts[0]) return null;
+    return new Date(parts[0], parts[1] - 1, parts[2]);
   }
-  if (!Array.isArray(it.replanHistory)) it.replanHistory = [];
-  if (!Array.isArray(it.cyclesArchive)) it.cyclesArchive = [];
-  if (!Array.isArray(it.historique)) it.historique = [];
-  if (!it.cycle) it.cycle = 1;
-  return it;
-}
-
-function loadState() {
-  var raw = null;
-  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
-  if (raw) {
-    try { state = JSON.parse(raw); } catch (e) { state = null; }
+  function formatDateSimple(dateStr) {
+    if (!dateStr) return '—';
+    var parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
   }
-  if (!state) {
-    state = defaultState();
-    state.items = buildDemoItems();
-    state.nextId = 9;
+  function isoWeekInfo(dateStr) {
+    var d = parseLocalDate(dateStr);
+    if (!d) return null;
+    var target = new Date(d.getTime());
+    var dayNr = (d.getDay() + 6) % 7; // lundi = 0
+    target.setDate(target.getDate() - dayNr + 3); // jeudi de la semaine
+    var firstThursday = new Date(target.getFullYear(), 0, 4);
+    var firstDayNr = (firstThursday.getDay() + 6) % 7;
+    firstThursday.setDate(firstThursday.getDate() - firstDayNr + 3);
+    var week = 1 + Math.round((target.getTime() - firstThursday.getTime()) / (7 * 86400000));
+    return { week: week, year: target.getFullYear() };
   }
-  var d = defaultState();
-  for (var k in d) { if (state[k] === undefined) state[k] = d[k]; }
-  if (!state.filters) state.filters = d.filters;
-  for (var fk in d.filters) { if (state.filters[fk] === undefined) state.filters[fk] = d.filters[fk]; }
-  if (!Array.isArray(state.items)) state.items = [];
-  for (var i = 0; i < state.items.length; i++) state.items[i] = migrateItem(state.items[i]);
-}
-
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    if (window.__driveNotifySave) window.__driveNotifySave();
-  } catch (e) { showToast('Stockage local indisponible ou plein — la sauvegarde a échoué.', 'error'); }
-}
-
-/* ============================================================
-   LOGIQUE METIER PDCA
-   ============================================================ */
-function computeAvancement(item) {
-  var pct = 0;
-  if (item.gates.p.done) pct += 25;
-  if (item.gates.d.done) pct += 25;
-  if (item.gates.c.done) pct += 25;
-  if (item.gates.a.done) pct += 25;
-  return pct;
-}
-function computeEtapeActuelle(item) {
-  if (!item.gates.p.done) return 'P';
-  if (!item.gates.d.done) return 'D';
-  if (!item.gates.c.done) return 'C';
-  if (!item.gates.a.done) return 'A';
-  return 'TERMINE';
-}
-function isTerminee(item) { return item.gates.a.done === true; }
-function isGateUnlocked(item, gateKey) {
-  var idx = GATE_ORDER.indexOf(gateKey);
-  for (var i = 0; i < idx; i++) { if (!item.gates[GATE_ORDER[i]].done) return false; }
-  return true;
-}
-function effectiveDeadline(item) { return item.delaiReplanifie || item.delaiInitial || ''; }
-function daysLate(item, refDateStr) {
-  var dl = effectiveDeadline(item);
-  if (!dl) return null;
-  if (isTerminee(item)) return null;
-  var ref = refDateStr || todayStr();
-  var d1 = new Date(dl + 'T00:00:00');
-  var d0 = new Date(ref + 'T00:00:00');
-  if (isNaN(d1.getTime()) || isNaN(d0.getTime())) return null;
-  return Math.round((d0 - d1) / 86400000);
-}
-function isLate(item) { var d = daysLate(item); return d !== null && d > 0; }
-function isSoon(item) { var d = daysLate(item); return d !== null && d <= 0 && d >= -5; }
-function computeStatutLabel(item) {
-  var pct = computeAvancement(item);
-  if (pct === 0) return 'non_demarre';
-  if (pct === 100) return 'termine';
-  return 'en_cours';
-}
-function statutDisplay(item) {
-  var s = computeStatutLabel(item);
-  if (s === 'non_demarre') return 'Non démarré';
-  if (s === 'termine') return 'Terminé';
-  return isLate(item) ? 'En cours — en retard' : 'En cours';
-}
-
-/* Archive le cycle courant et démarre un nouveau cycle PDCA */
-function startNewCycle(item) {
-  item.cyclesArchive.push({ cycle: item.cycle, gates: deepClone(item.gates), closedAt: nowIso() });
-  item.cycle += 1;
-  item.gates = defaultGates();
-  addHistorique(item, 'Nouveau cycle PDCA démarré (cycle ' + item.cycle + ') — historique du cycle précédent conservé.');
-}
-
-/* Réinitialise une étape et toutes les suivantes (elles ne peuvent rester valides sans elle) */
-function resetGateCascade(item, gateKey) {
-  var idx = GATE_ORDER.indexOf(gateKey);
-  var letters = [];
-  for (var i = idx; i < GATE_ORDER.length; i++) {
-    if (item.gates[GATE_ORDER[i]].done) letters.push(GATES[i].letter);
-    item.gates[GATE_ORDER[i]] = defaultGate();
+  function weekLabel(dateStr) {
+    var info = isoWeekInfo(dateStr);
+    if (!info) return '—';
+    return 'S' + info.week + '/' + info.year;
   }
-  addHistorique(item, 'Étape(s) réinitialisée(s) : ' + letters.join(', ') + '.');
-}
 
-/* ============================================================
-   FILTRAGE / TRI
-   ============================================================ */
-function itemMatchesFilters(item, filters) {
-  if (filters.semaine && item.semaine !== filters.semaine) return false;
-  if (filters.priorite && String(item.priorite) !== String(filters.priorite)) return false;
-  if (filters.pilote && item.pilote !== filters.pilote) return false;
-  if (filters.etape && computeEtapeActuelle(item) !== filters.etape) return false;
-  if (filters.statut && computeStatutLabel(item) !== filters.statut) return false;
-  if (filters.retard === 'oui' && !isLate(item)) return false;
-  if (filters.retard === 'non' && isLate(item)) return false;
-  if (filters.search) {
-    var q = filters.search.toLowerCase();
-    var hay = (item.sujet + ' ' + item.description).toLowerCase();
-    if (hay.indexOf(q) === -1) return false;
-  }
-  return true;
-}
-function filterItems(items, filters) {
-  var out = [];
-  for (var i = 0; i < items.length; i++) if (itemMatchesFilters(items[i], filters)) out.push(items[i]);
-  return out;
-}
-function sortValue(item, col) {
-  switch (col) {
-    case 'numero': return item.id;
-    case 'semaine': return item.semaine || '';
-    case 'sujet': return (item.sujet || '').toLowerCase();
-    case 'priorite': return item.priorite;
-    case 'pilote': return (item.pilote || '').toLowerCase();
-    case 'delai': return effectiveDeadline(item) || '9999-99-99';
-    case 'avancement': return computeAvancement(item);
-    default: return item.id;
-  }
-}
-function sortItems(items, sort) {
-  var copy = items.slice();
-  copy.sort(function (a, b) {
-    var va = sortValue(a, sort.col), vb = sortValue(b, sort.col);
-    if (va < vb) return -1 * sort.dir;
-    if (va > vb) return 1 * sort.dir;
-    return a.id - b.id;
-  });
-  return copy;
-}
-
-/* ============================================================
-   CSV
-   ============================================================ */
-function csvEscape(v) {
-  var s = v === null || v === undefined ? '' : String(v);
-  if (/[";\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
-  return s;
-}
-function buildCsv(items) {
-  var headers = ['N°', 'Semaine', 'Sujet', 'Description', 'Priorité', 'Pilote', 'Délai initial', 'Replanifié', 'P', 'D', 'C', 'A', 'Avancement %', 'Statut', 'Retard (j)'];
-  var lines = [headers.map(csvEscape).join(';')];
-  for (var i = 0; i < items.length; i++) {
-    var it = items[i];
-    var dl = daysLate(it);
-    var row = [
-      it.id, it.semaine, it.sujet, it.description, PRIORITES[it.priorite] ? PRIORITES[it.priorite].full : it.priorite,
-      it.pilote, fmtDateFR(it.delaiInitial), fmtDateFR(it.delaiReplanifie),
-      it.gates.p.done ? fmtDateFR(it.gates.p.date) : '', it.gates.d.done ? fmtDateFR(it.gates.d.date) : '',
-      it.gates.c.done ? fmtDateFR(it.gates.c.date) : '', it.gates.a.done ? fmtDateFR(it.gates.a.date) : '',
-      computeAvancement(it), statutDisplay(it), dl !== null && dl > 0 ? dl : ''
+  /* ================= Structures par défaut ================= */
+  function defaultPriorityThemes() {
+    return [
+      { num: 1, label: 'Sécurité / Disponibilité' },
+      { num: 2, label: 'BPF / Obsolescence / Env' },
+      { num: 3, label: 'Projets / Savings' },
+      { num: 4, label: 'Amélioration' }
     ];
-    lines.push(row.map(csvEscape).join(';'));
   }
-  return lines.join('\r\n');
-}
-
-/* ============================================================
-   RENDU : INFO BAR / HORLOGE
-   ============================================================ */
-function renderInfoBar() {
-  var now = new Date();
-  document.getElementById('info-year').textContent = now.getFullYear();
-  document.getElementById('info-week').textContent = isoWeekString(now).replace('S', '');
-  document.getElementById('info-today').textContent = fmtDateTimeFR(now.toISOString());
-}
-function tickClock() {
-  var now = new Date();
-  var el = document.getElementById('info-clock');
-  if (el) el.textContent = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
-}
-
-/* ============================================================
-   RENDU : JAUGE SEMI-CIRCULAIRE
-   ============================================================ */
-function polarToCartesian(cx, cy, r, angleDeg) {
-  var rad = angleDeg * Math.PI / 180;
-  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
-}
-function arcPath(cx, cy, r, startAngle, endAngle) {
-  var start = polarToCartesian(cx, cy, r, startAngle);
-  var end = polarToCartesian(cx, cy, r, endAngle);
-  var largeArc = Math.abs(startAngle - endAngle) > 180 ? 1 : 0;
-  var sweep = startAngle > endAngle ? 1 : 0;
-  return 'M ' + start.x.toFixed(2) + ' ' + start.y.toFixed(2) + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' ' + sweep + ' ' + end.x.toFixed(2) + ' ' + end.y.toFixed(2);
-}
-function buildGaugeSvg(pct) {
-  var cx = 110, cy = 108, r = 86;
-  var bands = [
-    { a0: 180, a1: 144, color: 'var(--brick)' },
-    { a0: 144, a1: 108, color: 'var(--ochre)' },
-    { a0: 108, a1: 72, color: 'var(--gold)' },
-    { a0: 72, a1: 36, color: 'var(--teal)' },
-    { a0: 36, a1: 0, color: 'var(--moss)' }
-  ];
-  var svg = '<svg viewBox="0 0 220 122" width="100%" height="auto">';
-  for (var i = 0; i < bands.length; i++) {
-    svg += '<path d="' + arcPath(cx, cy, r, bands[i].a0, bands[i].a1) + '" fill="none" stroke="' + bands[i].color + '" stroke-width="16" stroke-linecap="butt" opacity="0.9"></path>';
+  function uid(prefix) { return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
+  function defaultPdca(name) {
+    return {
+      id: uid('pdca'),
+      name: name || 'PDCA sans nom',
+      nextNumero: 1,
+      priorityThemes: defaultPriorityThemes(),
+      subjects: []
+    };
   }
-  var ticks = [0, 25, 50, 75, 100];
-  for (var t = 0; t < ticks.length; t++) {
-    var ta = 180 - (ticks[t] / 100 * 180);
-    var tp = polarToCartesian(cx, cy, r + 17, ta);
-    svg += '<text x="' + tp.x.toFixed(1) + '" y="' + tp.y.toFixed(1) + '" font-size="9" fill="var(--ink-soft)" text-anchor="middle" font-family="IBM Plex Mono, monospace">' + ticks[t] + '</text>';
-  }
-  var needleAngle = 180 - (Math.max(0, Math.min(100, pct)) / 100 * 180);
-  var np = polarToCartesian(cx, cy, r - 14, needleAngle);
-  svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + np.x.toFixed(2) + '" y2="' + np.y.toFixed(2) + '" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"></line>';
-  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="var(--ink)"></circle>';
-  svg += '</svg>';
-  return svg;
-}
-
-/* ============================================================
-   RENDU : DASHBOARD
-   ============================================================ */
-function renderDashboard() {
-  var items = state.items;
-  var total = items.length;
-  var terminees = 0, enCours = 0, nonDemarrees = 0, enRetard = 0;
-  var etapeCounts = { P: 0, D: 0, C: 0, A: 0, TERMINE: 0 };
-  var prioCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
-  var sumPct = 0;
-
-  for (var i = 0; i < items.length; i++) {
-    var it = items[i];
-    var st = computeStatutLabel(it);
-    if (st === 'termine') terminees++; else if (st === 'non_demarre') nonDemarrees++; else enCours++;
-    if (isLate(it)) enRetard++;
-    etapeCounts[computeEtapeActuelle(it)]++;
-    prioCounts[it.priorite] = (prioCounts[it.priorite] || 0) + 1;
-    sumPct += computeAvancement(it);
-  }
-  var globalPct = total > 0 ? Math.round(sumPct / total) : 0;
-
-  document.getElementById('gauge-wrap').innerHTML = buildGaugeSvg(globalPct) +
-    '<div class="gauge-pct">' + globalPct + '%</div><div class="gauge-sub">' + total + ' sujet' + (total > 1 ? 's' : '') + ' suivi' + (total > 1 ? 's' : '') + '</div>';
-
-  var stats = [
-    { label: 'Total actions', value: total, cls: '' },
-    { label: 'Terminées', value: terminees, cls: 'a-moss' },
-    { label: 'En cours', value: enCours, cls: 'a-gold' },
-    { label: 'Non démarrées', value: nonDemarrees, cls: 'a-indigo' },
-    { label: 'En retard', value: enRetard, cls: 'a-brick' }
-  ];
-  var html = '';
-  for (var s = 0; s < stats.length; s++) {
-    html += '<div class="stat-card ' + stats[s].cls + '"><div class="stat-label">' + stats[s].label + '</div><div class="stat-value">' + stats[s].value + '</div></div>';
-  }
-  document.getElementById('stat-grid').innerHTML = html;
-
-  var etapeDefs = [
-    { key: 'P', label: 'Plan', color: 'var(--indigo)' },
-    { key: 'D', label: 'Do', color: 'var(--ochre)' },
-    { key: 'C', label: 'Check', color: 'var(--teal)' },
-    { key: 'A', label: 'Act', color: 'var(--moss)' },
-    { key: 'TERMINE', label: 'Terminé', color: 'var(--card-dim)' }
-  ];
-  var etapeHtml = '';
-  for (var e = 0; e < etapeDefs.length; e++) {
-    var c = etapeCounts[etapeDefs[e].key] || 0;
-    var w = total > 0 ? Math.round((c / total) * 100) : 0;
-    etapeHtml += '<div class="bar-row"><span class="bar-label">' + etapeDefs[e].label + '</span><div class="bar-track"><div class="bar-fill" style="width:' + w + '%;background:' + etapeDefs[e].color + '"></div></div><span class="bar-count">' + c + '</span></div>';
-  }
-  document.getElementById('dist-etape').innerHTML = etapeHtml;
-
-  var prioHtml = '';
-  for (var p = 1; p <= 4; p++) {
-    var pc = prioCounts[p] || 0;
-    var pw = total > 0 ? Math.round((pc / total) * 100) : 0;
-    var pcolor = p === 1 ? 'var(--brick)' : p === 2 ? 'var(--ochre)' : p === 3 ? 'var(--indigo)' : 'var(--moss)';
-    prioHtml += '<div class="bar-row"><span class="bar-label">' + p + ' — ' + PRIORITES[p].label + '</span><div class="bar-track"><div class="bar-fill" style="width:' + pw + '%;background:' + pcolor + '"></div></div><span class="bar-count">' + pc + '</span></div>';
-  }
-  document.getElementById('dist-prio').innerHTML = prioHtml;
-}
-
-/* ============================================================
-   RENDU : FILTRES (options dynamiques)
-   ============================================================ */
-function uniqueSorted(arr) {
-  var seen = {}, out = [];
-  for (var i = 0; i < arr.length; i++) {
-    var v = arr[i];
-    if (v && !seen[v]) { seen[v] = true; out.push(v); }
-  }
-  out.sort();
-  return out;
-}
-function populateFilterOptions() {
-  var semaineSel = document.getElementById('f-semaine');
-  var currentSemaine = semaineSel.value;
-  var semaines = uniqueSorted(state.items.map(function (it) { return it.semaine; }));
-  semaineSel.innerHTML = '<option value="">Toutes</option>' + semaines.map(function (s) { return '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>'; }).join('');
-  semaineSel.value = currentSemaine;
-
-  var piloteSel = document.getElementById('f-pilote');
-  var currentPilote = piloteSel.value;
-  var pilotes = uniqueSorted(state.items.map(function (it) { return it.pilote; }));
-  piloteSel.innerHTML = '<option value="">Tous</option>' + pilotes.map(function (p) { return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>'; }).join('');
-  piloteSel.value = currentPilote;
-}
-function readFiltersFromUI() {
-  return {
-    semaine: document.getElementById('f-semaine').value,
-    priorite: document.getElementById('f-priorite').value,
-    pilote: document.getElementById('f-pilote').value,
-    etape: document.getElementById('f-etape').value,
-    statut: document.getElementById('f-statut').value,
-    retard: document.getElementById('f-retard').value,
-    search: document.getElementById('f-search').value.trim()
-  };
-}
-function applyFiltersFromUI() {
-  state.filters = readFiltersFromUI();
-  saveState();
-  renderTable();
-}
-function writeFiltersToUI() {
-  document.getElementById('f-semaine').value = state.filters.semaine || '';
-  document.getElementById('f-priorite').value = state.filters.priorite || '';
-  document.getElementById('f-pilote').value = state.filters.pilote || '';
-  document.getElementById('f-etape').value = state.filters.etape || '';
-  document.getElementById('f-statut').value = state.filters.statut || '';
-  document.getElementById('f-retard').value = state.filters.retard || '';
-  document.getElementById('f-search').value = state.filters.search || '';
-}
-
-/* ============================================================
-   RENDU : TABLEAU
-   ============================================================ */
-function pilotesList() { return uniqueSorted(state.items.map(function (it) { return it.pilote; })); }
-
-function gateCellHtml(item, gateKey) {
-  var g = item.gates[gateKey];
-  var unlocked = isGateUnlocked(item, gateKey);
-  var disabled = !unlocked && !g.done;
-  var cls = 'pdca-cell-btn step-' + gateKey + (g.done ? ' done' : '');
-  var title = g.done ? (GATE_ORDER.indexOf(gateKey) >= 0 ? '' : '') + 'Validé le ' + fmtDateFR(g.date) : (disabled ? 'Étape(s) précédente(s) requise(s)' : 'Cliquer pour valider');
-  return '<button type="button" class="' + cls + '" data-action="gate" data-id="' + item.id + '" data-gate="' + gateKey + '"' + (disabled ? ' disabled' : '') + ' title="' + escapeHtml(title) + '">' + (g.done ? '✓' : '') + '</button>';
-}
-
-function renderTable() {
-  populateFilterOptions();
-  writeFiltersToUI();
-
-  var filtered = filterItems(state.items, state.filters);
-  var sorted = sortItems(filtered, state.sort);
-
-  var thead = document.querySelectorAll('#pdca-table thead th[data-sort]');
-  for (var h = 0; h < thead.length; h++) {
-    var col = thead[h].getAttribute('data-sort');
-    thead[h].classList.toggle('sorted', col === state.sort.col);
-    var arrow = thead[h].querySelector('.sort-arrow');
-    if (arrow) arrow.textContent = (col === state.sort.col && state.sort.dir === -1) ? '▼' : '▲';
+  function defaultState() {
+    var p = defaultPdca('Service technique - Encadrement');
+    return {
+      version: 1,
+      theme: 'light',
+      pilotesConnus: [],
+      pdcas: [p],
+      currentPdcaId: p.id
+    };
   }
 
-  document.getElementById('filters-count').textContent = sorted.length + ' / ' + state.items.length + ' sujet(s) affiché(s)';
-  document.getElementById('empty-state').classList.toggle('hidden', sorted.length > 0);
+  function findPdca(id) {
+    for (var i = 0; i < state.pdcas.length; i++) if (state.pdcas[i].id === id) return state.pdcas[i];
+    return null;
+  }
+  function currentPdca() {
+    if (!state.pdcas.length) return null;
+    return findPdca(state.currentPdcaId) || state.pdcas[0];
+  }
+  function findSubject(id) {
+    var p = currentPdca();
+    if (!p) return null;
+    for (var i = 0; i < p.subjects.length; i++) if (p.subjects[i].id === id) return p.subjects[i];
+    return null;
+  }
 
-  var rows = '';
-  var todayS = todayStr();
-  for (var i = 0; i < sorted.length; i++) {
-    var it = sorted[i];
-    var dl = daysLate(it, todayS);
-    var late = dl !== null && dl > 0;
-    var soon = dl !== null && dl <= 0 && dl >= -5;
-    var done = isTerminee(it);
-    var rowCls = [];
-    if (done) rowCls.push('row-done');
-    else if (late) rowCls.push(dl >= 5 ? 'row-late-severe' : 'row-late');
-    else if (soon) rowCls.push('row-soon');
-
-    var pct = computeAvancement(it);
-    var delaiHtml = '';
-    if (it.delaiReplanifie) {
-      delaiHtml = '<span class="delai-struck">' + fmtDateFR(it.delaiInitial) + '</span>';
+  /* ================= Chargement / sauvegarde ================= */
+  function loadState() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    if (raw) {
+      try { state = JSON.parse(raw); } catch (e) { state = defaultState(); }
     } else {
-      delaiHtml = fmtDateFR(it.delaiInitial);
+      state = defaultState();
     }
-    if (late) delaiHtml += '<span class="retard-badge">' + dl + ' j de retard</span>';
-    else if (soon) delaiHtml += '<span class="soon-badge">' + (-dl) + ' j restant(s)</span>';
-
-    var replanHtml = it.delaiReplanifie ? '<span class="delai-replan">' + fmtDateFR(it.delaiReplanifie) + '</span>' : '<span style="color:var(--ink-soft)">—</span>';
-
-    rows += '<tr class="' + rowCls.join(' ') + '">' +
-      '<td class="col-num">' + it.id + (it.cycle > 1 ? '<span class="cycle-tag">C' + it.cycle + '</span>' : '') + '</td>' +
-      '<td class="col-semaine">' + escapeHtml(it.semaine) + '</td>' +
-      '<td class="col-sujet col-prio-bar bl-' + it.priorite + '">' + escapeHtml(it.sujet) + '</td>' +
-      '<td class="col-desc">' + escapeHtml(it.description) + '</td>' +
-      '<td><span class="prio-chip prio-' + it.priorite + '"><span class="prio-dot"></span>' + it.priorite + '</span></td>' +
-      '<td class="col-pilote">' + escapeHtml(it.pilote) + '</td>' +
-      '<td class="col-delai">' + delaiHtml + '</td>' +
-      '<td class="col-delai">' + replanHtml + '</td>' +
-      '<td>' + gateCellHtml(it, 'p') + '</td>' +
-      '<td>' + gateCellHtml(it, 'd') + '</td>' +
-      '<td>' + gateCellHtml(it, 'c') + '</td>' +
-      '<td>' + gateCellHtml(it, 'a') + '</td>' +
-      '<td><div class="adv-cell"><div class="adv-track"><div class="adv-fill" style="width:' + pct + '%"></div></div><span class="adv-pct">' + pct + '%</span></div></td>' +
-      '<td><div class="row-actions">' +
-        '<button type="button" class="icon-btn" data-action="edit" data-id="' + it.id + '" title="Modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>' +
-        '<button type="button" class="icon-btn" data-action="duplicate" data-id="' + it.id + '" title="Dupliquer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>' +
-        '<button type="button" class="icon-btn" data-action="history" data-id="' + it.id + '" title="Historique"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg></button>' +
-        '<button type="button" class="icon-btn danger" data-action="delete" data-id="' + it.id + '" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg></button>' +
-      '</div></td>' +
-    '</tr>';
-  }
-  document.getElementById('table-body').innerHTML = rows;
-
-  renderDashboard();
-}
-
-function renderAll() {
-  renderInfoBar();
-  renderTable();
-}
-
-/* ============================================================
-   MODALES : ouverture / fermeture génériques
-   ============================================================ */
-function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-var pendingConfirmCallback = null;
-function confirmAction(title, message, onConfirm) {
-  document.getElementById('confirm-title').textContent = title;
-  document.getElementById('confirm-message').textContent = message;
-  pendingConfirmCallback = onConfirm;
-  openModal('modal-confirm');
-}
-
-/* ============================================================
-   MODALE : FORMULAIRE SUJET
-   ============================================================ */
-var formEditingId = null; /* null = création */
-
-function renderFormStepper(item) {
-  var html = '';
-  for (var i = 0; i < GATES.length; i++) {
-    var g = GATES[i];
-    var gate = item.gates[g.key];
-    var unlocked = isGateUnlocked(item, g.key);
-    var cls = 'pdca-gate gate-' + g.key + (gate.done ? ' done' : (!unlocked ? ' locked' : ''));
-    var meta = gate.done ? ('Validé le ' + fmtDateFR(gate.date) + (gate.commentaire ? ' — ' + escapeHtml(gate.commentaire) : '') + (g.key === 'a' && gate.type ? ' (' + ACT_TYPE_LABELS[gate.type] + ')' : '')) : (unlocked ? 'Étape disponible' : 'Verrouillée — étape(s) précédente(s) requise(s)');
-    html += '<div class="' + cls + '">' +
-      '<div class="pdca-gate-left"><div class="pdca-gate-badge">' + g.letter + '</div><div><div class="pdca-gate-title">' + g.title + '</div><div class="pdca-gate-desc">' + g.desc + '</div><div class="pdca-gate-meta">' + meta + '</div></div></div>' +
-      '<button type="button" class="btn btn-sm ' + (gate.done ? 'btn-ghost' : 'btn-primary') + '" data-action="open-step" data-gate="' + g.key + '"' + (!unlocked && !gate.done ? ' disabled' : '') + '>' + (gate.done ? 'Modifier' : 'Compléter') + '</button>' +
-    '</div>';
-  }
-  return html;
-}
-
-function renderReplanBox(item) {
-  var box = document.getElementById('replan-box');
-  if (!item.replanHistory.length) { box.classList.add('hidden'); return; }
-  box.classList.remove('hidden');
-  var html = '';
-  for (var i = 0; i < item.replanHistory.length; i++) {
-    var r = item.replanHistory[i];
-    html += '<li><span>' + fmtDateFR(r.ancien) + ' → ' + fmtDateFR(r.nouveau) + '</span><span>' + fmtDateTimeFR(r.date) + '</span></li>';
-  }
-  document.getElementById('replan-history-list').innerHTML = html;
-  document.getElementById('drift-warning').classList.toggle('hidden', item.replanHistory.length < 2);
-}
-
-function fillPiloteDatalist() {
-  var dl = document.getElementById('dl-pilotes');
-  dl.innerHTML = pilotesList().map(function (p) { return '<option value="' + escapeHtml(p) + '">'; }).join('');
-}
-
-function openFormModal(id) {
-  formEditingId = id || null;
-  var item = id ? state.items.filter(function (it) { return it.id === id; })[0] : newItem();
-  if (!item) return;
-  fillPiloteDatalist();
-
-  document.getElementById('form-modal-title').textContent = id ? ('Sujet #' + item.id + ' — ' + (item.sujet || 'Sans titre')) : 'Nouvelle action';
-  document.getElementById('form-modal-sub').textContent = id ? ('Cycle ' + item.cycle + (item.cyclesArchive.length ? ' — ' + item.cyclesArchive.length + ' cycle(s) précédent(s) archivé(s)' : '')) : "Sujet suivi dans le cadre du PDCA";
-  document.getElementById('ff-numero').value = id ? item.id : '(auto)';
-  document.getElementById('ff-semaine').value = item.semaine;
-  document.getElementById('ff-pilote').value = item.pilote;
-  document.getElementById('ff-statut-display').value = id ? statutDisplay(item) : 'Non démarré';
-  document.getElementById('ff-sujet').value = item.sujet;
-  document.getElementById('ff-description').value = item.description;
-  document.getElementById('ff-delai').value = item.delaiInitial;
-  document.getElementById('ff-replan').value = item.delaiReplanifie;
-  var radios = document.getElementsByName('ff-prio');
-  for (var r = 0; r < radios.length; r++) radios[r].checked = (parseInt(radios[r].value, 10) === item.priorite);
-
-  renderReplanBox(item);
-  document.getElementById('form-pdca-stepper').innerHTML = renderFormStepper(item);
-  document.getElementById('btn-form-history').classList.toggle('hidden', !id);
-  document.getElementById('btn-form-close-direct').classList.toggle('hidden', !id || isTerminee(item));
-
-  openModal('modal-form');
-}
-
-function readPrioriteFromForm() {
-  var radios = document.getElementsByName('ff-prio');
-  for (var r = 0; r < radios.length; r++) if (radios[r].checked) return parseInt(radios[r].value, 10);
-  return 2;
-}
-
-function saveFormModal() {
-  var sujet = document.getElementById('ff-sujet').value.trim();
-  if (!sujet) { showToast('Le champ « Sujet » est obligatoire.', 'error'); document.getElementById('ff-sujet').focus(); return; }
-
-  var isNew = !formEditingId;
-  var item = isNew ? newItem() : state.items.filter(function (it) { return it.id === formEditingId; })[0];
-  if (!item) return;
-
-  var newDelaiReplan = document.getElementById('ff-replan').value;
-  var oldDelaiReplan = item.delaiReplanifie;
-  var oldDelaiInitial = item.delaiInitial;
-
-  item.semaine = document.getElementById('ff-semaine').value.trim() || isoWeekString(new Date());
-  item.pilote = document.getElementById('ff-pilote').value.trim();
-  item.sujet = sujet;
-  item.description = document.getElementById('ff-description').value.trim();
-  item.priorite = readPrioriteFromForm();
-  item.delaiInitial = document.getElementById('ff-delai').value;
-  item.delaiReplanifie = newDelaiReplan;
-
-  if (newDelaiReplan && newDelaiReplan !== oldDelaiReplan) {
-    var ancien = oldDelaiReplan || oldDelaiInitial || null;
-    item.replanHistory.push({ date: nowIso(), ancien: ancien, nouveau: newDelaiReplan });
-    addHistorique(item, 'Date replanifiée : ' + (ancien ? fmtDateFR(ancien) : 'non définie') + ' → ' + fmtDateFR(newDelaiReplan));
-  } else if (!newDelaiReplan && oldDelaiReplan) {
-    addHistorique(item, 'Replanification annulée (retour au délai initial ' + fmtDateFR(item.delaiInitial) + ').');
+    // Note : un tableau `pdcas` vide est un état valide et volontaire (voir
+    // « Supprimer tous les PDCA ») — on ne recrée un PDCA par défaut que si
+    // la clé n'existe pas du tout (première utilisation / donnée corrompue).
+    if (!state.pdcas) state.pdcas = [defaultPdca()];
+    state.pdcas.forEach(function (p) {
+      if (!p.priorityThemes || !p.priorityThemes.length) p.priorityThemes = defaultPriorityThemes();
+      if (!p.subjects) p.subjects = [];
+      if (!p.nextNumero) {
+        var maxNum = 0;
+        p.subjects.forEach(function (s) { if (s.numero > maxNum) maxNum = s.numero; });
+        p.nextNumero = maxNum + 1;
+      }
+      p.subjects.forEach(function (s) {
+        if (!s.subActions) s.subActions = [];
+        if (!s.lessons) s.lessons = [];
+        if (!s.replanHistory) s.replanHistory = [];
+        if (typeof s.closed !== 'boolean') s.closed = false;
+      });
+    });
+    if (state.pdcas.length && (!state.currentPdcaId || !findPdca(state.currentPdcaId))) state.currentPdcaId = state.pdcas[0].id;
+    if (!state.pdcas.length) state.currentPdcaId = null;
+    if (!state.pilotesConnus) state.pilotesConnus = [];
+    if (!state.theme) state.theme = 'light';
+    try { lastGoodSnapshot = JSON.stringify(state); } catch (e) { lastGoodSnapshot = null; }
   }
 
-  if (isNew) {
-    item.id = state.nextId++;
-    addHistorique(item, 'Création');
-    state.items.push(item);
-  } else {
-    addHistorique(item, 'Modification du sujet');
+  function saveState() {
+    var serialized;
+    try { serialized = JSON.stringify(state); } catch (e) {
+      alert('Erreur interne : impossible de préparer les données pour la sauvegarde.');
+      return false;
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, serialized);
+      lastGoodSnapshot = serialized;
+      if (window.__driveNotifySave) window.__driveNotifySave();
+      return true;
+    } catch (e) {
+      if (lastGoodSnapshot) { try { state = JSON.parse(lastGoodSnapshot); } catch (e2) {} }
+      var sizeMo = (serialized.length / (1024 * 1024)).toFixed(2);
+      alert('Impossible d\'enregistrer : le stockage local de ce navigateur est plein.\n\nTaille actuelle des données : environ ' + sizeMo + ' Mo.\n\nCette dernière modification n\'a PAS été sauvegardée.');
+      return false;
+    }
   }
 
-  saveState();
-  closeModal('modal-form');
-  renderTable();
-  showToast(isNew ? 'Sujet créé.' : 'Sujet mis à jour.', 'success');
-}
+  /* ================= Toasts ================= */
+  function showToast(msg, type) {
+    var container = document.getElementById('toastContainer');
+    var el = document.createElement('div');
+    el.className = 'toast' + (type ? ' toast-' + type : '');
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(function () { el.remove(); }, 3200);
+  }
 
-function closeFinalDirect() {
-  if (!formEditingId) return;
-  var item = state.items.filter(function (it) { return it.id === formEditingId; })[0];
-  if (!item) return;
-  confirmAction('Clôturer directement', 'Toutes les étapes restantes de ce sujet seront marquées comme réalisées ce jour, avec la mention « Clôturé directement ». Continuer ?', function () {
-    var t = todayStr();
-    for (var i = 0; i < GATE_ORDER.length; i++) {
-      var gk = GATE_ORDER[i];
-      if (!item.gates[gk].done) {
-        item.gates[gk] = { done: true, date: t, commentaire: 'Clôturé directement.', reference: '', type: gk === 'a' ? 'standardisation' : null };
-        addHistorique(item, GATES[i].letter + ' validé (clôture directe).');
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  /* ================= Guide du cycle PDCA ================= */
+  var PDCA_GUIDE = [
+    { key: 'p', name: 'Plan', what: 'Identifier le problème, analyser les causes, définir l\'objectif et le plan d\'action.', when: 'Le problème est compris, l\'objectif est défini et le plan d\'action est établi (sujet + pilote + délai renseignés).' },
+    { key: 'd', name: 'Do', what: 'Mettre en œuvre les actions prévues, idéalement à petite échelle au départ.', when: 'Les actions ont été réalisées : toutes les sous-actions de l\'avancement sont validées.' },
+    { key: 'c', name: 'Check', what: 'Mesurer les résultats et les comparer à l\'objectif / à la situation initiale.', when: 'Les résultats ont été analysés et le sujet est validé / clôturé.' },
+    { key: 'a', name: 'Act', what: 'Standardiser si ça fonctionne, ou corriger / replanifier si ça ne fonctionne pas.', when: 'La décision est prise : au moins un retour d\'expérience ou une action pérenne/routine est validé(e).' }
+  ];
+  var GATE_TIPS = {};
+  PDCA_GUIDE.forEach(function (g) { GATE_TIPS[g.key] = g.name + ' — ' + g.what; });
+
+  function renderGuideModal() {
+    var container = document.getElementById('guideRows');
+    container.innerHTML = PDCA_GUIDE.map(function (g) {
+      return '<div class="guide-row">' +
+        '<div class="guide-step"><span class="gate on">' + g.key.toUpperCase() + '</span><span class="step-name">' + g.name + '</span></div>' +
+        '<div><p class="guide-what">' + escapeHtml(g.what) + '</p><p class="guide-when">Passage à l\'étape suivante : <strong>' + escapeHtml(g.when) + '</strong></p></div>' +
+        '</div>';
+    }).join('');
+  }
+  function openGuideModal() {
+    renderGuideModal();
+    document.getElementById('guideModalOverlay').classList.remove('hidden');
+  }
+  function closeGuideModal() {
+    document.getElementById('guideModalOverlay').classList.add('hidden');
+  }
+  document.getElementById('pdcaGuideBtn').addEventListener('click', openGuideModal);
+  document.getElementById('closeGuideModalBtn').addEventListener('click', closeGuideModal);
+  document.getElementById('guideModalOverlay').addEventListener('click', function (e) {
+    if (e.target.id === 'guideModalOverlay') closeGuideModal();
+  });
+
+  /* ================= Logique PDCA (gates / avancement) ================= */
+  function computeGates(subject) {
+    var p = !!(subject.subject && subject.subject.trim() && subject.pilote && subject.pilote.trim() && subject.delai);
+    var d = subject.subActions.length > 0 && subject.subActions.every(function (a) { return a.done; });
+    var c = !!subject.closed;
+    var a = subject.lessons.some(function (l) { return l.done; });
+    return { p: p, d: d, c: c, a: a };
+  }
+  function computeAvancementPct(subject) {
+    var g = computeGates(subject);
+    var count = (g.p ? 1 : 0) + (g.d ? 1 : 0) + (g.c ? 1 : 0) + (g.a ? 1 : 0);
+    return count * 25;
+  }
+  function effectiveDelai(subject) {
+    return subject.replanifie || subject.delai || null;
+  }
+  function daysLate(subject) {
+    var eff = effectiveDelai(subject);
+    if (!eff) return null;
+    var d = parseLocalDate(eff);
+    d.setHours(23, 59, 59, 999);
+    var diffMs = Date.now() - d.getTime();
+    return Math.floor(diffMs / 86400000);
+  }
+  function remainingInfo(subject) {
+    if (subject.closed) return { text: 'Clôturé', cls: 'remaining-closed' };
+    var eff = effectiveDelai(subject);
+    if (!eff) return { text: 'Pas de délai', cls: 'remaining-safe' };
+    var late = daysLate(subject);
+    if (late > 0) return { text: 'Retard de ' + late + ' j', cls: 'remaining-overdue' };
+    var remaining = -late;
+    if (remaining === 0) return { text: "Aujourd'hui", cls: 'remaining-urgent' };
+    if (remaining <= 3) return { text: remaining + ' j restant' + (remaining > 1 ? 's' : ''), cls: 'remaining-urgent' };
+    if (remaining <= 7) return { text: remaining + ' j restants', cls: 'remaining-warning' };
+    return { text: remaining + ' j restants', cls: 'remaining-safe' };
+  }
+  function overdueBg(subject) {
+    if (subject.closed) return null;
+    var late = daysLate(subject);
+    if (late == null || late <= 0) return null;
+    var t = Math.min(late / 30, 1);
+    var startColor = [255, 247, 176];
+    var endColor = [248, 176, 168];
+    var mixed = startColor.map(function (s, i) { return Math.round(s + (endColor[i] - s) * t); });
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      var dStart = [58, 50, 20], dEnd = [58, 28, 26];
+      mixed = dStart.map(function (s, i) { return Math.round(s + (dEnd[i] - s) * t); });
+    }
+    return 'rgb(' + mixed.join(',') + ')';
+  }
+
+  /* ================= Jauge globale (SVG) ================= */
+  function colorForPct(pct) {
+    var stops = [
+      { p: 0, c: [197, 63, 51] },
+      { p: 25, c: [212, 141, 40] },
+      { p: 50, c: [217, 187, 45] },
+      { p: 75, c: [154, 191, 60] },
+      { p: 100, c: [40, 158, 92] }
+    ];
+    for (var i = 0; i < stops.length - 1; i++) {
+      var a = stops[i], b = stops[i + 1];
+      if (pct >= a.p && pct <= b.p) {
+        var t = (pct - a.p) / (b.p - a.p);
+        var mix = a.c.map(function (s, idx) { return Math.round(s + (b.c[idx] - s) * t); });
+        return 'rgb(' + mix.join(',') + ')';
       }
     }
+    return 'rgb(40,158,92)';
+  }
+  function polarPoint(cx, cy, r, pctAngleDeg) {
+    var rad = pctAngleDeg * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+  }
+  function arcPath(cx, cy, r, startDeg, endDeg) {
+    var p1 = polarPoint(cx, cy, r, startDeg);
+    var p2 = polarPoint(cx, cy, r, endDeg);
+    var largeArc = Math.abs(startDeg - endDeg) > 180 ? 1 : 0;
+    return 'M ' + p1.x.toFixed(2) + ' ' + p1.y.toFixed(2) + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 0 ' + p2.x.toFixed(2) + ' ' + p2.y.toFixed(2);
+  }
+  function buildGaugeSVG(pct) {
+    var cx = 90, cy = 78, r = 70, strokeW = 14;
+    var segments = 10;
+    var arcs = '';
+    for (var i = 0; i < segments; i++) {
+      var segStartPct = i * (100 / segments);
+      var segEndPct = (i + 1) * (100 / segments);
+      var startAngle = 180 - segStartPct * 1.8;
+      var endAngle = 180 - segEndPct * 1.8;
+      var midPct = (segStartPct + segEndPct) / 2;
+      var color = colorForPct(midPct);
+      arcs += '<path d="' + arcPath(cx, cy, r, startAngle, endAngle) + '" stroke="' + color + '" stroke-width="' + strokeW + '" fill="none" stroke-linecap="butt"/>';
+    }
+    var needleAngle = 180 - pct * 1.8;
+    var needleTip = polarPoint(cx, cy, r - strokeW / 2 - 3, needleAngle);
+    var needleColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#e7ebf3' : '#1a2233';
+    var needle = '<line x1="' + cx + '" y1="' + cy + '" x2="' + needleTip.x.toFixed(2) + '" y2="' + needleTip.y.toFixed(2) + '" stroke="' + needleColor + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="' + needleColor + '"/>';
+    return '<svg viewBox="0 0 180 92" width="150" height="80" xmlns="http://www.w3.org/2000/svg">' + arcs + needle + '</svg>';
+  }
+
+  /* ================= Rendu : infos date/semaine/jour ================= */
+  function renderInfoBar() {
+    var now = new Date();
+    var todayIso = todayStr();
+    var wi = isoWeekInfo(todayIso);
+    document.getElementById('infoYear').textContent = now.getFullYear();
+    document.getElementById('infoWeek').textContent = wi ? ('S' + wi.week) : '—';
+    document.getElementById('infoDay').textContent = formatDateSimple(todayIso);
+  }
+
+  /* ================= Rendu : jauge globale ================= */
+  function renderGauge() {
+    var p = currentPdca();
+    var subjects = p.subjects;
+    var pct = 0;
+    if (subjects.length > 0) {
+      var sum = subjects.reduce(function (acc, s) { return acc + computeAvancementPct(s); }, 0);
+      pct = Math.round(sum / subjects.length);
+    }
+    document.getElementById('gaugeSvgWrap').innerHTML = buildGaugeSVG(pct);
+    var pctText = document.getElementById('globalPctText');
+    pctText.textContent = pct + '%';
+    pctText.style.color = colorForPct(pct);
+  }
+
+  /* ================= Rendu : sélecteur de PDCA ================= */
+  function renderPdcaSelect() {
+    var sel = document.getElementById('pdcaSelect');
+    sel.innerHTML = state.pdcas.map(function (p) {
+      return '<option value="' + p.id + '"' + (p.id === state.currentPdcaId ? ' selected' : '') + '>' + escapeHtml(p.name) + '</option>';
+    }).join('');
+  }
+
+  /* ================= Rendu : panneau priorités ================= */
+  var priorityColors = ['p1', 'p2', 'p3', 'p4'];
+  function renderPrioritySettings() {
+    var p = currentPdca();
+    var container = document.getElementById('priorityRows');
+    container.innerHTML = '';
+    p.priorityThemes.forEach(function (theme, idx) {
+      var row = document.createElement('div');
+      row.className = 'priority-row';
+      var num = document.createElement('span');
+      num.className = 'pnum';
+      num.textContent = theme.num;
+      num.style.background = 'var(--' + priorityColors[idx % 4] + '-bg)';
+      num.style.color = 'var(--' + priorityColors[idx % 4] + ')';
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = 60;
+      input.value = theme.label;
+      input.addEventListener('change', function () {
+        theme.label = input.value.trim() || theme.label;
+        saveState();
+        renderAll();
+      });
+      row.appendChild(num);
+      row.appendChild(input);
+      container.appendChild(row);
+    });
+    // filtre priorité
+    var filterSel = document.getElementById('filterPriority');
+    var currentVal = filterSel.value;
+    filterSel.innerHTML = '<option value="">Toutes priorités</option>' + p.priorityThemes.map(function (t) {
+      return '<option value="' + t.num + '">' + t.num + ' — ' + escapeHtml(t.label) + '</option>';
+    }).join('');
+    filterSel.value = currentVal;
+    // select priorité dans le formulaire sujet
+    var fPriority = document.getElementById('fPriority');
+    fPriority.innerHTML = p.priorityThemes.map(function (t) {
+      return '<option value="' + t.num + '">' + t.num + ' — ' + escapeHtml(t.label) + '</option>';
+    }).join('');
+  }
+
+  /* ================= Rendu : datalist pilotes ================= */
+  function renderPilotesDatalist() {
+    var dl = document.getElementById('pilotesDatalist');
+    dl.innerHTML = state.pilotesConnus.slice().sort(function (a, b) { return a.localeCompare(b); })
+      .map(function (name) { return '<option value="' + escapeHtml(name) + '">'; }).join('');
+  }
+  function rememberPilote(name) {
+    name = (name || '').trim();
+    if (!name) return;
+    if (state.pilotesConnus.indexOf(name) === -1) {
+      state.pilotesConnus.push(name);
+    }
+  }
+
+  /* ================= Rendu : tableau des sujets ================= */
+  function priorityLabel(num) {
+    var p = currentPdca();
+    if (!p) return '';
+    var theme = p.priorityThemes.filter(function (t) { return t.num === num; })[0];
+    return theme ? theme.label : '';
+  }
+
+  function visibleSubjects() {
+    var p = currentPdca();
+    if (!p) return [];
+    var status = document.getElementById('filterStatus').value;
+    var prio = document.getElementById('filterPriority').value;
+    return p.subjects.filter(function (s) {
+      if (status === 'open' && s.closed) return false;
+      if (status === 'closed' && !s.closed) return false;
+      if (prio && String(s.priority) !== String(prio)) return false;
+      return true;
+    }).sort(function (a, b) { return a.numero - b.numero; });
+  }
+
+  function autosizeTextarea(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
+  function toggleSubActionDone(subject, subactionId, done) {
+    var a = subject.subActions.filter(function (x) { return x.id === subactionId; })[0];
+    if (!a) return;
+    a.done = done;
+    a.doneDate = done ? todayStr() : null;
     saveState();
-    closeModal('modal-form');
-    renderTable();
+    renderSubjectsTable();
+    renderGauge();
+    if (avancementSubjectId === subject.id) renderSubActionsList();
+  }
+
+  function buildInlineSubActionsHtml(s) {
+    if (s.subActions.length === 0) return '';
+    var maxShown = 3;
+    var shown = s.subActions.slice(0, maxShown);
+    var html = '<div class="subactions-inline">' + shown.map(function (a) {
+      return '<label class="subaction-inline-item' + (a.done ? ' sa-done' : '') + '" title="' + escapeHtml(a.text) + '">' +
+        '<input type="checkbox" data-sa-id="' + a.id + '"' + (a.done ? ' checked' : '') + '>' +
+        '<span class="subaction-inline-text">' + escapeHtml(a.text) + '</span>' +
+        (a.done && a.doneDate ? '<span class="subaction-inline-date">' + formatDateSimple(a.doneDate) + '</span>' : '') +
+        '</label>';
+    }).join('');
+    if (s.subActions.length > maxShown) {
+      html += '<button type="button" class="subaction-more-link">+ ' + (s.subActions.length - maxShown) + ' de plus…</button>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderSubjectsTable() {
+    var tbody = document.getElementById('subjectsBody');
+    var items = visibleSubjects();
+    var p = currentPdca();
+    if (!p) return;
+    document.getElementById('subjectsCount').textContent = p.subjects.length;
+    document.getElementById('emptyState').style.display = items.length === 0 ? 'block' : 'none';
+    tbody.innerHTML = '';
+
+    items.forEach(function (s) {
+      var gates = computeGates(s);
+      var pct = computeAvancementPct(s);
+      var rem = remainingInfo(s);
+      var bg = overdueBg(s);
+
+      var tr = document.createElement('tr');
+      if (s.closed) tr.className = 'closed-row';
+      if (bg) tr.style.backgroundColor = bg;
+
+      var subActionsDone = s.subActions.filter(function (a) { return a.done; }).length;
+      var subActionsTotal = s.subActions.length;
+
+      var replanCell = '—';
+      if (s.replanifie) {
+        replanCell = formatDateSimple(s.replanifie);
+        if (s.replanHistory.length > 0) {
+          replanCell += '<span class="replan-history-hint">' + s.replanHistory.length + ' report' + (s.replanHistory.length > 1 ? 's' : '') + ' précédent' + (s.replanHistory.length > 1 ? 's' : '') + '</span>';
+        }
+      }
+
+      tr.innerHTML =
+        '<td class="cell-num">' + s.numero + '</td>' +
+        '<td class="cell-week"><span class="week-badge">' + weekLabel(s.weekDate) + '</span></td>' +
+        '<td class="cell-subject"><textarea class="edit-subject subject-textarea" rows="1" placeholder="Sujet…">' + escapeHtml(s.subject) + '</textarea></td>' +
+        '<td class="cell-avancement">' +
+          '<button type="button" class="btn-tiny open-avancement">💬 ' + subActionsDone + ' / ' + subActionsTotal + ' sous-action' + (subActionsTotal > 1 ? 's' : '') + '</button>' +
+          buildInlineSubActionsHtml(s) +
+        '</td>' +
+        '<td class="cell-priority"></td>' +
+        '<td class="cell-pilote"><input type="text" class="edit-pilote" list="pilotesDatalist" value="' + escapeHtml(s.pilote || '') + '" placeholder="Pilote…"></td>' +
+        '<td class="cell-dates"><input type="date" class="edit-delai" value="' + (s.delai || '') + '"></td>' +
+        '<td class="cell-dates">' + replanCell + '<button type="button" class="btn-tiny open-replan" style="margin-top:4px;">🔁 Replanifier</button></td>' +
+        '<td class="cell-gates"><span class="gate' + (gates.p ? ' on' : '') + '" title="' + GATE_TIPS.p + '">P</span></td>' +
+        '<td class="cell-gates"><span class="gate' + (gates.d ? ' on' : '') + '" title="' + GATE_TIPS.d + '">D</span></td>' +
+        '<td class="cell-gates"><span class="gate' + (gates.c ? ' on' : '') + '" title="' + GATE_TIPS.c + '">C</span></td>' +
+        '<td class="cell-gates"><span class="gate' + (gates.a ? ' on' : '') + '" title="' + GATE_TIPS.a + '">A</span></td>' +
+        '<td class="cell-avancement">' +
+          '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%; background:' + colorForPct(pct) + ';"></div></div>' +
+          '<span class="avancement-pct-text">' + pct + '%</span>' +
+        '</td>' +
+        '<td class="cell-remaining ' + rem.cls + '">' + rem.text + '</td>' +
+        '<td class="cell-actions"><div class="row-actions">' +
+          '<button type="button" class="btn-tiny open-cloture" title="Valider / clôturer">' + (s.closed ? '↩️' : '✅') + '</button>' +
+          '<button type="button" class="btn-tiny danger delete-subject" title="Supprimer">🗑️</button>' +
+        '</div></td>';
+
+      // priorité : badge coloré + popover (plutôt qu'un <select> qui tronquait le libellé)
+      var prioTd = tr.querySelector('.cell-priority');
+      var theme = p.priorityThemes.filter(function (t) { return t.num === s.priority; })[0] || p.priorityThemes[0];
+      var colorKey = priorityColors[(theme.num - 1 + 4) % 4];
+      var badge = document.createElement('button');
+      badge.type = 'button';
+      badge.className = 'priority-badge';
+      badge.title = theme.num + ' — ' + theme.label;
+      badge.innerHTML = '<span class="pb-num" style="background:var(--' + colorKey + '-bg); color:var(--' + colorKey + ');">' + theme.num + '</span><span class="pb-label">' + escapeHtml(theme.label) + '</span>';
+      badge.addEventListener('click', function () { openPriorityPopover(s.id, badge); });
+      prioTd.appendChild(badge);
+
+      // sous-actions visibles directement dans le tableau
+      tr.querySelectorAll('.subactions-inline input[type=checkbox]').forEach(function (cb) {
+        cb.addEventListener('click', function (e) { e.stopPropagation(); });
+        cb.addEventListener('change', function (e) {
+          toggleSubActionDone(s, e.target.getAttribute('data-sa-id'), e.target.checked);
+        });
+      });
+      var moreLink = tr.querySelector('.subaction-more-link');
+      if (moreLink) moreLink.addEventListener('click', function () { openAvancementModal(s.id); });
+
+      // bindings
+      var subjectTextarea = tr.querySelector('.edit-subject');
+      autosizeTextarea(subjectTextarea);
+      subjectTextarea.addEventListener('input', function () { autosizeTextarea(subjectTextarea); });
+      subjectTextarea.addEventListener('change', function (e) {
+        s.subject = e.target.value.trim();
+        saveState();
+        renderAll();
+      });
+      tr.querySelector('.edit-pilote').addEventListener('change', function (e) {
+        s.pilote = e.target.value.trim();
+        rememberPilote(s.pilote);
+        saveState();
+        renderAll();
+      });
+      tr.querySelector('.edit-delai').addEventListener('change', function (e) {
+        s.delai = e.target.value || null;
+        saveState();
+        renderAll();
+      });
+      tr.querySelector('.open-avancement').addEventListener('click', function () { openAvancementModal(s.id); });
+      tr.querySelector('.open-replan').addEventListener('click', function () { openReplanModal(s.id); });
+      tr.querySelector('.open-cloture').addEventListener('click', function () { openClotureModal(s.id); });
+      tr.querySelector('.delete-subject').addEventListener('click', function () { requestDeleteSubject(s.id); });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  /* ================= Popover de sélection de priorité ================= */
+  var priorityPopoverSubjectId = null;
+  function closePriorityPopover() {
+    document.getElementById('priorityPopover').classList.add('hidden');
+    priorityPopoverSubjectId = null;
+  }
+  function openPriorityPopover(subjectId, anchorEl) {
+    var s = findSubject(subjectId);
+    var p = currentPdca();
+    if (!s || !p) return;
+    priorityPopoverSubjectId = subjectId;
+    var pop = document.getElementById('priorityPopover');
+    pop.innerHTML = p.priorityThemes.map(function (t) {
+      var colorKey = priorityColors[(t.num - 1 + 4) % 4];
+      return '<div class="priority-popover-item" data-num="' + t.num + '">' +
+        '<span class="pb-num" style="background:var(--' + colorKey + '-bg); color:var(--' + colorKey + ');">' + t.num + '</span>' +
+        '<span>' + escapeHtml(t.label) + '</span></div>';
+    }).join('');
+    var rect = anchorEl.getBoundingClientRect();
+    pop.style.left = Math.round(rect.left) + 'px';
+    pop.style.top = Math.round(rect.bottom + 4) + 'px';
+    pop.classList.remove('hidden');
+    pop.querySelectorAll('.priority-popover-item').forEach(function (item) {
+      item.addEventListener('click', function () {
+        s.priority = parseInt(item.getAttribute('data-num'), 10);
+        saveState();
+        closePriorityPopover();
+        renderAll();
+      });
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var pop = document.getElementById('priorityPopover');
+    if (pop.classList.contains('hidden')) return;
+    if (pop.contains(e.target) || e.target.closest('.priority-badge')) return;
+    closePriorityPopover();
+  });
+
+  function renderAll() {
+    var hasPdca = state.pdcas.length > 0;
+    document.getElementById('noPdcaState').style.display = hasPdca ? 'none' : 'block';
+    document.getElementById('mainContent').style.display = hasPdca ? '' : 'none';
+    if (!hasPdca) { closePriorityPopover(); return; }
+    renderInfoBar();
+    renderPdcaSelect();
+    renderPrioritySettings();
+    renderPilotesDatalist();
+    renderGauge();
+    renderSubjectsTable();
+  }
+
+  /* ================= Gestion des PDCA (documents) ================= */
+  document.getElementById('pdcaSelect').addEventListener('change', function (e) {
+    state.currentPdcaId = e.target.value;
+    saveState();
+    renderAll();
+  });
+  function createPdcaFlow() {
+    var name = window.prompt('Nom du nouveau PDCA :', '');
+    if (name === null) return;
+    name = name.trim();
+    if (!name) return;
+    var p = defaultPdca(name);
+    state.pdcas.push(p);
+    state.currentPdcaId = p.id;
+    saveState();
+    renderAll();
+    showToast('PDCA créé.', 'success');
+  }
+  document.getElementById('btnNewPdca').addEventListener('click', createPdcaFlow);
+  document.getElementById('btnCreateFirstPdca').addEventListener('click', createPdcaFlow);
+  document.getElementById('btnDeleteAllPdca').addEventListener('click', function () {
+    if (!state.pdcas.length) { showToast('Il n\'y a déjà plus aucun PDCA.', 'info'); return; }
+    var total = state.pdcas.reduce(function (acc, p) { return acc + p.subjects.length; }, 0);
+    pendingDeleteAction = function () {
+      state.pdcas = [];
+      state.currentPdcaId = null;
+      saveState();
+      renderAll();
+      showToast('Tous les PDCA ont été supprimés.', 'info');
+    };
+    document.getElementById('confirmMessage').textContent = 'Supprimer TOUS les PDCA stockés dans ce navigateur (' + state.pdcas.length + ' PDCA, ' + total + ' sujet(s) au total) ? Cette opération est irréversible.';
+    document.getElementById('confirmOverlay').classList.remove('hidden');
+  });
+  document.getElementById('btnRenamePdca').addEventListener('click', function () {
+    var p = currentPdca();
+    if (!p) return;
+    var name = window.prompt('Renommer le PDCA :', p.name);
+    if (name === null) return;
+    name = name.trim();
+    if (!name) return;
+    p.name = name;
+    saveState();
+    renderAll();
+  });
+  document.getElementById('btnDeletePdca').addEventListener('click', function () {
+    if (state.pdcas.length <= 1) { showToast('Impossible de supprimer le dernier PDCA — utilise « Supprimer tous les PDCA » si besoin.', 'warning'); return; }
+    var p = currentPdca();
+    if (!p) return;
+    if (!window.confirm('Supprimer le PDCA « ' + p.name + ' » et ses ' + p.subjects.length + ' sujet(s) ?')) return;
+    state.pdcas = state.pdcas.filter(function (x) { return x.id !== p.id; });
+    state.currentPdcaId = state.pdcas[0].id;
+    saveState();
+    renderAll();
+    showToast('PDCA supprimé.', 'info');
+  });
+
+  /* ================= Panneau priorités (toggle) ================= */
+  document.getElementById('prioritySettingsHeader').addEventListener('click', function () {
+    var body = document.getElementById('prioritySettingsBody');
+    var chevron = document.getElementById('prioritySettingsChevron');
+    var open = body.classList.toggle('open');
+    chevron.textContent = open ? '▲' : '▼';
+  });
+
+  /* ================= Filtres ================= */
+  document.getElementById('filterStatus').addEventListener('change', renderSubjectsTable);
+  document.getElementById('filterPriority').addEventListener('change', renderSubjectsTable);
+
+  /* ================= Modal : Nouveau sujet ================= */
+  function openNewSubjectModal() {
+    editingSubjectId = null;
+    document.getElementById('subjectModalTitle').textContent = 'Nouveau sujet';
+    document.getElementById('subjectForm').reset();
+    document.getElementById('fWeekDate').value = todayStr();
+    document.getElementById('fDelai').value = '';
+    updateWeekHint();
+    document.getElementById('subjectFormError').classList.add('hidden');
+    document.getElementById('subjectModalOverlay').classList.remove('hidden');
+    setTimeout(function () { document.getElementById('fSubject').focus(); }, 50);
+  }
+  function closeSubjectModal() {
+    document.getElementById('subjectModalOverlay').classList.add('hidden');
+  }
+  function updateWeekHint() {
+    var v = document.getElementById('fWeekDate').value;
+    document.getElementById('fWeekLabelHint').textContent = v ? ('Semaine ' + weekLabel(v)) : 'Semaine —';
+  }
+  document.getElementById('fWeekDate').addEventListener('input', updateWeekHint);
+  document.getElementById('btnNewSubject').addEventListener('click', openNewSubjectModal);
+  document.getElementById('closeSubjectModalBtn').addEventListener('click', closeSubjectModal);
+  document.getElementById('cancelSubjectBtn').addEventListener('click', closeSubjectModal);
+  document.getElementById('subjectModalOverlay').addEventListener('click', function (e) {
+    if (e.target.id === 'subjectModalOverlay') closeSubjectModal();
+  });
+
+  document.getElementById('subjectForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var subject = document.getElementById('fSubject').value.trim();
+    var weekDate = document.getElementById('fWeekDate').value || todayStr();
+    var priority = parseInt(document.getElementById('fPriority').value, 10);
+    var pilote = document.getElementById('fPilote').value.trim();
+    var delai = document.getElementById('fDelai').value || null;
+
+    if (!subject) {
+      document.getElementById('subjectFormError').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('subjectFormError').classList.add('hidden');
+
+    var p = currentPdca();
+    var s = {
+      id: uid('subj'),
+      numero: p.nextNumero++,
+      weekDate: weekDate,
+      subject: subject,
+      priority: priority || p.priorityThemes[0].num,
+      pilote: pilote,
+      delai: delai,
+      replanHistory: [],
+      replanifie: null,
+      subActions: [],
+      lessons: [],
+      closed: false,
+      createdAt: new Date().toISOString()
+    };
+    rememberPilote(pilote);
+    p.subjects.push(s);
+    saveState();
+    closeSubjectModal();
+    renderAll();
+    showToast('Sujet n°' + s.numero + ' créé.', 'success');
+  });
+
+  /* ================= Suppression sujet ================= */
+  function requestDeleteSubject(id) {
+    var s = findSubject(id);
+    if (!s) return;
+    pendingDeleteAction = function () {
+      var p = currentPdca();
+      p.subjects = p.subjects.filter(function (x) { return x.id !== id; });
+      saveState();
+      renderAll();
+      showToast('Sujet supprimé.', 'info');
+    };
+    document.getElementById('confirmMessage').textContent = 'Supprimer le sujet n°' + s.numero + ' « ' + s.subject + ' » ? Cette opération est irréversible.';
+    document.getElementById('confirmOverlay').classList.remove('hidden');
+  }
+  document.getElementById('confirmOkBtn').addEventListener('click', function () {
+    if (pendingDeleteAction) pendingDeleteAction();
+    pendingDeleteAction = null;
+    document.getElementById('confirmOverlay').classList.add('hidden');
+  });
+  document.getElementById('confirmCancelBtn').addEventListener('click', function () {
+    pendingDeleteAction = null;
+    document.getElementById('confirmOverlay').classList.add('hidden');
+  });
+  document.getElementById('confirmOverlay').addEventListener('click', function (e) {
+    if (e.target.id === 'confirmOverlay') { pendingDeleteAction = null; e.currentTarget.classList.add('hidden'); }
+  });
+
+  /* ================= Modal : Avancement (sous-actions) ================= */
+  function renderSubActionsList() {
+    var s = findSubject(avancementSubjectId);
+    var container = document.getElementById('subActionsList');
+    container.innerHTML = '';
+    if (!s || s.subActions.length === 0) {
+      container.innerHTML = '<p class="empty-state" style="padding:14px;">Aucune sous-action pour le moment.</p>';
+      return;
+    }
+    s.subActions.forEach(function (a) {
+      var item = document.createElement('div');
+      item.className = 'checklist-item' + (a.done ? ' done' : '');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = a.done;
+      cb.addEventListener('change', function () {
+        toggleSubActionDone(s, a.id, cb.checked);
+      });
+      var text = document.createElement('span');
+      text.className = 'item-text';
+      text.textContent = a.text + (a.done && a.doneDate ? ' — clôturée le ' + formatDateSimple(a.doneDate) : '');
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-item-btn';
+      removeBtn.textContent = '×';
+      removeBtn.title = 'Supprimer cette sous-action';
+      removeBtn.addEventListener('click', function () {
+        s.subActions = s.subActions.filter(function (x) { return x.id !== a.id; });
+        saveState();
+        renderSubActionsList();
+        renderSubjectsTable();
+        renderGauge();
+      });
+      item.appendChild(cb);
+      item.appendChild(text);
+      item.appendChild(removeBtn);
+      container.appendChild(item);
+    });
+  }
+  function openAvancementModal(id) {
+    avancementSubjectId = id;
+    var s = findSubject(id);
+    document.getElementById('avancementModalTitle').textContent = 'Avancement — ' + (s ? s.subject : '');
+    document.getElementById('newSubActionInput').value = '';
+    var hint = document.getElementById('avancementHint');
+    if (s) {
+      var gates = computeGates(s);
+      if (!gates.p) {
+        hint.textContent = 'Astuce : renseigne le sujet, le pilote et le délai pour activer le sous-critère « P » avant de démarrer les sous-actions.';
+        hint.className = 'modal-hint warn';
+      } else if (gates.d) {
+        hint.textContent = 'Toutes les sous-actions sont validées : le sous-critère « D » est actif. Tu peux passer à la validation du sujet (Check).';
+        hint.className = 'modal-hint';
+      } else {
+        hint.textContent = '« P » est actif : mets en œuvre les actions prévues ci-dessous, idéalement à petite échelle au départ.';
+        hint.className = 'modal-hint';
+      }
+    }
+    renderSubActionsList();
+    document.getElementById('avancementModalOverlay').classList.remove('hidden');
+    setTimeout(function () { document.getElementById('newSubActionInput').focus(); }, 50);
+  }
+  function closeAvancementModal() {
+    document.getElementById('avancementModalOverlay').classList.add('hidden');
+    avancementSubjectId = null;
+  }
+  document.getElementById('closeAvancementModalBtn').addEventListener('click', closeAvancementModal);
+  document.getElementById('avancementModalOverlay').addEventListener('click', function (e) {
+    if (e.target.id === 'avancementModalOverlay') closeAvancementModal();
+  });
+  function addSubActionFromInput() {
+    var s = findSubject(avancementSubjectId);
+    if (!s) return;
+    var input = document.getElementById('newSubActionInput');
+    var text = input.value.trim();
+    if (!text) return;
+    s.subActions.push({ id: uid('sa'), text: text, done: false, doneDate: null });
+    input.value = '';
+    saveState();
+    renderSubActionsList();
+    renderSubjectsTable();
+    renderGauge();
+    input.focus();
+  }
+  document.getElementById('addSubActionBtn').addEventListener('click', addSubActionFromInput);
+  document.getElementById('newSubActionInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addSubActionFromInput(); }
+  });
+
+  /* ================= Modal : Replanification ================= */
+  function renderReplanHistory() {
+    var s = findSubject(replanSubjectId);
+    var block = document.getElementById('replanHistoryBlock');
+    if (!s) { block.innerHTML = ''; return; }
+    var html = '';
+    html += '<p class="form-hint">Délai initial : <strong>' + formatDateSimple(s.delai) + '</strong></p>';
+    if (s.replanHistory.length > 0) {
+      html += '<ul class="replan-history-list">' + s.replanHistory.map(function (d, idx) {
+        return '<li><span>Report ' + (idx + 1) + '</span><span>' + formatDateSimple(d) + '</span></li>';
+      }).join('') + '</ul>';
+      if (s.replanHistory.length >= 2) {
+        html += '<div class="drift-warning">⚠️ Ce sujet a déjà été reporté ' + s.replanHistory.length + ' fois — sujet en dérive.</div>';
+      }
+    }
+    block.innerHTML = html;
+  }
+  function openReplanModal(id) {
+    replanSubjectId = id;
+    var s = findSubject(id);
+    document.getElementById('replanModalTitle').textContent = 'Replanifier — ' + (s ? s.subject : '');
+    document.getElementById('fReplanDate').value = (s && (s.replanifie || s.delai)) || todayStr();
+    renderReplanHistory();
+    document.getElementById('replanModalOverlay').classList.remove('hidden');
+  }
+  function closeReplanModal() {
+    document.getElementById('replanModalOverlay').classList.add('hidden');
+    replanSubjectId = null;
+  }
+  document.getElementById('closeReplanModalBtn').addEventListener('click', closeReplanModal);
+  document.getElementById('cancelReplanBtn').addEventListener('click', closeReplanModal);
+  document.getElementById('replanModalOverlay').addEventListener('click', function (e) {
+    if (e.target.id === 'replanModalOverlay') closeReplanModal();
+  });
+  document.getElementById('confirmReplanBtn').addEventListener('click', function () {
+    var s = findSubject(replanSubjectId);
+    if (!s) return;
+    var newDate = document.getElementById('fReplanDate').value;
+    if (!newDate) { showToast('Merci de choisir une date.', 'warning'); return; }
+    var previous = s.replanifie || s.delai;
+    if (previous && previous !== newDate) s.replanHistory.push(previous);
+    s.replanifie = newDate;
+    saveState();
+    closeReplanModal();
+    renderAll();
+    showToast('Sujet replanifié.', 'success');
+  });
+
+  /* ================= Modal : Clôture (retours d'expérience) ================= */
+  function renderLessonsList() {
+    var s = findSubject(clotureSubjectId);
+    var container = document.getElementById('lessonsList');
+    container.innerHTML = '';
+    if (!s || s.lessons.length === 0) {
+      container.innerHTML = '<p class="empty-state" style="padding:14px;">Aucun retour d\'expérience pour le moment.</p>';
+      return;
+    }
+    s.lessons.forEach(function (l) {
+      var item = document.createElement('div');
+      item.className = 'checklist-item' + (l.done ? ' done' : '');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = l.done;
+      cb.addEventListener('change', function () {
+        l.done = cb.checked;
+        saveState();
+        renderLessonsList();
+        renderSubjectsTable();
+        renderGauge();
+      });
+      var text = document.createElement('span');
+      text.className = 'item-text';
+      text.textContent = l.text;
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-item-btn';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', function () {
+        s.lessons = s.lessons.filter(function (x) { return x.id !== l.id; });
+        saveState();
+        renderLessonsList();
+        renderSubjectsTable();
+        renderGauge();
+      });
+      item.appendChild(cb);
+      item.appendChild(text);
+      item.appendChild(removeBtn);
+      container.appendChild(item);
+    });
+  }
+  function openClotureModal(id) {
+    clotureSubjectId = id;
+    var s = findSubject(id);
+    document.getElementById('clotureModalTitle').textContent = (s && s.closed ? 'Sujet clôturé — ' : 'Validation du sujet — ') + (s ? s.subject : '');
+    document.getElementById('newLessonInput').value = '';
+    var hint = document.getElementById('clotureHint');
+    if (s) {
+      var gates = computeGates(s);
+      if (s.closed) {
+        hint.className = 'modal-hint';
+        hint.textContent = 'Ce sujet est clôturé (Check actif). Ajoute ou complète les retours d\'expérience ci-dessous pour activer « A », ou rouvre le sujet si besoin.';
+      } else if (!gates.d) {
+        hint.className = 'modal-hint warn';
+        hint.textContent = '⚠️ Les sous-actions ne sont pas toutes validées (« D » pas encore actif). Assure-toi d\'avoir mesuré les résultats avant de clôturer.';
+      } else {
+        hint.className = 'modal-hint';
+        hint.textContent = 'Les sous-actions sont validées : tu peux mesurer les résultats et clôturer le sujet (« C ») ci-dessous.';
+      }
+    }
+    renderLessonsList();
+    document.getElementById('closeSubjectBtn').style.display = (s && s.closed) ? 'none' : '';
+    document.getElementById('reopenSubjectBtn').style.display = (s && s.closed) ? '' : 'none';
+    document.getElementById('clotureModalOverlay').classList.remove('hidden');
+  }
+  function closeClotureModal() {
+    document.getElementById('clotureModalOverlay').classList.add('hidden');
+    clotureSubjectId = null;
+  }
+  document.getElementById('closeClotureModalBtn').addEventListener('click', closeClotureModal);
+  document.getElementById('clotureModalOverlay').addEventListener('click', function (e) {
+    if (e.target.id === 'clotureModalOverlay') closeClotureModal();
+  });
+  function addLessonFromInput() {
+    var s = findSubject(clotureSubjectId);
+    if (!s) return;
+    var input = document.getElementById('newLessonInput');
+    var text = input.value.trim();
+    if (!text) return;
+    s.lessons.push({ id: uid('ls'), text: text, done: false });
+    input.value = '';
+    saveState();
+    renderLessonsList();
+    renderSubjectsTable();
+    renderGauge();
+    input.focus();
+  }
+  document.getElementById('addLessonBtn').addEventListener('click', addLessonFromInput);
+  document.getElementById('newLessonInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addLessonFromInput(); }
+  });
+  document.getElementById('closeSubjectBtn').addEventListener('click', function () {
+    var s = findSubject(clotureSubjectId);
+    if (!s) return;
+    s.closed = true;
+    saveState();
+    closeClotureModal();
+    renderAll();
     showToast('Sujet clôturé.', 'success');
   });
-}
-
-/* ============================================================
-   MODALE : ÉTAPE PDCA
-   ============================================================ */
-var stepEditingItemId = null;
-var stepEditingGate = null;
-
-function openStepModal(itemId, gateKey) {
-  var item = state.items.filter(function (it) { return it.id === itemId; })[0];
-  if (!item) return;
-  if (!isGateUnlocked(item, gateKey) && !item.gates[gateKey].done) {
-    showToast("Les étapes précédentes doivent être validées d'abord.", 'error');
-    return;
-  }
-  stepEditingItemId = itemId;
-  stepEditingGate = gateKey;
-  var g = GATES[GATE_ORDER.indexOf(gateKey)];
-  var gate = item.gates[gateKey];
-
-  document.getElementById('step-modal-title').textContent = g.letter + ' — ' + g.title + (gate.done ? ' (déjà validée)' : '');
-  document.getElementById('step-modal-sub').textContent = g.desc;
-  document.getElementById('sf-date').value = gate.date || todayStr();
-  document.getElementById('sf-commentaire').value = gate.commentaire || '';
-  document.getElementById('sf-reference').value = gate.reference || '';
-
-  var actBlock = document.getElementById('act-type-block');
-  if (gateKey === 'a') {
-    actBlock.classList.remove('hidden');
-    var radios = document.getElementsByName('sf-act-type');
-    for (var r = 0; r < radios.length; r++) radios[r].checked = (radios[r].value === gate.type);
-  } else {
-    actBlock.classList.add('hidden');
-  }
-
-  document.getElementById('btn-step-undo').classList.toggle('hidden', !gate.done);
-  openModal('modal-step');
-}
-
-function readActTypeFromForm() {
-  var radios = document.getElementsByName('sf-act-type');
-  for (var r = 0; r < radios.length; r++) if (radios[r].checked) return radios[r].value;
-  return null;
-}
-
-function saveStepModal() {
-  var item = state.items.filter(function (it) { return it.id === stepEditingItemId; })[0];
-  if (!item) return;
-  var gateKey = stepEditingGate;
-  var g = GATES[GATE_ORDER.indexOf(gateKey)];
-
-  var actType = null;
-  if (gateKey === 'a') {
-    actType = readActTypeFromForm();
-    if (!actType) { showToast("Choisis l'issue de l'étape A (standardisation, action corrective ou nouveau cycle).", 'error'); return; }
-  }
-
-  var date = document.getElementById('sf-date').value || todayStr();
-  var commentaire = document.getElementById('sf-commentaire').value.trim();
-  var reference = document.getElementById('sf-reference').value.trim();
-
-  item.gates[gateKey] = { done: true, date: date, commentaire: commentaire, reference: reference, type: actType };
-  var logMsg = g.letter + ' validé' + (commentaire ? ' — ' + commentaire : '') + (actType ? ' (' + ACT_TYPE_LABELS[actType] + ')' : '');
-  addHistorique(item, logMsg);
-
-  if (gateKey === 'a' && actType === 'nouveau_cycle') {
-    startNewCycle(item);
-  }
-
-  saveState();
-  closeModal('modal-step');
-  if (!document.getElementById('modal-form').classList.contains('hidden')) {
-    document.getElementById('form-pdca-stepper').innerHTML = renderFormStepper(item);
-    document.getElementById('ff-statut-display').value = statutDisplay(item);
-    document.getElementById('form-modal-sub').textContent = 'Cycle ' + item.cycle + (item.cyclesArchive.length ? ' — ' + item.cyclesArchive.length + ' cycle(s) précédent(s) archivé(s)' : '');
-    document.getElementById('btn-form-close-direct').classList.toggle('hidden', isTerminee(item));
-  }
-  renderTable();
-  showToast('Étape ' + g.letter + ' validée.', 'success');
-}
-
-function undoStepModal() {
-  var item = state.items.filter(function (it) { return it.id === stepEditingItemId; })[0];
-  if (!item) return;
-  var gateKey = stepEditingGate;
-  confirmAction('Réinitialiser cette étape', "Cette étape et les étapes suivantes déjà validées seront réinitialisées. Continuer ?", function () {
-    resetGateCascade(item, gateKey);
+  document.getElementById('reopenSubjectBtn').addEventListener('click', function () {
+    var s = findSubject(clotureSubjectId);
+    if (!s) return;
+    s.closed = false;
     saveState();
-    closeModal('modal-step');
-    if (!document.getElementById('modal-form').classList.contains('hidden')) {
-      document.getElementById('form-pdca-stepper').innerHTML = renderFormStepper(item);
-      document.getElementById('ff-statut-display').value = statutDisplay(item);
-    }
-    renderTable();
-    showToast('Étape réinitialisée.', 'warning');
+    closeClotureModal();
+    renderAll();
+    showToast('Sujet rouvert.', 'info');
   });
-}
 
-/* ============================================================
-   MODALE : HISTORIQUE
-   ============================================================ */
-function openHistoryModal(itemId) {
-  var item = state.items.filter(function (it) { return it.id === itemId; })[0];
-  if (!item) return;
-  document.getElementById('history-modal-sub').textContent = '#' + item.id + ' — ' + item.sujet;
-  var entries = item.historique.slice().sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
-  var html = '';
-  for (var i = 0; i < entries.length; i++) {
-    html += '<li class="history-item"><span class="history-date">' + fmtDateTimeFR(entries[i].date) + '</span><span>' + escapeHtml(entries[i].texte) + '</span></li>';
+  /* ================= Thème clair / sombre ================= */
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+    var btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    renderSubjectsTable();
+    renderGauge();
   }
-  if (!entries.length) html = '<li class="history-item"><span>Aucun évènement enregistré.</span></li>';
-  document.getElementById('history-list').innerHTML = html;
-  openModal('modal-history');
-}
-
-/* ============================================================
-   CRUD : SUPPRESSION / DUPLICATION
-   ============================================================ */
-function deleteItem(itemId) {
-  var item = state.items.filter(function (it) { return it.id === itemId; })[0];
-  if (!item) return;
-  confirmAction('Supprimer ce sujet', 'Le sujet #' + item.id + ' « ' + item.sujet + ' » sera supprimé définitivement. Cette action est irréversible. Continuer ?', function () {
-    state.items = state.items.filter(function (it) { return it.id !== itemId; });
+  document.getElementById('themeToggleBtn').addEventListener('click', function () {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(state.theme);
     saveState();
-    renderTable();
-    showToast('Sujet supprimé.', 'success');
   });
-}
 
-function duplicateItem(itemId) {
-  var item = state.items.filter(function (it) { return it.id === itemId; })[0];
-  if (!item) return;
-  var copy = deepClone(item);
-  copy.id = state.nextId++;
-  copy.sujet = item.sujet + ' (copie)';
-  copy.historique = [];
-  copy.replanHistory = [];
-  copy.cyclesArchive = [];
-  copy.cycle = 1;
-  copy.gates = defaultGates();
-  copy.createdAt = nowIso();
-  addHistorique(copy, 'Création par duplication du sujet #' + item.id + '.');
-  state.items.push(copy);
-  saveState();
-  renderTable();
-  showToast('Sujet dupliqué en #' + copy.id + '.', 'success');
-}
-
-/* ============================================================
-   IMPORT / EXPORT JSON / CSV
-   ============================================================ */
-function exportFileNameBase() {
-  var d = new Date();
-  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '_Suivi_PDCA';
-}
-function downloadBlob(content, mime, filename) {
-  var blob = new Blob([content], { type: mime });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-}
-function doExportJson() {
-  downloadBlob(JSON.stringify(state, null, 2), 'application/json', exportFileNameBase() + '.json');
-  showToast('Export JSON généré.', 'success');
-}
-function doExportCsv() {
-  var filtered = sortItems(filterItems(state.items, state.filters), state.sort);
-  var csv = '\uFEFF' + buildCsv(filtered);
-  downloadBlob(csv, 'text/csv;charset=utf-8', exportFileNameBase() + '.csv');
-  showToast('Export CSV généré (' + filtered.length + ' ligne(s)).', 'success');
-}
-function doImportJson(file) {
-  var reader = new FileReader();
-  reader.onload = function () {
-    try {
-      var data = JSON.parse(reader.result);
-      if (!data || !Array.isArray(data.items)) { showToast('Fichier invalide : structure inattendue.', 'error'); return; }
-      confirmAction('Importer ce fichier', "L'import remplacera toutes les données actuelles de cet outil. Continuer ?", function () {
-        state = data;
-        var d = defaultState();
-        for (var k in d) { if (state[k] === undefined) state[k] = d[k]; }
-        if (!state.filters) state.filters = d.filters;
-        for (var fk in d.filters) { if (state.filters[fk] === undefined) state.filters[fk] = d.filters[fk]; }
-        for (var i = 0; i < state.items.length; i++) state.items[i] = migrateItem(state.items[i]);
-        var maxId = 0;
-        for (var j = 0; j < state.items.length; j++) if (state.items[j].id > maxId) maxId = state.items[j].id;
-        if (!state.nextId || state.nextId <= maxId) state.nextId = maxId + 1;
-        saveState();
-        applyTheme(state.theme, false);
-        renderAll();
-        showToast('Import réussi (' + state.items.length + ' sujet(s)).', 'success');
-      });
-    } catch (err) { showToast('Impossible de lire ce fichier JSON.', 'error'); }
-  };
-  reader.readAsText(file);
-}
-
-/* ============================================================
-   THEME
-   ============================================================ */
-var ICONS = {
-  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>',
-  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>'
-};
-function applyTheme(theme, persist) {
-  state.theme = theme === 'light' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', state.theme);
-  var btn = document.getElementById('btn-theme-toggle');
-  if (btn) {
-    btn.innerHTML = state.theme === 'dark' ? ICONS.sun : ICONS.moon;
-    var label = state.theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre';
-    btn.title = label; btn.setAttribute('aria-label', label);
+  /* ================= Import / Export JSON ================= */
+  function exportFileName() {
+    var d = new Date();
+    var datePart = d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate());
+    return datePart + '_Suivi PDCA - export.json';
   }
-  renderDashboard();
-  if (persist) saveState();
-}
-
-/* ============================================================
-   IMPRESSION
-   ============================================================ */
-function doPrint() { window.print(); }
-
-/* ============================================================
-   EVENEMENTS
-   ============================================================ */
-function onGlobalClick(e) {
-  var t;
-
-  t = e.target.closest ? e.target.closest('[data-close]') : null;
-  if (t) { closeModal(t.getAttribute('data-close')); return; }
-  if (e.target.classList && e.target.classList.contains('modal-overlay')) { e.target.classList.add('hidden'); return; }
-
-  if (e.target.id === 'btn-theme-toggle' || (e.target.closest && e.target.closest('#btn-theme-toggle'))) { applyTheme(state.theme === 'dark' ? 'light' : 'dark', true); return; }
-  if (e.target.id === 'btn-export') { doExportJson(); return; }
-  if (e.target.id === 'btn-export-csv') { doExportCsv(); return; }
-  if (e.target.id === 'btn-print') { doPrint(); return; }
-  if (e.target.id === 'btn-new-action') { openFormModal(null); return; }
-  if (e.target.id === 'btn-reset-filters') {
-    state.filters = defaultState().filters;
-    document.getElementById('f-search').value = '';
-    saveState(); renderTable(); return;
-  }
-  if (e.target.id === 'btn-form-save') { saveFormModal(); return; }
-  if (e.target.id === 'btn-form-close-direct') { closeFinalDirect(); return; }
-  if (e.target.id === 'btn-form-history') { if (formEditingId) openHistoryModal(formEditingId); return; }
-  if (e.target.id === 'btn-step-save') { saveStepModal(); return; }
-  if (e.target.id === 'btn-step-undo') { undoStepModal(); return; }
-  if (e.target.id === 'btn-confirm-ok') {
-    var cb = pendingConfirmCallback; pendingConfirmCallback = null;
-    closeModal('modal-confirm');
-    if (cb) cb();
-    return;
-  }
-
-  t = e.target.closest ? e.target.closest('[data-action="gate"]') : null;
-  if (t) { openStepModal(parseInt(t.getAttribute('data-id'), 10), t.getAttribute('data-gate')); return; }
-  t = e.target.closest ? e.target.closest('[data-action="open-step"]') : null;
-  if (t && formEditingId) { openStepModal(formEditingId, t.getAttribute('data-gate')); return; }
-  t = e.target.closest ? e.target.closest('[data-action="edit"]') : null;
-  if (t) { openFormModal(parseInt(t.getAttribute('data-id'), 10)); return; }
-  t = e.target.closest ? e.target.closest('[data-action="duplicate"]') : null;
-  if (t) { duplicateItem(parseInt(t.getAttribute('data-id'), 10)); return; }
-  t = e.target.closest ? e.target.closest('[data-action="history"]') : null;
-  if (t) { openHistoryModal(parseInt(t.getAttribute('data-id'), 10)); return; }
-  t = e.target.closest ? e.target.closest('[data-action="delete"]') : null;
-  if (t) { deleteItem(parseInt(t.getAttribute('data-id'), 10)); return; }
-
-  t = e.target.closest ? e.target.closest('#pdca-table thead th[data-sort]') : null;
-  if (t) {
-    var col = t.getAttribute('data-sort');
-    if (state.sort.col === col) state.sort.dir *= -1; else { state.sort.col = col; state.sort.dir = 1; }
-    saveState(); renderTable(); return;
-  }
-}
-function onGlobalChange(e) {
-  if (e.target.id && e.target.id.indexOf('f-') === 0) { applyFiltersFromUI(); return; }
-}
-function onGlobalInput(e) {
-  if (e.target.id === 'f-search') { applyFiltersFromUI(); return; }
-}
-
-/* ============================================================
-   INIT
-   ============================================================ */
-function init() {
-  loadState();
-  document.addEventListener('click', onGlobalClick);
-  document.addEventListener('change', onGlobalChange);
-  document.addEventListener('input', onGlobalInput);
-  document.getElementById('file-input').addEventListener('change', function (e) {
-    if (e.target.files && e.target.files[0]) doImportJson(e.target.files[0]);
+  document.getElementById('btnExport').addEventListener('click', function () {
+    var payload = { app: 'suivi_pdca', version: 1, exportedAt: new Date().toISOString(), state: state };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = exportFileName();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+  document.getElementById('btnImport').addEventListener('click', function () {
+    document.getElementById('importInput').click();
+  });
+  document.getElementById('importInput').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var data;
+      try { data = JSON.parse(ev.target.result); } catch (err) { alert('Fichier JSON invalide.'); return; }
+      var imported = (data && data.state) ? data.state : data;
+      if (!imported || !Array.isArray(imported.pdcas)) { alert('Ce fichier ne semble pas être un export valide.'); return; }
+      if (!window.confirm('Importer ce fichier remplacera toutes les données actuelles de l\'outil. Continuer ?')) return;
+      state = imported;
+      loadStateDefaults();
+      saveState();
+      applyTheme(state.theme);
+      renderAll();
+      showToast('Import réussi.', 'success');
+    };
+    reader.readAsText(file);
     e.target.value = '';
   });
-  applyTheme(state.theme, false);
+  function loadStateDefaults() {
+    if (!state.pdcas) state.pdcas = [defaultPdca()];
+    state.pdcas.forEach(function (p) {
+      if (!p.priorityThemes || !p.priorityThemes.length) p.priorityThemes = defaultPriorityThemes();
+      if (!p.subjects) p.subjects = [];
+      if (!p.nextNumero) {
+        var maxNum = 0;
+        p.subjects.forEach(function (s) { if (s.numero > maxNum) maxNum = s.numero; });
+        p.nextNumero = maxNum + 1;
+      }
+      p.subjects.forEach(function (s) {
+        if (!s.subActions) s.subActions = [];
+        if (!s.lessons) s.lessons = [];
+        if (!s.replanHistory) s.replanHistory = [];
+        if (typeof s.closed !== 'boolean') s.closed = false;
+      });
+    });
+    if (state.pdcas.length && (!state.currentPdcaId || !findPdca(state.currentPdcaId))) state.currentPdcaId = state.pdcas[0].id;
+    if (!state.pdcas.length) state.currentPdcaId = null;
+    if (!state.pilotesConnus) state.pilotesConnus = [];
+    if (!state.theme) state.theme = 'light';
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      closeSubjectModal();
+      closeAvancementModal();
+      closeReplanModal();
+      closeClotureModal();
+      closeGuideModal();
+      closePriorityPopover();
+      document.getElementById('confirmOverlay').classList.add('hidden');
+    }
+  });
+
+  setInterval(function () {
+    if (!currentPdca()) return;
+    renderInfoBar();
+    renderSubjectsTable();
+  }, 60000);
+
+  /* ================= Initialisation ================= */
+  loadState();
+  applyTheme(state.theme);
   renderAll();
-  tickClock();
-  setInterval(tickClock, 15000);
-  setInterval(renderTable, 60000);
-}
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
-
-/* Exposé pour les tests uniquement (inoffensif dans le navigateur) */
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    computeAvancement: computeAvancement, computeEtapeActuelle: computeEtapeActuelle, isTerminee: isTerminee,
-    isGateUnlocked: isGateUnlocked, effectiveDeadline: effectiveDeadline, daysLate: daysLate, isLate: isLate,
-    isSoon: isSoon, computeStatutLabel: computeStatutLabel, startNewCycle: startNewCycle, resetGateCascade: resetGateCascade,
-    filterItems: filterItems, sortItems: sortItems, buildCsv: buildCsv, isoWeekString: isoWeekString,
-    newItem: newItem, defaultState: defaultState, migrateItem: migrateItem, PRIORITES: PRIORITES, GATES: GATES, GATE_ORDER: GATE_ORDER
-  };
-}
-
 })();
 </script>
 </body>
