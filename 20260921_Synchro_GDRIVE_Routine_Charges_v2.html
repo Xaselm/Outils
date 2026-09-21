@@ -1,0 +1,2447 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Routine &amp; Charges</title>
+<meta name="description" content="Suivi des routines, actions court / moyen / long terme et idées de projet — checks, échéances, responsables, pièces jointes, emplacements de stockage.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg: #14211C;
+    --card: #F2EAD3;
+    --ink: #241C14;
+    --moss: #5B7A4A;
+    --ochre: #B8842E;
+    --brick: #9C3B2E;
+    --indigo: #3F5D7A;
+    --gold: #C9A227;
+    --teal: #3F7A6B;
+
+    --bg-raised: #1C2C25;
+    --card-dim: #C9BB98;
+    --text-strong: #F2EAD3;
+    --ink-soft: #5B5041;
+    --moss-ink: #3A4E2F;
+    --ochre-ink: #7A551C;
+    --brick-ink: #6E2A20;
+    --indigo-ink: #25384A;
+    --gold-ink: #8C6D14;
+    --teal-ink: #2A5147;
+    --line: rgba(36,28,20,0.16);
+    --line-dark: rgba(242,234,211,0.14);
+    --input-bg: #FBF5E4;
+    --chip-bg-card: rgba(36,28,20,0.06);
+    --ghost-hover-bg: rgba(242,234,211,0.06);
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+    --radius-s: 4px; --radius-m: 8px; --radius-l: 14px;
+
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+
+    --shadow-card: 0 1px 2px rgba(10,16,13,.4), 0 8px 20px -10px rgba(10,16,13,.55);
+    --shadow-modal: 0 24px 64px -20px rgba(0,0,0,.65);
+  }
+  [data-theme="light"] {
+    --bg: #E3D9BE;
+    --card: #FFFCF2;
+    --bg-raised: #EEE5CC;
+    --card-dim: #6B5D45;
+    --text-strong: #241C14;
+    --line-dark: rgba(36,28,20,0.14);
+    --ghost-hover-bg: rgba(36,28,20,0.05);
+    --shadow-card: 0 1px 2px rgba(60,48,24,.10), 0 8px 20px -10px rgba(60,48,24,.22);
+    --shadow-modal: 0 24px 64px -20px rgba(40,30,15,.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text-strong); font-family: var(--font-body); font-size: 15px; line-height: 1.5; min-height: 100vh; -webkit-font-smoothing: antialiased; color-scheme: dark; transition: background-color .2s ease, color .2s ease; }
+  [data-theme="light"] body { color-scheme: light; }
+  .hidden { display: none !important; }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+  .app { max-width: 1180px; margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-8); }
+  svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ---------- Header ---------- */
+  .header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .header-title { display: flex; align-items: center; gap: var(--space-3); }
+  .logo { width: 36px; height: 36px; color: var(--ochre); flex-shrink: 0; }
+  .header-title h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(24px, 3.2vw, 32px); color: var(--text-strong); margin: 0; letter-spacing: -0.01em; }
+  .tagline { margin: 3px 0 0; color: var(--card-dim); font-size: 12.5px; font-family: var(--font-mono); letter-spacing: 0.01em; }
+  .header-actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+
+  .btn { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: var(--radius-m); border: 1px solid transparent; cursor: pointer; transition: transform .12s ease, background .15s ease, border-color .15s ease; white-space: nowrap; line-height: 1.2; }
+  .btn svg { width: 14px; height: 14px; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--ochre); color: #1B1206; }
+  .btn-primary:hover { background: #C6934A; }
+  .btn-ghost { background: transparent; border-color: var(--line-dark); color: var(--text-strong); }
+  .btn-ghost:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
+  .btn-danger { background: var(--brick); color: #F7EFE0; }
+  .btn-danger:hover { background: #B34838; }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+  /* boutons "ghost" posés sur fond clair (cartes, modales) */
+  .charge-card .btn-ghost, .panel-card .btn-ghost, .modal .btn-ghost { color: var(--ink); border-color: var(--line); }
+  .charge-card .btn-ghost:hover, .panel-card .btn-ghost:hover, .modal .btn-ghost:hover { border-color: var(--ink-soft); background: var(--chip-bg-card); }
+  .btn-ghost.is-warn:hover { border-color: var(--brick); color: var(--brick-ink); }
+
+  .drive-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--card-dim); transition: background .2s ease; }
+  .drive-dot.is-connected { background: #7FA86A; }
+  .drive-dot.is-syncing { background: var(--ochre); animation: drive-pulse 1s ease-in-out infinite; }
+  .drive-dot.is-error { background: #D0604F; }
+  @keyframes drive-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+  .theme-toggle { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: transparent; color: var(--text-strong); cursor: pointer; flex-shrink: 0; }
+  .theme-toggle:hover { border-color: var(--card-dim); background: var(--ghost-hover-bg); }
+  .theme-toggle svg { width: 17px; height: 17px; }
+
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .tab:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+
+  /* ---------- Navigation + recherche ---------- */
+  .navwrap { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 10px 0 12px; margin: 0 0 var(--space-4); border-bottom: 1px solid var(--line-dark); }
+  .navrow { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; }
+  .tab { padding: 8px 14px; border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: transparent; color: var(--text-strong); cursor: pointer; font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+  .tab:hover { background: var(--ghost-hover-bg); }
+  .tab.active { background: var(--ochre); border-color: var(--ochre); color: #1B1206; }
+  .tab-count { font-family: var(--font-mono); font-size: 11px; opacity: .7; margin-left: 6px; font-weight: 500; }
+  .searchbox { position: relative; flex: 0 1 230px; min-width: 200px; margin-left: auto; }
+  .searchbox input { width: 100%; padding: 9px 34px 9px 12px; border-radius: var(--radius-m); border: 1px solid var(--line-dark); background: var(--card); color: var(--ink); font-size: 13.5px; }
+  .searchbox input::placeholder { color: var(--ink-soft); opacity: .8; }
+  .searchbox .clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); }
+  @media (max-width: 700px) { .navwrap { position: static; } .searchbox { flex-basis: 100%; } }
+
+  /* ---------- Titres de liste + filtres ---------- */
+  .list-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-3); }
+  .list-head h2 { font-family: var(--font-display); font-size: 22px; margin: 0; color: var(--text-strong); font-weight: 600; }
+  .list-head .sub { color: var(--card-dim); font-size: 12.5px; font-family: var(--font-mono); margin-top: 2px; }
+  .list-tools { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: var(--space-3); }
+  .fchip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-dark); background: transparent; color: var(--text-strong); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .fchip:hover { background: var(--ghost-hover-bg); }
+  .fchip.active { background: var(--ochre); border-color: var(--ochre); color: #1B1206; }
+  .fchip .n { opacity: .7; margin-left: 5px; font-family: var(--font-mono); font-weight: 500; }
+  .section-title { font-family: var(--font-display); font-size: 18px; margin: var(--space-5) 0 var(--space-3); color: var(--text-strong); font-weight: 600; display: flex; align-items: baseline; gap: 10px; }
+  .section-title .n { font-family: var(--font-mono); font-size: 12px; color: var(--card-dim); font-weight: 500; }
+
+  /* ---------- Cartes de charge ---------- */
+  .charge-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); box-shadow: var(--shadow-card); margin-bottom: 12px; border-left: 5px solid var(--card-dim); overflow: hidden; scroll-margin-top: 110px; }
+  .charge-card.is-late { border-left-color: var(--brick); }
+  .charge-card.is-soon { border-left-color: var(--ochre); }
+  .charge-card.is-ok { border-left-color: var(--moss); }
+  .charge-card.st-a_faire { border-left-color: var(--indigo); }
+  .charge-card.st-en_cours { border-left-color: var(--ochre); }
+  .charge-card.st-attente { border-left-color: var(--teal); }
+  .charge-card.st-cloture { border-left-color: var(--moss); }
+  .charge-card.st-cloture .card-title { color: var(--ink-soft); }
+  .charge-card.flash { animation: card-flash 1.8s ease; }
+  @keyframes card-flash { 0% { box-shadow: 0 0 0 3px var(--ochre), var(--shadow-card); } 100% { box-shadow: var(--shadow-card); } }
+  .card-h { margin: 0; font: inherit; }
+  .card-head { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: none; padding: 14px 16px 14px 12px; color: inherit; }
+  .card-head:hover { background: var(--chip-bg-card); }
+  .chev { width: 18px; height: 18px; transition: transform .15s ease; color: var(--ink-soft); flex-shrink: 0; }
+  .card-head[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  .head-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+  .card-title { font-family: var(--font-display); font-weight: 600; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--chip-bg-card); color: var(--ink-soft); white-space: nowrap; line-height: 1.6; }
+  .chip svg { width: 12px; height: 12px; }
+  .chip.mono { font-family: var(--font-mono); font-weight: 500; }
+  .chip.c-indigo { background: rgba(63,93,122,.16); color: var(--indigo-ink); }
+  .chip.c-ochre { background: rgba(184,132,46,.22); color: var(--ochre-ink); }
+  .chip.c-teal { background: rgba(63,122,107,.18); color: var(--teal-ink); }
+  .chip.c-moss { background: rgba(91,122,74,.22); color: var(--moss-ink); }
+  .chip.c-brick { background: rgba(156,59,46,.16); color: var(--brick-ink); }
+  .head-progress { flex-shrink: 0; display: flex; align-items: center; gap: 8px; min-width: 90px; justify-content: flex-end; }
+  .bar { width: 64px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--moss); border-radius: 3px; }
+  .prog-num { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+  .card-body { padding: 4px 18px 16px 18px; border-top: 1px solid var(--line); }
+  .card-note { font-size: 13px; color: var(--ink-soft); font-style: italic; margin: 12px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .meta-strip { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 12px 0 4px; font-size: 12.5px; color: var(--ink-soft); }
+  .meta-strip .mf { display: flex; align-items: center; gap: 7px; }
+  .meta-strip .mf b { color: var(--ink); font-weight: 600; }
+  .mini-inp { padding: 4px 7px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--input-bg); color: var(--ink); font-size: 12.5px; font-family: var(--font-mono); }
+  .banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; padding: 9px 12px; border-radius: var(--radius-s); background: rgba(91,122,74,.18); color: var(--moss-ink); font-size: 13px; font-weight: 600; }
+  .banner.warn { background: rgba(184,132,46,.2); color: var(--ochre-ink); }
+
+  .rows { list-style: none; padding: 0; margin: 8px 0 0; }
+  .row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: none; }
+  .row .chk { flex: 0 0 20px; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--moss); cursor: pointer; }
+  /* Les surfaces crème restent claires même en thème sombre : contrôles natifs (cases, radios, dates) en schéma clair. */
+  .charge-card, .panel-card, .stat-card, .modal { color-scheme: light; }
+  .row .ico { flex: 0 0 20px; width: 20px; height: 20px; color: var(--ink-soft); margin-top: 1px; opacity: .7; }
+  .row-main { flex: 1; min-width: 0; }
+  .row .txt { font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .row.is-done .txt { color: var(--ink-soft); text-decoration: line-through; text-decoration-color: rgba(36,28,20,.4); }
+  .row.t-note .txt { font-size: 13px; color: var(--ink-soft); font-style: italic; }
+  .row.t-titre { border-bottom: none; padding: 14px 2px 2px; }
+  .row.t-titre .txt { font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ochre-ink); }
+  .row-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+  .row-actions { flex: 0 0 auto; display: flex; opacity: .5; transition: opacity .12s ease; }
+  .row:hover .row-actions, .row:focus-within .row-actions { opacity: 1; }
+  @media (hover: none) { .row-actions { opacity: .85; } }
+  .ibtn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; color: var(--ink-soft); border-radius: var(--radius-s); flex-shrink: 0; }
+  .ibtn:hover { background: var(--chip-bg-card); color: var(--ink); }
+  .ibtn.danger:hover { color: var(--brick); }
+  .ibtn:disabled { opacity: .25; cursor: default; }
+  .ibtn:disabled:hover { background: none; color: var(--ink-soft); }
+  .ibtn svg { width: 15px; height: 15px; }
+  .searchbox .ibtn { color: var(--ink-soft); }
+
+  .addrow { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  .addrow .inp { flex: 1; min-width: 0; }
+  .addrow .sel { flex: 0 0 auto; width: auto; }
+
+  .inp, .sel, .ta { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--input-bg); color: var(--ink); font-size: 13.5px; }
+  .ta { resize: vertical; min-height: 70px; line-height: 1.45; }
+  .inp.mono { font-family: var(--font-mono); font-size: 12.5px; }
+
+  .blk { margin-top: 16px; padding-top: 10px; border-top: 1px dashed var(--line); }
+  .blk-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); margin-bottom: 8px; }
+  .loc { display: flex; gap: 10px; align-items: flex-start; padding: 8px 8px 8px 10px; background: var(--chip-bg-card); border-radius: var(--radius-s); margin-bottom: 6px; }
+  .loc > .ico { width: 16px; height: 16px; color: var(--ochre-ink); margin-top: 2px; flex-shrink: 0; }
+  .loc-main { flex: 1; min-width: 0; }
+  .loc-ctx { font-size: 10.5px; font-weight: 700; color: var(--ochre-ink); text-transform: uppercase; letter-spacing: .05em; }
+  .loc-label { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+  .loc-path { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); overflow-wrap: anywhere; }
+  .loc-path a { color: var(--indigo-ink); }
+  .hist-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--line); }
+  .hist-row:last-child { border-bottom: none; }
+  .hist-row .d { font-family: var(--font-mono); font-weight: 600; min-width: 92px; }
+  .hist-row .s { font-family: var(--font-mono); color: var(--ink-soft); flex: 1; }
+  .card-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .card-foot .spacer { flex: 1; }
+  mark { background: rgba(201,162,39,.45); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+  /* ---------- Vue d'ensemble ---------- */
+  .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 10px; margin-bottom: var(--space-4); }
+  .stat-card { background: var(--card); color: var(--ink); border-radius: var(--radius-m); padding: 12px 14px; box-shadow: var(--shadow-card); border-left: 4px solid var(--ochre); }
+  .stat-card .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); font-weight: 700; }
+  .stat-card .stat-value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.2; }
+  .stat-card .stat-sub { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .stat-card.a-moss { border-left-color: var(--moss); }
+  .stat-card.a-brick { border-left-color: var(--brick); }
+  .stat-card.a-indigo { border-left-color: var(--indigo); }
+  .stat-card.a-teal { border-left-color: var(--teal); }
+  .panel-card { background: var(--card); color: var(--ink); border-radius: var(--radius-l); padding: 18px 20px; box-shadow: var(--shadow-card); margin-bottom: var(--space-4); }
+  .panel-card h2 { font-family: var(--font-display); font-size: 17px; margin: 0 0 12px; color: var(--ink); font-weight: 600; }
+  .panel-card h2 .n { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); font-weight: 500; margin-left: 6px; }
+  .dash-cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--space-4); align-items: start; }
+  @media (max-width: 900px) { .dash-cols { grid-template-columns: 1fr; } }
+  .agenda { list-style: none; margin: 0; padding: 0; }
+  .ag-btn { display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid var(--line); padding: 9px 4px; color: inherit; }
+  .agenda li:last-child .ag-btn { border-bottom: none; }
+  .ag-btn:hover { background: var(--chip-bg-card); }
+  .ag-date { flex: 0 0 auto; min-width: 104px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+  .ag-date small { display: block; font-weight: 500; font-size: 11px; }
+  .ag-date.late { color: var(--brick-ink); }
+  .ag-date.soon { color: var(--ochre-ink); }
+  .ag-body { flex: 1; min-width: 0; }
+  .ag-title { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+  .ag-sub { font-size: 12px; color: var(--ink-soft); margin-top: 2px; overflow-wrap: anywhere; }
+  .ag-side { flex: 0 0 auto; align-self: center; }
+  .empty-inline { font-size: 13px; color: var(--ink-soft); padding: 6px 0; }
+  .empty-state { text-align: center; padding: 44px 20px; }
+  .empty-state svg.big { width: 46px; height: 46px; color: var(--ochre-ink); opacity: .7; margin-bottom: 10px; }
+  .empty-state h2 { margin: 0 0 6px; }
+  .empty-state p { margin: 0 auto 16px; max-width: 460px; color: var(--ink-soft); font-size: 14px; }
+  .empty-state .row-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  /* ---------- Emplacements ---------- */
+  .locrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 8px 16px; align-items: start; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+  .locrow:last-child { border-bottom: none; }
+  .locrow .who { min-width: 0; }
+  .locrow .who button { background: none; border: none; padding: 0; text-align: left; color: var(--indigo-ink); font-weight: 600; font-size: 13.5px; text-decoration: underline; text-underline-offset: 2px; }
+  .locrow .who .chip { margin-bottom: 4px; }
+  @media (max-width: 720px) { .locrow { grid-template-columns: 1fr auto; } .locrow .what { grid-column: 1 / -1; order: 3; } }
+
+
+  /* ---------- Personnes / services ---------- */
+  .who-filters { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; margin-bottom: var(--space-3); }
+  .who-filters > label { font-size: 11.5px; font-weight: 700; color: var(--card-dim); letter-spacing: .05em; text-transform: uppercase; }
+  .who-filters .sel { width: auto; min-width: 180px; max-width: 100%; }
+  .people-strip { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 12px 0 0; font-size: 13px; }
+  .people-strip .pf-role { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .people-strip b { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); font-weight: 700; }
+  .pchip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 999px; background: var(--chip-bg-card); color: var(--ink); font-size: 12.5px; font-weight: 600; line-height: 1.6; }
+  .pchip small { font-weight: 500; color: var(--ink-soft); font-size: 11.5px; }
+  .pchip svg { width: 12px; height: 12px; color: var(--ink-soft); }
+  .people-empty { color: var(--ink-soft); font-size: 12.5px; }
+  .linkbtn { background: none; border: none; padding: 0; color: var(--indigo-ink); text-decoration: underline; text-underline-offset: 2px; font-size: inherit; font-weight: 600; cursor: pointer; }
+  .modal .hint { font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+  .pf-group { margin-bottom: 12px; }
+  .pf-group .hint { margin-top: 6px; }
+  .pf-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .pf-row .inp { flex: 1; min-width: 0; }
+  .pf-row .ibtn { flex: 0 0 28px; }
+  .modal.wide { max-width: 700px; }
+  .team-cols { display: grid; grid-template-columns: 1fr 1.7fr; gap: 20px; }
+  @media (max-width: 720px) { .team-cols { grid-template-columns: 1fr; } }
+  .team-col h3 { margin: 0 0 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); font-weight: 700; }
+  .team-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .team-row .inp { flex: 1; min-width: 0; }
+  .team-row .sel { flex: 0 0 44%; width: 44%; min-width: 0; }
+  .team-empty { font-size: 12.5px; color: var(--ink-soft); padding: 2px 0 8px; }
+
+  /* ---------- Pièces jointes ---------- */
+  .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+  .att { display: flex; gap: 10px; align-items: center; padding: 6px 6px 6px 6px; background: var(--chip-bg-card); border-radius: var(--radius-s); min-width: 0; }
+  .att-open { flex: 0 0 56px; width: 56px; height: 56px; border-radius: 6px; border: 1px solid var(--line); background: var(--input-bg); padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--ink-soft); cursor: pointer; }
+  .att-open:hover { border-color: var(--ink-soft); }
+  .att-open img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .att-open .ext { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+  .att-info { flex: 1; min-width: 0; }
+  .att-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .att-sub { font-size: 11.5px; color: var(--ink-soft); font-family: var(--font-mono); }
+  .lightbox-img { display: block; max-width: 100%; max-height: 68vh; margin: 0 auto; border-radius: 6px; background: var(--chip-bg-card); }
+  .gauge { margin-top: 6px; font-family: var(--font-mono); font-size: 11.5px; }
+  .gauge.is-warn { color: var(--ochre); }
+  .gauge.is-danger { color: #E0705F; font-weight: 700; }
+
+  /* ---------- Modales + toast ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(8,14,11,.66); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 14px 14px; z-index: 100; overflow-y: auto; }
+  .modal { background: var(--card); color: var(--ink); border-radius: var(--radius-l); box-shadow: var(--shadow-modal); width: 100%; max-width: 560px; padding: 18px 22px 20px; }
+  .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .modal-head h2 { font-family: var(--font-display); font-size: 19px; margin: 0; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+  .modal-foot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .modal-foot .spacer { flex: 1; }
+  .field { margin-bottom: 12px; }
+  .field > label, .flabel { display: block; font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+  .field .hint { font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row > .field { flex: 1; min-width: 0; }
+  .radio-card { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-m); margin-bottom: 8px; cursor: pointer; }
+  .radio-card input { margin-top: 3px; accent-color: var(--ochre); }
+  .radio-card b { display: block; font-size: 13.5px; }
+  .radio-card span.d { display: block; font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+  .radio-card.is-selected { border-color: var(--ochre); background: rgba(184,132,46,.1); }
+  .check-line { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px; }
+  .check-line input { width: 16px; height: 16px; accent-color: var(--ochre); }
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 20px); background: #0F1814; color: #F2EAD3; border: 1px solid var(--line-dark); padding: 10px 16px; border-radius: var(--radius-m); font-size: 13px; box-shadow: var(--shadow-modal); opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 120; max-width: 90vw; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  footer.app-footer { text-align: center; color: var(--card-dim); font-size: 12px; padding: 24px 0 0; }
+  #file-input, #att-input { display: none; }
+  @media (max-width: 640px) {
+    .app { padding: var(--space-4) var(--space-3) var(--space-7); }
+    .head-progress { min-width: 0; }
+    .bar { display: none; }
+    .card-head { padding-right: 10px; }
+    .card-body { padding: 4px 12px 14px; }
+    .field-row { flex-direction: column; gap: 0; }
+    .ag-date { min-width: 88px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="header">
+    <div class="header-title">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14l2 2 4-4"></path></svg>
+      <div>
+        <h1>Routine &amp; Charges</h1>
+        <p class="tagline">Routines, actions court / moyen / long terme &amp; idées de projet</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-export" title="Exporter les données (JSON)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Exporter
+      </button>
+      <label class="btn btn-ghost" title="Importer des données (JSON)" for="file-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        Importer
+      </label>
+      <input type="file" id="file-input" accept="application/json,.json">
+      <input type="file" id="att-input" multiple>
+      <button class="btn btn-ghost is-warn" id="btn-reset" title="Remettre à zéro ou tout effacer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+        Remise à zéro
+      </button>
+      <button class="btn btn-ghost" id="btn-team" title="Gérer les personnes et les services">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Équipe
+      </button>
+      <button class="btn btn-ghost drive-btn" id="btn-drive-connect" title="Connecter Google Drive">
+        <span id="drive-dot" class="drive-dot"></span>
+        <span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btn-drive-force" title="Forcer la synchronisation">Forcer synchro</button>
+      <button id="btn-theme-toggle" class="theme-toggle" title="Passer en mode clair" aria-label="Passer en mode clair"></button>
+    </div>
+  </header>
+
+  <div class="navwrap">
+    <div class="navrow">
+      <nav class="tabs" id="tabs" aria-label="Navigation"></nav>
+      <div class="searchbox">
+        <input type="search" id="search" placeholder="Rechercher partout…  ( / )" autocomplete="off" aria-label="Rechercher dans toutes les charges, actions, notes et emplacements">
+        <button type="button" class="ibtn clear hidden" id="search-clear" aria-label="Effacer la recherche" title="Effacer la recherche"></button>
+      </div>
+    </div>
+  </div>
+
+  <main id="app"></main>
+
+  <footer class="app-footer">Outil autonome — données stockées dans ce navigateur (localStorage), synchronisables avec Google Drive. Pense à exporter régulièrement pour sauvegarder / transférer tes données.<div id="gauge" class="gauge hidden"></div></footer>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — se branche sur la clé
+   localStorage existante de l'appli (APP_STORAGE_KEY) au lieu de la
+   remplacer. Réutilisable : changer APP_NS pour un autre outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
+  var APP_NS = 'routinecharge';
+  var APP_STORAGE_KEY = 'axelRoutineCharge_v1'; /* doit rester identique au STORAGE_KEY du script principal */
+  var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
+  var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
+  var DOCS_FOLDER_KEY = 'gdsync__' + APP_NS + '__docsFolderId';
+  var DOCS_FOLDER_NAME = 'Routine et Charges - Documents';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  function getLocalRecord() {
+    var value = null;
+    try { value = localStorage.getItem(APP_STORAGE_KEY); } catch (e) { value = null; }
+    if (!value) return null;
+    var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10);
+    if (!modified) modified = Date.now();
+    return { value: value, modified: modified };
+  }
+
+  function setLocalRecord(value, modified) {
+    try {
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connect\u00E9', connected: 'Drive : connect\u00E9', ok: 'Drive : synchronis\u00E9', sync: 'Drive : synchro\u2026', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName() { return 'storage__' + APP_NS + '__state.json'; }
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  /* ---- Pièces jointes : téléversées telles quelles dans un dossier dédié et
+     visible du Drive de l'utilisateur (scope drive.file), pour un accès en
+     un clic sans alourdir le stockage local du navigateur. ---- */
+  function driveFindOrCreateDocsFolder() {
+    var cachedId = null;
+    try { cachedId = localStorage.getItem(DOCS_FOLDER_KEY); } catch (e) { cachedId = null; }
+    if (cachedId) return Promise.resolve(cachedId);
+    var q = encodeURIComponent("name='" + DOCS_FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) {
+      if (data.files && data.files[0]) {
+        try { localStorage.setItem(DOCS_FOLDER_KEY, data.files[0].id); } catch (e) {}
+        return data.files[0].id;
+      }
+      return driveFetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: DOCS_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+      }).then(function (res) { return res.json(); }).then(function (folder) {
+        try { localStorage.setItem(DOCS_FOLDER_KEY, folder.id); } catch (e) {}
+        return folder.id;
+      });
+    });
+  }
+  function driveUploadRawFile(file, folderId) {
+    var boundary = 'gdocbound' + Date.now();
+    var metadata = { name: file.name, parents: [folderId] };
+    var metadataPart = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n';
+    var mediaHeader = '--' + boundary + '\r\nContent-Type: ' + (file.type || 'application/octet-stream') + '\r\n\r\n';
+    var closing = '\r\n--' + boundary + '--';
+    var body = new Blob([metadataPart, mediaHeader, file, closing]);
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,name,size', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    }).then(function (res) { return res.json(); });
+  }
+  window.__driveHasToken = function () { return hasValidToken(); };
+  window.__driveUploadDocument = function (file) {
+    if (!hasValidToken()) return Promise.reject(new Error('not-connected'));
+    return driveFindOrCreateDocsFolder().then(function (folderId) {
+      return driveUploadRawFile(file, folderId).catch(function (err) {
+        /* dossier supprimé depuis Drive : on oublie l'id en cache et on réessaie une fois */
+        try { localStorage.removeItem(DOCS_FOLDER_KEY); } catch (e) {}
+        return driveFindOrCreateDocsFolder().then(function (id2) { return driveUploadRawFile(file, id2); });
+      });
+    });
+  };
+  window.__driveDeleteFile = function (fileId) {
+    if (!hasValidToken() || !fileId) return Promise.resolve();
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(fileId), { method: 'DELETE' }).catch(function () {});
+  };
+
+  function driveCreateFile(record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(record) {
+    return driveFindFile().then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(record); });
+  }
+
+  async function syncFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var local = getLocalRecord();
+      var existing = await driveFindFile();
+      if (!existing) {
+        if (local) await drivePushRecord(local);
+        setSyncStatus('ok');
+        return;
+      }
+      var remote = await driveGetRecord(existing.id);
+      if (!remote) { setSyncStatus('ok'); return; }
+
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        setLocalRecord(remote.value, remote.modified);
+        setSyncStatus('ok');
+        if (changed) {
+          setSyncStatus('sync');
+          setTimeout(function () { location.reload(); }, 700);
+        }
+      } else if (local.modified > remote.modified) {
+        await driveUpdateFile(existing.id, local);
+        setSyncStatus('ok');
+      } else {
+        setSyncStatus('ok');
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord \u00E0 Drive (bouton "Drive : non connect\u00E9").'); return; }
+      var local = getLocalRecord();
+      if (!local) { alert('Rien en local \u00E0 synchroniser.'); return; }
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () {
+        setSyncStatus('ok');
+        alert('Synchro forc\u00E9e : OK (' + Math.round(local.value.length / 1024) + ' Ko envoy\u00E9s)');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        alert('Erreur : ' + e.message);
+      });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  window.__driveNotifySave = function () {
+    var modified = Date.now();
+    localStorage.setItem(MODIFIED_KEY, String(modified));
+    if (hasValidToken()) {
+      var local = getLocalRecord();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] \u00C9chec de la sauvegarde vers Drive :', e);
+      });
+    }
+  };
+})();
+
+</script>
+<script>
+(function () {
+"use strict";
+
+/* ======================= Polyfills ======================= */
+if (!Element.prototype.matches) {
+  Element.prototype.matches = Element.prototype.matchesSelector || Element.prototype.webkitMatchesSelector || Element.prototype.mozMatchesSelector || Element.prototype.msMatchesSelector;
+}
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function (s) {
+    var el = this;
+    while (el && el.nodeType === 1) { if (el.matches(s)) return el; el = el.parentElement || el.parentNode; }
+    return null;
+  };
+}
+
+/* ======================= Constantes ======================= */
+var STORAGE_KEY = "axelRoutineCharge_v1";      /* identique à APP_STORAGE_KEY du module Drive */
+var UI_KEY = "axelRoutineCharge_ui_v1";        /* préférences d'affichage propres à l'appareil (non synchronisées) */
+var APP_VERSION = "v2";
+var SOON_DAYS = 7;                             /* fenêtre « à venir » (jours) */
+var HISTORY_MAX = 200;                         /* cycles conservés par routine */
+var LOCAL_FILE_MAX = 2 * 1024 * 1024;          /* plafond par fichier stocké localement (base64) */
+var IMG_FULL_MAX = 1200, IMG_DRIVE_MAX = 1800, IMG_THUMB = 160;  /* dimensions max des photos (px) */
+var QUOTA_MB = 5;                              /* estimation prudente du quota localStorage */
+
+var SECTIONS = [
+  { key: "routine", label: "Routine", title: "Routine" },
+  { key: "court", label: "Court terme", title: "Actions court terme" },
+  { key: "moyen", label: "Moyen terme", title: "Actions moyen terme" },
+  { key: "long", label: "Long terme", title: "Actions long terme" },
+  { key: "idees", label: "Idées", title: "Idées de projet" }
+];
+var STATUSES = [
+  { key: "a_faire", label: "À faire", cls: "c-indigo" },
+  { key: "en_cours", label: "En cours", cls: "c-ochre" },
+  { key: "attente", label: "En attente", cls: "c-teal" },
+  { key: "cloture", label: "Clôturé", cls: "c-moss" }
+];
+var ITEM_TYPES = [
+  { key: "action", label: "Action (case à cocher)" },
+  { key: "note", label: "Note (information, sans case)" },
+  { key: "titre", label: "Sous-titre" }
+];
+var REC_PRESETS = [
+  ["", "Sans périodicité"], ["day:1", "Chaque jour"], ["week:1", "Chaque semaine"], ["week:2", "Toutes les 2 semaines"],
+  ["month:1", "Chaque mois"], ["month:3", "Chaque trimestre"], ["month:6", "Chaque semestre"], ["month:12", "Chaque année"], ["custom", "Personnalisée…"]
+];
+
+/* ======================= Icônes ======================= */
+var ICON_PATHS = {
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  up: '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>',
+  down: '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  chevron: '<polyline points="9 18 15 12 9 6"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  folder: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  repeat: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  note: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  link: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+  clipboard: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  paperclip: '<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>'
+};
+function svg(name, cls) {
+  return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON_PATHS[name] + '</svg>';
+}
+var THEME_ICONS = {
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>'
+};
+
+/* ======================= Utilitaires ======================= */
+function $(sel, root) { return (root || document).querySelector(sel); }
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function uid(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function normText(v) { return typeof v === "string" ? v : (v == null ? "" : String(v)); }
+function fold(s) {
+  s = String(s == null ? "" : s).toLowerCase();
+  try { s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); } catch (e) { /* normalize indisponible */ }
+  return s;
+}
+function shorten(s, n) { s = normText(s).replace(/\s+/g, " "); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
+/* ---- Dates (format ISO local AAAA-MM-JJ) ---- */
+function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+function toISO(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function todayISO() { return toISO(new Date()); }
+function parseISO(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2], 12, 0, 0); }
+function isISO(s) {
+  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  var d = parseISO(s);
+  return toISO(d) === s;
+}
+function normDate(v) { return isISO(v) ? v : ""; }
+function diffDays(aISO, bISO) { return Math.round((parseISO(aISO) - parseISO(bISO)) / 86400000); }
+function addDays(iso, n) { var d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); }
+function addMonths(iso, n) {
+  var d = parseISO(iso), day = d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth() + n);
+  var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return toISO(d);
+}
+function addInterval(iso, rec) {
+  if (rec.unit === "day") return addDays(iso, rec.n);
+  if (rec.unit === "week") return addDays(iso, 7 * rec.n);
+  return addMonths(iso, rec.n);
+}
+function fmtDate(iso) { if (!isISO(iso)) return ""; var p = iso.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+function relText(iso) {
+  var d = diffDays(iso, todayISO());
+  if (d < 0) return "en retard de " + (-d) + " j";
+  if (d === 0) return "aujourd’hui";
+  if (d === 1) return "demain";
+  return "dans " + d + " j";
+}
+function dueState(iso) {
+  if (!iso) return null;
+  var d = diffDays(iso, todayISO());
+  return d < 0 ? "late" : (d <= SOON_DAYS ? "soon" : "ok");
+}
+
+/* ---- Périodicité ---- */
+function normRec(r) {
+  if (!r || typeof r !== "object") return null;
+  var n = parseInt(r.n, 10);
+  if (!(n >= 1)) return null;
+  if (n > 999) n = 999;
+  if (r.unit !== "day" && r.unit !== "week" && r.unit !== "month") return null;
+  return { n: n, unit: r.unit };
+}
+function recLabel(rec) {
+  if (!rec) return "";
+  var n = rec.n;
+  if (rec.unit === "day") return n === 1 ? "Chaque jour" : "Tous les " + n + " jours";
+  if (rec.unit === "week") return n === 1 ? "Chaque semaine" : "Toutes les " + n + " semaines";
+  if (n === 1) return "Chaque mois";
+  if (n === 3) return "Chaque trimestre";
+  if (n === 6) return "Chaque semestre";
+  if (n === 12) return "Chaque année";
+  return "Tous les " + n + " mois";
+}
+function recPresetKey(rec) {
+  if (!rec) return "";
+  var k = rec.unit + ":" + rec.n;
+  for (var i = 0; i < REC_PRESETS.length; i++) { if (REC_PRESETS[i][0] === k) return k; }
+  return "custom";
+}
+function computeNextDue(c, doneISO) {
+  var rec = c.recurrence;
+  if (!rec) return "";
+  var base = c.nextDue || doneISO;
+  var next = addInterval(base, rec), guard = 0;
+  while (diffDays(next, doneISO) <= 0 && guard++ < 1000) next = addInterval(next, rec);
+  return next;
+}
+
+/* ======================= Données d'origine (fichier Excel routine_charge.xlsx) ======================= */
+var SEED_DATA = {"app":"routine-charge","version":1,"theme":"dark","charges":[{"id":"c01","section":"routine","title":"Alimenter le Workshop et l’animer chaque mardi à 14h","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":{"n":1,"unit":"week"},"nextDue":"","lastDone":"","history":[],"items":[{"id":"c01-i01","type":"action","text":"Remplir le fichier PDCA workshop Condi.","done":false,"doneAt":"","dueDate":""},{"id":"c01-i02","type":"action","text":"Prendre les valeurs du rapport RO de Pierre du Lundi et remplir les valeurs dans l’onglet « Suivi Ligne Terrain ».","done":false,"doneAt":"","dueDate":""},{"id":"c01-i03","type":"action","text":"Vérifier ensuite sur « Image Saisie Bis » les Problématiques rencontrées la semaine précédentes et remplir l’onglet « Suivi Ligne terrain »","done":false,"doneAt":"","dueDate":""},{"id":"c01-i04","type":"action","text":"Lors de la réunion Hebdo, présenter l’onglet « Suivi Ligne Terrain » et compléter les problématiques avec les ARS puis mettre des actions en face si problématique répétitive ou grave. Revoir également les actions données les semaines précédentes et les copier à la semaine actuelle tant que c’est pas clôturé.","done":false,"doneAt":"","dueDate":""},{"id":"c01-i05","type":"action","text":"Puis passer sur les actions longues dans l’onglet « Workshop » .","done":false,"doneAt":"","dueDate":""},{"id":"c01-i06","type":"action","text":"La fin de la réunion doit servir à discuter sur un nouveau projet.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c01-l01","context":"","label":"PDCA workshop Condi","path":"H:\\Documents_bureautiques\\00 Communs\\16 Excellence Opérationnelle\\WORKSHOP"}]},{"id":"c02","section":"routine","title":"Réaliser le suivi de perf de l’usine une fois par mois","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":{"n":1,"unit":"month"},"nextDue":"","lastDone":"","history":[],"items":[{"id":"c02-i01","type":"action","text":"Remplir le fichier ‘Performance Industrielle + Objectifs (+Opella)’.","done":false,"doneAt":"","dueDate":""},{"id":"c02-i02","type":"action","text":"Pour cela, aller dans « Quotidien Hebdo Mensuel » puis venir relever les valeurs du mois précédent et les copier dans l’onglet ‘Données brutes quotidien Hebdo’. (toutes les valeurs des onglets de chaque ligne devraient se remplir automatiquement -> Tirer la formule des tableaux de chaque onglet une fois arrivé en Juillet 2027).","done":false,"doneAt":"","dueDate":""},{"id":"c02-i03","type":"action","text":"Si besoin d’étudier une ligne , ne pas oublier de remettre l’intervalle de la courbe du graphe à jour (c’est pas fait en auto).","done":false,"doneAt":"","dueDate":""},{"id":"c02-i04","type":"action","text":"Pour remplir l’onglet « Data Allure », Prendre les valeurs du fichier ‘Calcul d’allure Conditionnement’ géré par Pierre, ajouter une ligne et copier manuellement les valeurs. Puis cliquer sur la ligne ajoutée -> clique droit -> Trier -> Tri personnalisé -> Puis choisir la ligne du mois ajoutée (ex : ligne25 = juin 2026)","done":false,"doneAt":"","dueDate":""},{"id":"c02-i05","type":"action","text":"Remettez ensuite la moyenne à jour , le meilleur mois, et le graphe devrait être actualisé.","done":false,"doneAt":"","dueDate":""},{"id":"c02-i06","type":"action","text":"Pour l’onglet « OP Prod », demander à Pierre de remplir son fichier et copier ses valeurs dans une nouvelle colonne.","done":false,"doneAt":"","dueDate":""},{"id":"c02-i07","type":"action","text":"Pour l’onglet « Taux de changement » , aller dans ‘Calcul d’allure Conditionnement’ et dans l’onglet « Setup mensuel » associé et copier les valeurs manuellement dans une nouvelle colonne puis mettre à jour le graphe, la moyenne et le meilleur mois.","done":false,"doneAt":"","dueDate":""},{"id":"c02-i08","type":"action","text":"Pour l’onglet « Panne + réglages + aléas », créer un tableau pour le nouveau mois, et récuperer les valeurs dans le fichier « Image saisie Bis » onglet « Panne Réglage » et jouer avec le TCD pour avoir les taux de panne/réglage/ aléas par ligne.","done":false,"doneAt":"","dueDate":""},{"id":"c02-i09","type":"action","text":"Pour les temps d’ouverture , les prendre dans ‘Données brutes quotidien Hebdo’","done":false,"doneAt":"","dueDate":""},{"id":"c02-i10","type":"action","text":"Pour les nombres d’arrêts , les prendre dans le fichier « Image Saisie Bis ».","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c02-l01","context":"","label":"Performance Industrielle + Objectifs (+Opella)","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\08 Indicateurs"}]},{"id":"c03","section":"routine","title":"Faire une présentation Opella 1 fois par Trimestre (Deadline : 8ème jour travaillé du mois)","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":{"n":3,"unit":"month"},"nextDue":"","lastDone":"","history":[],"items":[{"id":"c03-i01","type":"action","text":"Remplir le fichier ‘Performance Industrielle + Objectifs (+Opella)’ dans l’onglet « KPI OPELLA ».","done":false,"doneAt":"","dueDate":""},{"id":"c03-i02","type":"action","text":"Mettre en début de mois une réunion dite ‘Deadline’ pour rappeler aux gens de ne pas oublier ce point.","done":false,"doneAt":"","dueDate":""},{"id":"c03-i03","type":"action","text":"Pour la partie LOAD : Trimestre Précédent -> Prendre l’Opening time dans le calendrier classique, la charge dans ‘Données brutes quotidien Hebdo’ et faire la division.","done":false,"doneAt":"","dueDate":""},{"id":"c03-i04","type":"action","text":"Pour la Charge future , voir avec OLIVIER GARCIA pour qu’il mette son fichier à jour et recopier les valeurs pour créer les graphes. (garder l’historique)","done":false,"doneAt":"","dueDate":""},{"id":"c03-i05","type":"action","text":"Pour la performance Condi, prendre les valeurs dans ‘Données brutes quotidien Hebdo’, les recopier et mettre à jour le graphe.","done":false,"doneAt":"","dueDate":""},{"id":"c03-i06","type":"action","text":"Pour le PCT , demander à Pierre de prendre 3 lots par famille au hasard et de calculer le temps de traversée pesée-Condi.","done":false,"doneAt":"","dueDate":""},{"id":"c03-i07","type":"action","text":"Pour le Yield, demander à la Finance (actuellement Charlotte) de vous envoyer son fichier de Yield à jour et copier les valeurs.","done":false,"doneAt":"","dueDate":""},{"id":"c03-i08","type":"action","text":"Quand tout est fait, prendre la présentation N-1 et mettre à jour tous les graphes.","done":false,"doneAt":"","dueDate":""},{"id":"c03-i09","type":"action","text":"Faire revoir à Christophe et modifier au besoin.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c03-l01","context":"Pour les données","label":"Performance Industrielle + Objectifs (+Opella)","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\08 Indicateurs"},{"id":"c03-l02","context":"Pour les présentations","label":"KPI OPELLA Présentation Month XXXX","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\08 Indicateurs\\OPELLA"}]},{"id":"c04","section":"routine","title":"Routine Terrain","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c04-i01","type":"action","text":"Faire 30/45minutes de tour terrain Condi (et/ou Fab) pour discuter avec les opérations et vérifier si de nouveaux problèmes n’apparaissent pas. (si oui , mettre des actions API 1 si possible)","done":false,"doneAt":"","dueDate":""},{"id":"c04-i02","type":"action","text":"Participer si possible à certains API 1 (surtout sur les lignes avec une performance répétitivement faible.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c04-l01","context":"","label":"TERRAIN","path":""}]},{"id":"c05","section":"routine","title":"SAVINGS","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":{"n":1,"unit":"month"},"nextDue":"","lastDone":"","history":[],"items":[{"id":"c05-i01","type":"action","text":"Dans le fichier ‘Savings’ , ajouter les sujets de savings en cours et mettre à jour mensuellement les données .","done":false,"doneAt":"","dueDate":""},{"id":"c05-i02","type":"action","text":"En 2026/2027 , il faut continuer de remplir mensuellement les gains sur la CBLE et les buses ionisantes.","done":false,"doneAt":"","dueDate":""},{"id":"c05-i03","type":"action","text":"Pour les buses : -> Dans le fichier , onglet ‘suivi mensuel buse » remplir le nombre de boites fabriquées en vous aidant de LSM (Mail d’Alexandre Remeter en PJ pour accéder à LSM. (RE : Impacts RO système ionisants)) Puis étirer la formule des gains (Delta x prix boite x nb produit)","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c05-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\12 SAVINGS"},{"id":"c05-l02","context":"Pour la CBLE","label":"Performance Industrielle + Objectifs (+Opella) -> Onglet CBLE : suivre le gain en euro RO réel vs RO objectif","path":""},{"id":"c05-l03","context":"Pour les buses","label":"","path":"H:\\Documents_bureautiques\\16 Excellence Opérationnelle\\12 SAVINGS\\SAVINGS 2025-2026\\Buses ionisantes"}]},{"id":"c06","section":"routine","title":"Suivi Temps changement d’équipes","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c06-i01","type":"action","text":"Se rendre dans LSM pour vérifier les caisses sorties entre l’équipe N-1 et N.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c06-l01","context":"","label":"Mail d’Alexandre Remeter en PJ pour accèder à LSM. (RE : Impacts RO système ionisants)","path":""}]},{"id":"c07","section":"routine","title":"GEMBA WALK","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":{"n":1,"unit":"month"},"nextDue":"","lastDone":"","history":[],"items":[{"id":"c07-i01","type":"action","text":"Vérifier le calendrier maintenu par Franck et réaliser des gemba walk environ une fois par mois. Utiliser pour le cela le fichier dédié au gembas","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c07-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\11 GEMBA WALK"},{"id":"c07-l02","context":"Pour le calendrier","label":"AEO planning 2026-2027","path":""},{"id":"c07-l03","context":"Pour le formulaire","label":"AEO officiel V1","path":""}]},{"id":"c08","section":"routine","title":"API 2 et 3","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c08-i01","type":"action","text":"Participer en priorité aux API 3 en alternance avec Léa. Et participer à certains API 2 pour vérifier que les actions sur la non performance soient bien abordées et traitées.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c08-l01","context":"API 3","label":"salle Orléans","path":""},{"id":"c08-l02","context":"API 2","label":"terrain","path":""}]},{"id":"c09","section":"routine","title":"Charge Apprenti","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":{"n":1,"unit":"week"},"nextDue":"","lastDone":"","history":[],"items":[{"id":"c09-i01","type":"action","text":"Faire un point Hebdo avec Vincent L pour suivre ses actions et lui en donner des nouvelles.","done":false,"doneAt":"","dueDate":""},{"id":"c09-i02","type":"action","text":"Projet fin d’étude : Installer 4 lignes LEANCURE (CBL4 , CBL7, CGC1, CLQ1) en suivant un GANTT, en formant les opérateurs , en déployant des indicateurs provenant des rapports de Perf et en challengeant les ARS sur les Paretos","done":false,"doneAt":"","dueDate":""},{"id":"c09-i03","type":"action","text":"Le faire travailler sur l’encaisseuse CBLE : Remettre un indicateur physique Leancure sur les occurrences d’arrêts Encaisseuse + ouvrir un PDCA /A3 sur ligne pour faire avancer les choses. (TROP d’arrêts sur cette machine depuis plusieurs semaines.","done":false,"doneAt":"","dueDate":""},{"id":"c09-i04","type":"titre","text":"Missions diverses :","done":false,"doneAt":"","dueDate":""},{"id":"c09-i05","type":"action","text":"Diminuer le nombre de contrôle fin d’OF en changement de lot pour faire du gain (26000€)","done":false,"doneAt":"","dueDate":""},{"id":"c09-i06","type":"action","text":"Déployer une défauthèque LSM an condi","done":false,"doneAt":"","dueDate":""},{"id":"c09-i07","type":"action","text":"Faire un SMED à l’AT16 pilote","done":false,"doneAt":"","dueDate":""},{"id":"c09-i08","type":"action","text":"Ouvrir un A3 au condi sur un problème répétitif","done":false,"doneAt":"","dueDate":""},{"id":"c09-i09","type":"action","text":"Suivre le maintien de l’House Keeping","done":false,"doneAt":"","dueDate":""},{"id":"c09-i10","type":"action","text":"Routine Terrain","done":false,"doneAt":"","dueDate":""},{"id":"c09-i11","type":"action","text":"API 2","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c09-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\07 Projets\\MES PRODUCTION"}]},{"id":"c10","section":"routine","title":"Cantine","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c10-i01","type":"action","text":"Ne pas oublier de manger c’est important","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c10-l01","context":"","label":"Cantine","path":""}]},{"id":"c11","section":"court","title":"SMED AT 16","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c11-i01","type":"action","text":"Relever les temps au niveau du Vide Laverie + Remontage des pièces","done":false,"doneAt":"","dueDate":""},{"id":"c11-i02","type":"action","text":"Faire un groupe de travail pour combler les temps morts , optimiser les temps masqués (actions internes vers Externe) etc…","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c11-l01","context":"","label":"SMED AT16 PILOTE","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\06 Outils LEAN\\SMED"}]},{"id":"c12","section":"court","title":"A3 : Adhésif Condi","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c12-i01","type":"action","text":"Finaliser les actions PI qui doivent se dérouler en septembre. (mail transmis à Axel R)","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c12-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\00 Partages\\16 Excellence Opérationnelle\\A3\\2026-05-22 Déviation Scotch Décollé"}]},{"id":"c13","section":"court","title":"A3 : chute palette TK","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c13-i01","type":"action","text":"Finaliser les actions côté Gabriel Mucin : formation à la défauthèque sur les réceptions Palettes (qualité) -> Mail transmis à Axel R","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c13-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\00 Partages\\16 Excellence Opérationnelle\\A3\\2026-03-18 Chute palette dernier niveau TK1"}]},{"id":"c14","section":"court","title":"A3 : GPCG30 FPI3GR1 Déformation de la Cuve","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c14-i01","type":"action","text":"Léa a repris le sujet. Une cause racine identifiée avec un délai de résolution au 31/10/2026 à vérifier pour cloturer le A3","done":false,"doneAt":"","dueDate":"2026-10-31"}],"locations":[{"id":"c14-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\00 Partages\\16 Excellence Opérationnelle\\A3\\2026-07-01 GPCG30 FPI3GR1 Déformation de la Cuve"}]},{"id":"c15","section":"court","title":"API Transitique","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c15-i01","type":"action","text":"Mettre en place le tableau API de mon bureau au niveau du bureau des superviseurs ( prévu le 18 septembre)","done":false,"doneAt":"","dueDate":""},{"id":"c15-i02","type":"note","text":"Les indicateurs à coller sont près de mon PC.","done":false,"doneAt":"","dueDate":""},{"id":"c15-i03","type":"action","text":"L’API doit se dérouler tous les 15 jours. Y assister pour valider le bon fonctionnement.","done":false,"doneAt":"","dueDate":""},{"id":"c15-i04","type":"action","text":"Suivre Gabriel Mucin pour s’assurer que le remplissage du fichier de données se passe bien. (repris par Léa)","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c15-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\06 Outils LEAN\\API\\API Transitique"}]},{"id":"c16","section":"court","title":"API Maintenance","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c16-i01","type":"action","text":"Vérifier que les objectifs d’Olivier soient mis à jour et que le tableau soit rempli et suivi avec des actions associées","done":false,"doneAt":"","dueDate":""},{"id":"c16-i02","type":"action","text":"Bonus important : continuez à relancer olivier S sur le fait qu’il faille historiser et standardiser les rapports d’intervention (repris par Léa)","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c16-l01","context":"","label":"Terrain Maintenance Process.","path":""},{"id":"c16-l02","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\06 Outils LEAN\\API\\API Maintenance"}]},{"id":"c17","section":"court","title":"6S Atelier Central","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c17-i01","type":"action","text":"Vérifier que les travaux soient terminés et que le plan d’action soit clôturé (principalement peinture au sol + chariot de soudure + habilitation)","done":false,"doneAt":"","dueDate":""},{"id":"c17-i02","type":"action","text":"La peinture a été retardée pendant les travaux d’été. S’assurer que cela va être fait courant Octobre -> Axel R","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c17-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\06 Outils LEAN\\6S\\6S Atelier Maintenance"}]},{"id":"c18","section":"court","title":"Augmentation de la Cadence sur CBLH","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c18-i01","type":"action","text":"Récupérer les protocoles de la qualité pour faire l’essai sur la CBLH. Challenger David P sur le sujet qui en est le Leader.","done":false,"doneAt":"","dueDate":""},{"id":"c18-i02","type":"note","text":"Objectif : monter la cadence à 230bl/min ASAP","done":false,"doneAt":"","dueDate":""},{"id":"c18-i03","type":"action","text":"Relance depuis 3 mois sur le sujet qui n’avance pas côté qualité (demande à David Remond de relancer de son côté)","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c18-l01","context":"","label":"Voir David P et le workshop","path":""}]},{"id":"c19","section":"court","title":"Fiche de réglage de l’encaisseuse CBL5","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c19-i01","type":"action","text":"S’assurer que la dernière version de cette fiche soit à jour (enlever les rondelles sur deux modules).","done":false,"doneAt":"","dueDate":""},{"id":"c19-i02","type":"action","text":"S’assurer que la maintenance ait transformé ce document en FIT rattachée à l’encaisseuse CBL5","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c19-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\00 Partages\\16 Excellence Opérationnelle\\A3\\2026\\2026-03-18 Encaisseuse Scotchage CBL5"}]},{"id":"c20","section":"court","title":"Finaliser le Workshop CBL5","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c20-i01","type":"action","text":"Clôturer les 3 actions restantes du Workshop CBL5 . Actions ajoutées sur la dernière réunion sur la partie Encaisseuse. Remettre une réunion de suivi de ce Workshop une fois par mois avec olivier et Bernard.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c20-l01","context":"","label":"PDCA workshop CBL5","path":"H:\\Documents_bureautiques\\00 Communs\\16 Excellence Opérationnelle\\WORKSHOP"}]},{"id":"c21","section":"court","title":"5S Service Technique","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c21-i01","type":"action","text":"Michel a entamé les étiquetages, Gérald doit finaliser le tri des bouches d’aération et des filtres. Il faut que létabli côté Utilité soit propre et vide. Ensuite vérifier étiquetage de Gerald et Michel.","done":false,"doneAt":"","dueDate":""},{"id":"c21-i02","type":"action","text":"Ne pas oublier de prendre photos avant après","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c21-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\06 Outils LEAN\\6S\\6S Maintenance ST"}]},{"id":"c22","section":"moyen","title":"Standardiser tous les paramètres transvis avec des fiches de réglages sur ligne","note":"","status":"en_cours","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c22-i01","type":"action","text":"1ère étape : reprendre les mesures physiques sur les distances capteurs. (OK)","done":true,"doneAt":"","dueDate":""},{"id":"c22-i02","type":"action","text":"2ème étape : Relever tous les paramètres actuels sur tous les formats du Condi (il en manque encore pas mal)","done":false,"doneAt":"","dueDate":""},{"id":"c22-i03","type":"action","text":"3ème étape : faire des essais sur ligne en modifiant les paramètres de fenêtres pour mettre les distances exactes et valider les paramètres de format avec Mickael.","done":false,"doneAt":"","dueDate":""},{"id":"c22-i04","type":"note","text":"(Les ARS autorisent des arrêts au besoin pour les réglages)","done":false,"doneAt":"","dueDate":""},{"id":"c22-i05","type":"action","text":"4ème étape : lorsque tous les formats d’une ligne sont testés et validés (la ligne doit avoir tourné minimum 24h sans toucher aux paramètres) , il faudra imprimer et plastifier la fiche de réglage sur ligne dans le transvis. (voir exemple sur la CBLH)","done":false,"doneAt":"","dueDate":""},{"id":"c22-i06","type":"action","text":"5ème étape : voir avec Francis Lafleur pour verrouiller l’accès à certains paramètres du transvis. (relance faite le 09/09/2026 à 11h29)","done":false,"doneAt":"","dueDate":""},{"id":"c22-i07","type":"note","text":"PS : il faudra remettre en page comme sur le CBLH pour que ca tienne sur une feuille.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c22-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\07 Projets\\FICHE DE REGLAGE TRANSVIS"},{"id":"c22-l02","context":"","label":"Fiche de réglage transvis","path":""}]},{"id":"c23","section":"moyen","title":"A3 : Ethanol 99","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c23-i01","type":"action","text":"Faire le suivi de la conso Ethanol AT09, AT10 et AT35 avec une feuille de suivi de consommation de fin aout à début septembre.","done":false,"doneAt":"","dueDate":""},{"id":"c23-i02","type":"action","text":"Continuez de trouver des actions de vérification pour mettre le doigt sur une cause Primaire.","done":false,"doneAt":"","dueDate":""},{"id":"c23-i03","type":"action","text":"Les écarts sont variables de 0 à 400kg par cuve, pourquoi ?","done":false,"doneAt":"","dueDate":""},{"id":"c23-i04","type":"action","text":"Etudier avec Claudia pourquoi lors du remplissage de la cuve à T0 , la supervision augmente directement de 1000L (essai fait sur la cuve 2 , 2 fois et même phénomène). Suivre la demande de modification et l’investigation Programme. Quand la supervision est remise en état, mettre en place un système de déclenchement KANBAN. Calculer la Conso moyenne journalière , prendre un seuil de sécurité, et créer un système d’alerte en supervision qui alerte le Planning pour réenclencher une réappro au plus juste pour éviter les ruptures de stock.","done":false,"doneAt":"","dueDate":""},{"id":"c23-i05","type":"action","text":"Au 07/09/2026 : On remarque des écarts de 20 à 50L par jour sans raison. Faire des points fréquents avec ARS , Marine, Jean-Louis et Claudia pour trouver des causes potentielles.","done":false,"doneAt":"","dueDate":""},{"id":"c23-i06","type":"note","text":"-> repris par Léa .","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c23-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\00 Partages\\16 Excellence Opérationnelle\\A3\\2025-09-02 Ethanol 99"}]},{"id":"c24","section":"moyen","title":"LEANCURE","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c24-i01","type":"action","text":"1. Installer les lignes CBL4 et CLQ1.","done":false,"doneAt":"","dueDate":""},{"id":"c24-i02","type":"action","text":"2. Former le personnel au logiciel","done":false,"doneAt":"","dueDate":""},{"id":"c24-i03","type":"action","text":"3. Créer les KPI associés aux top Arrêts","done":false,"doneAt":"","dueDate":""},{"id":"c24-i04","type":"action","text":"4. Vérifier que les rapports arrivent bien aux ARS et qu’ils animent correctement l’API1 avec. (TRES IMPORTANT d’AUDITER le remplissage des indicateurs avec David Remond, car il y a souvent du relâchement et les indicateurs ne génèrent pas de PDCA)","done":false,"doneAt":"","dueDate":""},{"id":"c24-i05","type":"action","text":"5. Vérifier que les objectifs soient cohérents avec les perfs sinon remettre à jour. (Il faut que ca soit challengeant et réalisable)","done":false,"doneAt":"","dueDate":""},{"id":"c24-i06","type":"action","text":"6. Installer Leancure sur la CBL7 et CGC1. En Reprenant le GANTT des anciennes lignes pour réaliser la même démarche projet.","done":false,"doneAt":"","dueDate":""}],"locations":[{"id":"c24-l01","context":"","label":"","path":"\\\\fr-reisfilp001\\H\\Documents_bureautiques\\16 Excellence Opérationnelle\\07 Projets\\MES PRODUCTION\\Demande d'investissement (avec annexes)"}]},{"id":"c25","section":"idees","title":"Faire les changements d’équipe machine en marche","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c25-i01","type":"action","text":"Réaliser une analyse des durées d’arrêts sur ce thème et mettre en place des actions pour faire disparaitre petit à petit les changements d’équipe à l’arrêt.","done":false,"doneAt":"","dueDate":""},{"id":"c25-i02","type":"note","text":"D’après Leancure , on perd en moyenne 20min par changement.","done":false,"doneAt":"","dueDate":""}],"locations":[]},{"id":"c26","section":"idees","title":"Changement de format Condi","note":"","status":"a_faire","dueDate":"","closedAt":"","recurrence":null,"nextDue":"","lastDone":"","history":[],"items":[{"id":"c26-i01","type":"action","text":"Faire des analyses chrono avec une personne extérieure spécialisée dans la chrono-analyse pour les changements de formats. Avec la mise en paramètres Leancure , je me rends compte que les techniciens ont des jugements très différents du temps nécessaire pour faire un changement de pièce en thermo, en encart , en fin de ligne etc. Il y a 20/30% de temps par changement à gagner. Ca peut faire des dizaines de milliers d’euro.","done":false,"doneAt":"","dueDate":""},{"id":"c26-i02","type":"note","text":"J’ai revu avec Michael B le fichier de Pierre G sur les temps moyens des changements de format par catégorie sur les perds de 2025/2026 et il dit que les temps sont bien au-dessus de ce qui est possible de réaliser.","done":false,"doneAt":"","dueDate":""}],"locations":[]}]};
+
+/* ======================= Modèle de données ======================= */
+function defaultState() { return { app: "routine-charge", version: 2, theme: "dark", services: [], people: [], charges: [] }; }
+function sectionOf(key) { for (var i = 0; i < SECTIONS.length; i++) { if (SECTIONS[i].key === key) return SECTIONS[i]; } return SECTIONS[0]; }
+function statusOf(key) { for (var i = 0; i < STATUSES.length; i++) { if (STATUSES[i].key === key) return STATUSES[i]; } return STATUSES[0]; }
+function validSection(k) { for (var i = 0; i < SECTIONS.length; i++) { if (SECTIONS[i].key === k) return true; } return false; }
+function validStatus(k) { for (var i = 0; i < STATUSES.length; i++) { if (STATUSES[i].key === k) return true; } return false; }
+function validType(k) { return k === "action" || k === "note" || k === "titre"; }
+function uniqueId(id, prefix, seen) {
+  if (!id || seen[id]) id = uid(prefix);
+  seen[id] = true;
+  return id;
+}
+function normItem(r, seen) {
+  if (!r || typeof r !== "object") return null;
+  var type = validType(r.type) ? r.type : "action";
+  var it = {
+    id: uniqueId(normText(r.id), "i-", seen),
+    type: type,
+    text: normText(r.text),
+    done: false, doneAt: "", dueDate: ""
+  };
+  if (type === "action") {
+    it.done = r.done === true;
+    it.doneAt = it.done ? normDate(r.doneAt) : "";
+    it.dueDate = normDate(r.dueDate);
+  }
+  return it;
+}
+function normLoc(r, seen) {
+  if (!r || typeof r !== "object") return null;
+  var l = { id: uniqueId(normText(r.id), "l-", seen), context: normText(r.context), label: normText(r.label), path: normText(r.path) };
+  return (l.context || l.label || l.path) ? l : null;
+}
+var NCTX = { services: {}, people: {} };   /* ids valides pendant une normalisation */
+function normService(r, seen) {
+  if (!r || typeof r !== "object") return null;
+  var name = normText(r.name).trim().slice(0, 80);
+  return name ? { id: uniqueId(normText(r.id), "s-", seen), name: name } : null;
+}
+function normPerson(r, seen) {
+  if (!r || typeof r !== "object") return null;
+  var name = normText(r.name).trim().slice(0, 80);
+  if (!name) return null;
+  var sid = normText(r.serviceId);
+  return { id: uniqueId(normText(r.id), "p-", seen), name: name, serviceId: NCTX.services[sid] ? sid : "" };
+}
+/* Référence « personne + service » : { person: id, service: id } — ids inconnus écartés. */
+function normRef(r) {
+  if (!r || typeof r !== "object") return null;
+  var p = normText(r.person), s = normText(r.service);
+  if (p && !NCTX.people[p]) p = "";
+  if (s && !NCTX.services[s]) s = "";
+  return (p || s) ? { person: p, service: s } : null;
+}
+function sameRef(a, b) { return a && b && a.person === b.person && a.service === b.service; }
+function normAtt(r, seen) {
+  if (!r || typeof r !== "object") return null;
+  var a = {
+    id: uniqueId(normText(r.id), "a-", seen), name: normText(r.name).trim().slice(0, 200) || "fichier",
+    type: normText(r.type).slice(0, 100), size: Math.max(0, Math.round(+r.size || 0)), addedAt: normDate(r.addedAt),
+    storage: r.storage === "drive" ? "drive" : "local", driveFileId: "", driveViewLink: "", thumb: "", dataUrl: ""
+  };
+  var th = normText(r.thumb);
+  if (/^data:image\/(jpeg|png|webp|gif);base64,/i.test(th)) a.thumb = th;
+  if (a.storage === "drive") {
+    a.driveFileId = normText(r.driveFileId).slice(0, 200);
+    var lk = normText(r.driveViewLink);
+    a.driveViewLink = /^https:\/\/\S+$/i.test(lk) ? lk : (a.driveFileId ? "https://drive.google.com/file/d/" + encodeURIComponent(a.driveFileId) + "/view" : "");
+    if (!a.driveFileId && !a.driveViewLink) return null;
+  } else {
+    var du = normText(r.dataUrl);
+    if (!/^data:[^,]*;base64,/i.test(du)) return null;
+    if (a.thumb && !/^data:image\//i.test(du)) a.thumb = "";
+    a.dataUrl = du;
+  }
+  return a;
+}
+function normCharge(r, seen) {
+  if (!r || typeof r !== "object") return null;
+  var c = {
+    id: uniqueId(normText(r.id), "c-", seen),
+    section: validSection(r.section) ? r.section : "routine",
+    title: normText(r.title),
+    note: normText(r.note),
+    status: validStatus(r.status) ? r.status : "a_faire",
+    dueDate: normDate(r.dueDate),
+    closedAt: normDate(r.closedAt),
+    recurrence: normRec(r.recurrence),
+    nextDue: normDate(r.nextDue),
+    lastDone: normDate(r.lastDone),
+    origin: normRef(r.origin), owner: normRef(r.owner), linked: [],
+    history: [], items: [], locations: [], attachments: []
+  };
+  if (c.status !== "cloture") c.closedAt = "";
+  var i, x;
+  var hs = Array.isArray(r.history) ? r.history : [];
+  for (i = 0; i < hs.length && c.history.length < HISTORY_MAX; i++) {
+    x = hs[i];
+    if (x && isISO(x.date)) c.history.push({ date: x.date, done: Math.max(0, parseInt(x.done, 10) || 0), total: Math.max(0, parseInt(x.total, 10) || 0) });
+  }
+  var its = Array.isArray(r.items) ? r.items : [];
+  for (i = 0; i < its.length; i++) { x = normItem(its[i], seen); if (x) c.items.push(x); }
+  var ls = Array.isArray(r.locations) ? r.locations : [];
+  for (i = 0; i < ls.length; i++) { x = normLoc(ls[i], seen); if (x) c.locations.push(x); }
+  var lkd = Array.isArray(r.linked) ? r.linked : [];
+  for (i = 0; i < lkd.length && c.linked.length < 50; i++) {
+    x = normRef(lkd[i]);
+    if (x && !c.linked.some(function (y) { return sameRef(x, y); })) c.linked.push(x);
+  }
+  var ats = Array.isArray(r.attachments) ? r.attachments : [];
+  for (i = 0; i < ats.length && c.attachments.length < 100; i++) { x = normAtt(ats[i], seen); if (x) c.attachments.push(x); }
+  return c;
+}
+function normalizeState(raw) {
+  var s = defaultState();
+  if (raw && typeof raw === "object") {
+    s.theme = raw.theme === "light" ? "light" : "dark";
+    var seen = {}, i, x;
+    NCTX = { services: {}, people: {} };
+    var sv = Array.isArray(raw.services) ? raw.services : [];
+    for (i = 0; i < sv.length; i++) { x = normService(sv[i], seen); if (x) { s.services.push(x); NCTX.services[x.id] = true; } }
+    var pp = Array.isArray(raw.people) ? raw.people : [];
+    for (i = 0; i < pp.length; i++) { x = normPerson(pp[i], seen); if (x) { s.people.push(x); NCTX.people[x.id] = true; } }
+    var arr = Array.isArray(raw.charges) ? raw.charges : [];
+    for (i = 0; i < arr.length; i++) { var c = normCharge(arr[i], seen); if (c) s.charges.push(c); }
+  }
+  return s;
+}
+function newCharge(section) {
+  return {
+    id: uid("c-"), section: section, title: "", note: "", status: "a_faire", dueDate: "", closedAt: "",
+    recurrence: null, nextDue: "", lastDone: "", origin: null, owner: null, linked: [], history: [], items: [], locations: [], attachments: []
+  };
+}
+
+/* ======================= État + persistance ======================= */
+var state = defaultState();
+var lastSerialized = JSON.stringify(state);
+var ui = { tab: "dashboard", expanded: {}, histOpen: {}, statusFilter: "all", who: "", role: "any", query: "", tokens: [], pendingFocus: null };
+var TAB_KEYS = ["dashboard", "routine", "court", "moyen", "long", "idees", "emplacements"];
+
+function seedState() { return normalizeState(SEED_DATA); }
+/* Première ouverture (aucune donnée en local) : on charge les données d'origine du fichier Excel. */
+function loadState() {
+  var raw = null, parsed = null, firstRun = false;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+  if (raw) { try { parsed = JSON.parse(raw); } catch (e2) { parsed = null; } }
+  else { parsed = SEED_DATA; firstRun = true; }
+  state = normalizeState(parsed);
+  lastSerialized = JSON.stringify(state);
+  if (firstRun) { try { localStorage.setItem(STORAGE_KEY, lastSerialized); } catch (e3) { /* stockage indisponible : ignoré */ } }
+}
+function restoreSeed() {
+  var theme = state.theme, sv = state.services, pp = state.people;
+  state = seedState();
+  state.theme = theme; state.services = sv; state.people = pp;
+  ui.expanded = {}; ui.histOpen = {}; ui.statusFilter = "all"; ui.who = ""; ui.role = "any"; ui.tab = "dashboard";
+  saveUI(); commit();
+}
+/* N'écrit (et ne notifie Drive) que si le contenu a réellement changé. */
+function saveState(silent) {
+  var json = JSON.stringify(state);
+  if (json === lastSerialized) return false;
+  try {
+    localStorage.setItem(STORAGE_KEY, json);
+    lastSerialized = json;
+    if (window.__driveNotifySave) window.__driveNotifySave();
+    return true;
+  } catch (e) {
+    if (!silent) alert("Impossible de sauvegarder (stockage plein ou indisponible).");
+    return false;
+  }
+}
+function loadUI() {
+  try {
+    var u = JSON.parse(localStorage.getItem(UI_KEY) || "{}");
+    if (u && TAB_KEYS.indexOf(u.tab) !== -1) ui.tab = u.tab;
+    if (u && u.expanded && typeof u.expanded === "object") ui.expanded = u.expanded;
+  } catch (e) { /* préférences absentes ou illisibles */ }
+}
+function saveUI() {
+  try { localStorage.setItem(UI_KEY, JSON.stringify({ tab: ui.tab, expanded: ui.expanded })); } catch (e) { /* ignoré */ }
+}
+function pruneUI() {
+  var ids = {}, k;
+  for (var i = 0; i < state.charges.length; i++) ids[state.charges[i].id] = true;
+  for (k in ui.expanded) { if (!ids[k]) delete ui.expanded[k]; }
+  for (k in ui.histOpen) { if (!ids[k]) delete ui.histOpen[k]; }
+}
+function commit() { saveState(); render(); }
+
+/* ======================= Accès / logique métier ======================= */
+function findCharge(id) { for (var i = 0; i < state.charges.length; i++) { if (state.charges[i].id === id) return state.charges[i]; } return null; }
+function findItem(c, id) { for (var i = 0; i < c.items.length; i++) { if (c.items[i].id === id) return c.items[i]; } return null; }
+function findLoc(c, id) { for (var i = 0; i < c.locations.length; i++) { if (c.locations[i].id === id) return c.locations[i]; } return null; }
+function sectionList(key) { return state.charges.filter(function (c) { return c.section === key; }); }
+function isAction(it) { return it.type === "action"; }
+function progressOf(c) {
+  var t = 0, d = 0;
+  for (var i = 0; i < c.items.length; i++) { if (c.items[i].type === "action") { t++; if (c.items[i].done) d++; } }
+  return { done: d, total: t, pct: t ? Math.round(100 * d / t) : 0 };
+}
+function lateActionsCount(c) {
+  if (c.section !== "routine" && c.status === "cloture") return 0;
+  var today = todayISO(), n = 0;
+  for (var i = 0; i < c.items.length; i++) {
+    var it = c.items[i];
+    if (it.type === "action" && !it.done && it.dueDate && it.dueDate < today) n++;
+  }
+  return n;
+}
+function isChargeLate(c) {
+  if (c.section === "routine") return !!c.nextDue && c.nextDue < todayISO();
+  if (c.status === "cloture") return false;
+  return (!!c.dueDate && c.dueDate < todayISO()) || lateActionsCount(c) > 0;
+}
+function setStatus(c, st) {
+  c.status = validStatus(st) ? st : "a_faire";
+  if (c.status === "cloture") { if (!c.closedAt) c.closedAt = todayISO(); } else { c.closedAt = ""; }
+}
+function reopenIfClosed(c) {
+  if (c.section !== "routine" && c.status === "cloture") { setStatus(c, "en_cours"); return true; }
+  return false;
+}
+function toggleItem(cid, iid, checked) {
+  var c = findCharge(cid), it = c && findItem(c, iid), msg = "";
+  if (!it || it.type !== "action") return;
+  it.done = !!checked;
+  it.doneAt = checked ? todayISO() : "";
+  if (c.section !== "routine") {
+    if (checked && c.status === "a_faire") setStatus(c, "en_cours");
+    if (!checked && reopenIfClosed(c)) msg = "Charge rouverte : une action a été décochée.";
+  }
+  commit();
+  if (msg) toast(msg);
+}
+function addItem(cid, type, text) {
+  var c = findCharge(cid);
+  text = normText(text).trim();
+  if (!c || !text) return;
+  if (!validType(type)) type = "action";
+  c.items.push({ id: uid("i-"), type: type, text: text, done: false, doneAt: "", dueDate: "" });
+  var reopened = type === "action" && reopenIfClosed(c);
+  ui.expanded[cid] = true; saveUI();
+  ui.pendingFocus = cid;
+  commit();
+  if (reopened) toast("Charge rouverte : une nouvelle action a été ajoutée.");
+}
+function moveInArray(arr, idx, dir) {
+  var j = idx + dir;
+  if (idx < 0 || j < 0 || j >= arr.length) return false;
+  var t = arr[idx]; arr[idx] = arr[j]; arr[j] = t;
+  return true;
+}
+function moveCharge(id, dir) {
+  var idx = -1, i;
+  for (i = 0; i < state.charges.length; i++) { if (state.charges[i].id === id) { idx = i; break; } }
+  if (idx < 0) return;
+  var sec = state.charges[idx].section, j = idx + dir;
+  while (j >= 0 && j < state.charges.length && state.charges[j].section !== sec) j += dir;
+  if (j < 0 || j >= state.charges.length) return;
+  var t = state.charges[idx]; state.charges[idx] = state.charges[j]; state.charges[j] = t;
+  commit();
+}
+function finishCycle(c, doneISO, nextISO) {
+  var p = progressOf(c);
+  c.history.unshift({ date: doneISO, done: p.done, total: p.total });
+  if (c.history.length > HISTORY_MAX) c.history.length = HISTORY_MAX;
+  c.lastDone = doneISO;
+  c.nextDue = nextISO || "";
+  for (var i = 0; i < c.items.length; i++) { if (c.items[i].type === "action") { c.items[i].done = false; c.items[i].doneAt = ""; } }
+}
+function resetProgress(clearDates) {
+  for (var i = 0; i < state.charges.length; i++) {
+    var c = state.charges[i];
+    for (var j = 0; j < c.items.length; j++) {
+      c.items[j].done = false; c.items[j].doneAt = "";
+      if (clearDates) c.items[j].dueDate = "";
+    }
+    c.status = "a_faire"; c.closedAt = "";
+    c.history = []; c.lastDone = "";
+    if (clearDates) { c.dueDate = ""; c.nextDue = ""; }
+  }
+}
+
+
+/* ---- Personnes / services ---- */
+function findService(id) { for (var i = 0; i < state.services.length; i++) { if (state.services[i].id === id) return state.services[i]; } return null; }
+function findPerson(id) { for (var i = 0; i < state.people.length; i++) { if (state.people[i].id === id) return state.people[i]; } return null; }
+function serviceName(id) { var s = findService(id); return s ? s.name : ""; }
+function personName(id) { var q = findPerson(id); return q ? q.name : ""; }
+function findServiceByName(name) {
+  var f = fold(normText(name).trim());
+  if (!f) return null;
+  for (var i = 0; i < state.services.length; i++) { if (fold(state.services[i].name) === f) return state.services[i]; }
+  return null;
+}
+function findPersonByName(name) {
+  var f = fold(normText(name).trim());
+  if (!f) return null;
+  for (var i = 0; i < state.people.length; i++) { if (fold(state.people[i].name) === f) return state.people[i]; }
+  return null;
+}
+function getOrCreateService(name) {
+  name = normText(name).trim().slice(0, 80);
+  var s = findServiceByName(name);
+  if (!s) { s = { id: uid("s-"), name: name }; state.services.push(s); }
+  return s;
+}
+function getOrCreatePerson(name, serviceId) {
+  name = normText(name).trim().slice(0, 80);
+  var q = findPersonByName(name);
+  if (!q) { q = { id: uid("p-"), name: name, serviceId: serviceId || "" }; state.people.push(q); }
+  return q;
+}
+/* Construit une référence à partir de deux textes saisis ; crée la personne / le service s'il n'existe pas. */
+function refFromInputs(pName, sName) {
+  pName = normText(pName).trim(); sName = normText(sName).trim();
+  if (!pName && !sName) return null;
+  var q = pName ? findPersonByName(pName) : null, sid = "";
+  if (sName) sid = getOrCreateService(sName).id;
+  else if (q) sid = q.serviceId;
+  if (pName && !q) q = getOrCreatePerson(pName, sid);
+  return { person: q ? q.id : "", service: sid };
+}
+function refText(ref) {
+  if (!ref) return "";
+  var pn = ref.person ? personName(ref.person) : "", sn = ref.service ? serviceName(ref.service) : "";
+  return pn && sn ? pn + " · " + sn : (pn || sn);
+}
+function chargeRefs(c, role) {
+  if (role === "linked") return c.linked;
+  return c[role] ? [c[role]] : [];
+}
+function refUsage(kind, id) {
+  var n = 0, roles = ["origin", "owner", "linked"];
+  for (var i = 0; i < state.charges.length; i++) {
+    for (var r = 0; r < roles.length; r++) {
+      var refs = chargeRefs(state.charges[i], roles[r]);
+      for (var j = 0; j < refs.length; j++) { if (refs[j][kind] === id) n++; }
+    }
+  }
+  return n;
+}
+/* Retire une personne / un service supprimé de toutes les charges (l'autre moitié de la référence est conservée). */
+function stripRefs(kind, id) {
+  for (var i = 0; i < state.charges.length; i++) {
+    var c = state.charges[i], k;
+    if (c.origin && c.origin[kind] === id) { c.origin[kind] = ""; if (!c.origin.person && !c.origin.service) c.origin = null; }
+    if (c.owner && c.owner[kind] === id) { c.owner[kind] = ""; if (!c.owner.person && !c.owner.service) c.owner = null; }
+    var kept = [];
+    for (k = 0; k < c.linked.length; k++) {
+      if (c.linked[k][kind] === id) c.linked[k][kind] = "";
+      if ((c.linked[k].person || c.linked[k].service) && !kept.some(function (y) { return sameRef(c.linked[k], y); })) kept.push(c.linked[k]);
+    }
+    c.linked = kept;
+  }
+}
+function whoExists(v) {
+  if (!v) return true;
+  return v.charAt(0) === "p" ? !!findPerson(v.slice(2)) : !!findService(v.slice(2));
+}
+function matchWho(c) {
+  if (!ui.who) return true;
+  var kind = ui.who.charAt(0) === "p" ? "person" : "service", id = ui.who.slice(2);
+  var roles = ui.role === "any" || !ui.role ? ["origin", "owner", "linked"] : [ui.role];
+  for (var r = 0; r < roles.length; r++) {
+    var refs = chargeRefs(c, roles[r]);
+    for (var j = 0; j < refs.length; j++) { if (refs[j][kind] === id) return true; }
+  }
+  return false;
+}
+
+/* ---- Pièces jointes ---- */
+function findAtt(c, id) { for (var i = 0; i < c.attachments.length; i++) { if (c.attachments[i].id === id) return c.attachments[i]; } return null; }
+function fmtSize(n) {
+  if (n < 1024) return n + " o";
+  if (n < 1048576) return Math.round(n / 1024) + " Ko";
+  return (n / 1048576).toFixed(1).replace(".", ",") + " Mo";
+}
+function extOf(name) { var m = /\.([A-Za-z0-9]{1,5})$/.exec(name || ""); return m ? m[1].toUpperCase() : "FICHIER"; }
+function dataUrlBytes(du) { var i = du.indexOf(","); return Math.round((du.length - i - 1) * 0.75); }
+function driveReady() {
+  return typeof window.__driveHasToken === "function" && window.__driveHasToken() && typeof window.__driveUploadDocument === "function";
+}
+function driveViewLinkOf(meta) { return meta.webViewLink || ("https://drive.google.com/file/d/" + meta.id + "/view"); }
+function readAsDataURL(file, cb) {
+  var r = new FileReader();
+  r.onload = function () { cb(r.result); };
+  r.onerror = function () { cb(null); };
+  r.readAsDataURL(file);
+}
+function loadImage(file, cb) {
+  readAsDataURL(file, function (url) {
+    if (!url) { cb(null); return; }
+    var img = new Image();
+    img.onload = function () { cb(img); };
+    img.onerror = function () { cb(null); };
+    img.src = url;
+  });
+}
+function drawScaled(img, maxDim) {
+  var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  if (!w || !h) return null;
+  var k = Math.min(1, maxDim / Math.max(w, h));
+  var cw = Math.max(1, Math.round(w * k)), ch = Math.max(1, Math.round(h * k));
+  var cv = document.createElement("canvas");
+  cv.width = cw; cv.height = ch;
+  var ctx = cv.getContext("2d");
+  if (!ctx) return null;
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cw, ch);   /* fond blanc pour les PNG transparents */
+  ctx.drawImage(img, 0, 0, cw, ch);
+  return cv;
+}
+function canvasToBlob(cv, quality, cb) {
+  if (cv.toBlob) { cv.toBlob(function (b) { cb(b); }, "image/jpeg", quality); return; }
+  try {
+    var du = cv.toDataURL("image/jpeg", quality), bin = atob(du.split(",")[1]), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    cb(new Blob([arr], { type: "image/jpeg" }));
+  } catch (e) { cb(null); }
+}
+/* Traite un fichier choisi → cb(pièce jointe) ou cb(null, message d'erreur). */
+function processFile(file, cb) {
+  var type = file.type || "", name = file.name || "fichier";
+  var base = { id: uid("a-"), name: name, type: type, size: file.size || 0, addedAt: todayISO(), storage: "local", driveFileId: "", driveViewLink: "", thumb: "", dataUrl: "" };
+  function extend(o) { for (var k in o) base[k] = o[k]; return base; }
+  function asDocument() {
+    if (driveReady()) {
+      window.__driveUploadDocument(file).then(function (meta) {
+        cb(extend({ storage: "drive", driveFileId: meta.id, driveViewLink: driveViewLinkOf(meta) }));
+      }, function () { cb(null, "Envoi vers Drive impossible pour « " + name + " »."); });
+      return;
+    }
+    if (file.size > LOCAL_FILE_MAX) { cb(null, "« " + name + " » dépasse " + fmtSize(LOCAL_FILE_MAX) + " : connecte Google Drive pour envoyer des fichiers volumineux."); return; }
+    readAsDataURL(file, function (du) {
+      if (!du) cb(null, "Lecture impossible : « " + name + " ».");
+      else cb(extend({ dataUrl: du }));
+    });
+  }
+  if (!/^image\/(jpeg|png|gif|webp|bmp)$/i.test(type)) { asDocument(); return; }
+  loadImage(file, function (img) {
+    var thumbCv = img ? drawScaled(img, IMG_THUMB) : null;
+    if (!thumbCv) { asDocument(); return; }             /* décodage impossible (ex. HEIC) : conservé comme document */
+    var thumb = thumbCv.toDataURL("image/jpeg", 0.7);
+    var jpgName = name.replace(/\.[^.\\\/]+$/, "") + ".jpg";
+    function asLocalImage() {
+      var cv = drawScaled(img, IMG_FULL_MAX);
+      var du = cv ? cv.toDataURL("image/jpeg", 0.72) : "";
+      if (!du) { cb(null, "Image illisible : « " + name + " »."); return; }
+      cb(extend({ name: jpgName, type: "image/jpeg", size: dataUrlBytes(du), thumb: thumb, dataUrl: du }));
+    }
+    if (!driveReady()) { asLocalImage(); return; }
+    var big = drawScaled(img, IMG_DRIVE_MAX);
+    canvasToBlob(big, 0.82, function (blob) {
+      if (!blob) { asLocalImage(); return; }
+      var up = blob;
+      try { up = new File([blob], jpgName, { type: "image/jpeg" }); } catch (e) { up.name = jpgName; }
+      window.__driveUploadDocument(up).then(function (meta) {
+        cb(extend({ name: jpgName, type: "image/jpeg", size: up.size || blob.size, thumb: thumb, storage: "drive", driveFileId: meta.id, driveViewLink: driveViewLinkOf(meta) }));
+      }, function () { asLocalImage(); });              /* Drive indisponible : repli local (photo réduite) */
+    });
+  });
+}
+var attTarget = null;
+function addFiles(cid, files) {
+  var list = [], i, added = 0, errors = [];
+  for (i = 0; i < files.length; i++) list.push(files[i]);
+  if (!list.length) return;
+  toast(list.length > 1 ? "Ajout de " + list.length + " fichiers…" : "Ajout de « " + shorten(list[0].name, 40) + " »…");
+  function next() {
+    if (!list.length) {
+      render();
+      if (added) toast(added + (added > 1 ? " pièces jointes ajoutées." : " pièce jointe ajoutée.") + (errors.length ? " " + errors.length + " échec(s)." : ""));
+      if (errors.length) alert(errors.join("\n"));
+      return;
+    }
+    processFile(list.shift(), function (att, err) {
+      var c = findCharge(cid);
+      if (att && c) {
+        c.attachments.push(att);
+        if (saveState(true)) { added++; ui.expanded[cid] = true; saveUI(); }
+        else { c.attachments.pop(); errors.push("Espace de stockage local insuffisant pour « " + att.name + " » (connecte Drive ou supprime des pièces jointes)."); }
+      } else if (!att) errors.push(err || "Fichier ignoré.");
+      next();
+    });
+  }
+  next();
+}
+function downloadDataUrl(name, du) {
+  var a = document.createElement("a");
+  a.href = du; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function openAttachment(c, a) {
+  if (!a) return;
+  if (a.storage === "drive") { if (a.driveViewLink) window.open(a.driveViewLink, "_blank", "noopener"); return; }
+  if (a.thumb && /^data:image\//i.test(a.dataUrl)) {
+    openModal({
+      title: a.name, cls: "wide",
+      body: '<img class="lightbox-img" src="' + esc(a.dataUrl) + '" alt="' + esc(a.name) + '">',
+      buttons: [
+        { label: "Fermer", kind: "ghost" },
+        { label: "Télécharger", kind: "primary", onClick: function () { downloadDataUrl(a.name, a.dataUrl); return false; } }
+      ]
+    });
+    return;
+  }
+  downloadDataUrl(a.name, a.dataUrl);
+}
+function deleteAttachment(c, a) {
+  if (!c || !a) return;
+  if (!confirm("Retirer cette pièce jointe ?\n\n« " + shorten(a.name, 100) + " »" + (a.storage === "drive" ? "\n\nLe fichier sera aussi supprimé de ton Drive." : ""))) return;
+  if (a.storage === "drive" && a.driveFileId && typeof window.__driveDeleteFile === "function") window.__driveDeleteFile(a.driveFileId);
+  c.attachments = c.attachments.filter(function (x) { return x.id !== a.id; });
+  commit();
+}
+function updateGauge() {
+  var el = $("#gauge");
+  if (!el) return;
+  var n = 0, i;
+  for (i = 0; i < state.charges.length; i++) n += state.charges[i].attachments.length;
+  var mb = lastSerialized.length / 1048576, pct = Math.min(100, Math.round(100 * mb / QUOTA_MB));
+  if (!n && pct < 40) { el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  el.className = "gauge" + (pct >= 85 ? " is-danger" : (pct >= 60 ? " is-warn" : ""));
+  el.textContent = "Espace local utilisé : " + mb.toFixed(2).replace(".", ",") + " Mo (≈ " + pct + " % de " + QUOTA_MB + " Mo estimés)" + (n ? " · " + n + " pièce" + (n > 1 ? "s" : "") + " jointe" + (n > 1 ? "s" : "") : "");
+}
+
+/* ======================= Recherche ======================= */
+function chargeHaystack(c) {
+  var parts = [c.title, c.note, sectionOf(c.section).title], i;
+  for (i = 0; i < c.items.length; i++) parts.push(c.items[i].text);
+  for (i = 0; i < c.locations.length; i++) parts.push(c.locations[i].context, c.locations[i].label, c.locations[i].path);
+  parts.push(refText(c.origin), refText(c.owner));
+  for (i = 0; i < c.linked.length; i++) parts.push(refText(c.linked[i]));
+  for (i = 0; i < c.attachments.length; i++) parts.push(c.attachments[i].name);
+  return fold(parts.join(" \n "));
+}
+function matchTokens(hay) {
+  for (var i = 0; i < ui.tokens.length; i++) { if (hay.indexOf(ui.tokens[i]) === -1) return false; }
+  return true;
+}
+function matchCharge(c) { return !ui.tokens.length || matchTokens(chargeHaystack(c)); }
+/* Échappe le texte et surligne les termes recherchés (insensible à la casse et aux accents). */
+function hl(text) {
+  text = normText(text);
+  if (!ui.tokens.length) return esc(text);
+  var f = fold(text);
+  if (f.length !== text.length) return esc(text);
+  var ranges = [], i, k, idx;
+  for (i = 0; i < ui.tokens.length; i++) {
+    k = ui.tokens[i]; idx = 0;
+    while ((idx = f.indexOf(k, idx)) !== -1) { ranges.push([idx, idx + k.length]); idx += k.length; }
+  }
+  if (!ranges.length) return esc(text);
+  ranges.sort(function (a, b) { return a[0] - b[0]; });
+  var merged = [ranges[0]];
+  for (i = 1; i < ranges.length; i++) {
+    var last = merged[merged.length - 1];
+    if (ranges[i][0] <= last[1]) { if (ranges[i][1] > last[1]) last[1] = ranges[i][1]; } else merged.push(ranges[i]);
+  }
+  var out = "", pos = 0;
+  for (i = 0; i < merged.length; i++) {
+    out += esc(text.slice(pos, merged[i][0])) + "<mark>" + esc(text.slice(merged[i][0], merged[i][1])) + "</mark>";
+    pos = merged[i][1];
+  }
+  return out + esc(text.slice(pos));
+}
+function setQuery(q) {
+  ui.query = q;
+  ui.tokens = fold(q).split(/\s+/).filter(function (t) { return t.length > 0; });
+  $("#search-clear").classList.toggle("hidden", !q);
+}
+function clearSearch() { $("#search").value = ""; setQuery(""); }
+
+/* ======================= Rendu : briques ======================= */
+function dueChip(iso, label, forceCls) {
+  var st = dueState(iso);
+  var cls = forceCls || (st === "late" ? "c-brick" : (st === "soon" ? "c-ochre" : ""));
+  return '<span class="chip mono ' + cls + '">' + svg("calendar") + (label ? esc(label) + " " : "") + fmtDate(iso) + " · " + relText(iso) + "</span>";
+}
+function statusChip(key) {
+  var S = statusOf(key);
+  return '<span class="chip ' + S.cls + '">' + esc(S.label) + "</span>";
+}
+function selectOptions(list, current) {
+  var h = "";
+  for (var i = 0; i < list.length; i++) h += '<option value="' + esc(list[i].key) + '"' + (list[i].key === current ? " selected" : "") + ">" + esc(list[i].label) + "</option>";
+  return h;
+}
+
+function renderRow(c, it, i, n) {
+  var cls = "row t-" + it.type + (it.done ? " is-done" : "");
+  var lead, meta = "";
+  if (it.type === "action") {
+    lead = '<input type="checkbox" class="chk" data-act="item-check" data-charge="' + esc(c.id) + '" data-item="' + esc(it.id) + '"' + (it.done ? " checked" : "") + ' aria-label="Cocher : ' + esc(shorten(it.text, 60)) + '">';
+    if (it.done && it.doneAt) meta += '<span class="chip c-moss mono">' + svg("check") + "Fait le " + fmtDate(it.doneAt) + "</span>";
+    if (!it.done && it.dueDate) meta += dueChip(it.dueDate, "Échéance");
+  } else if (it.type === "note") {
+    lead = svg("note", "ico");
+  } else {
+    lead = '<span class="ico"></span>';
+  }
+  var canReorder = true;
+  return '<li class="' + cls + '">' + lead +
+    '<div class="row-main"><div class="txt">' + hl(it.text) + "</div>" + (meta ? '<div class="row-meta">' + meta + "</div>" : "") + "</div>" +
+    '<div class="row-actions">' +
+    '<button type="button" class="ibtn" data-act="move-item" data-dir="-1" data-charge="' + esc(c.id) + '" data-item="' + esc(it.id) + '" aria-label="Monter la ligne" title="Monter"' + (i === 0 ? " disabled" : "") + ">" + svg("up") + "</button>" +
+    '<button type="button" class="ibtn" data-act="move-item" data-dir="1" data-charge="' + esc(c.id) + '" data-item="' + esc(it.id) + '" aria-label="Descendre la ligne" title="Descendre"' + (i === n - 1 ? " disabled" : "") + ">" + svg("down") + "</button>" +
+    '<button type="button" class="ibtn" data-act="edit-item" data-charge="' + esc(c.id) + '" data-item="' + esc(it.id) + '" aria-label="Modifier la ligne" title="Modifier">' + svg("edit") + "</button>" +
+    '<button type="button" class="ibtn danger" data-act="del-item" data-charge="' + esc(c.id) + '" data-item="' + esc(it.id) + '" aria-label="Supprimer la ligne" title="Supprimer">' + svg("trash") + "</button>" +
+    "</div></li>";
+}
+
+function isUrl(s) { return /^https?:\/\/\S+$/i.test(s); }
+function renderLoc(c, l) {
+  var pathHtml = "";
+  if (l.path) pathHtml = isUrl(l.path)
+    ? '<div class="loc-path"><a href="' + esc(l.path) + '" target="_blank" rel="noopener noreferrer">' + hl(l.path) + "</a></div>"
+    : '<div class="loc-path">' + hl(l.path) + "</div>";
+  return '<div class="loc">' + svg("folder", "ico") +
+    '<div class="loc-main">' + (l.context ? '<div class="loc-ctx">' + hl(l.context) + "</div>" : "") +
+    (l.label ? '<div class="loc-label">' + hl(l.label) + "</div>" : "") + pathHtml + "</div>" +
+    '<button type="button" class="ibtn" data-act="copy-loc" data-charge="' + esc(c.id) + '" data-loc="' + esc(l.id) + '" aria-label="' + (l.path ? "Copier le chemin" : "Copier le texte") + '" title="' + (l.path ? "Copier le chemin" : "Copier le texte") + '">' + svg("copy") + "</button>" +
+    '<button type="button" class="ibtn" data-act="edit-loc" data-charge="' + esc(c.id) + '" data-loc="' + esc(l.id) + '" aria-label="Modifier l’emplacement" title="Modifier">' + svg("edit") + "</button>" +
+    '<button type="button" class="ibtn danger" data-act="del-loc" data-charge="' + esc(c.id) + '" data-loc="' + esc(l.id) + '" aria-label="Supprimer l’emplacement" title="Supprimer">' + svg("trash") + "</button>" +
+    "</div>";
+}
+
+
+function refChip(ref) {
+  if (!ref) return "";
+  var pn = ref.person ? personName(ref.person) : "", sn = ref.service ? serviceName(ref.service) : "";
+  if (!pn && !sn) return "";
+  return '<span class="pchip">' + svg(pn ? "user" : "users") + hl(pn || sn) + (pn && sn ? " <small>" + hl(sn) + "</small>" : "") + "</span>";
+}
+function renderPeople(c) {
+  if (!c.origin && !c.owner && !c.linked.length) {
+    return '<div class="people-strip"><span class="people-empty">Demandeur, responsable et personnes liées non renseignés — <button type="button" class="linkbtn" data-act="edit-charge" data-id="' + esc(c.id) + '">renseigner</button></span></div>';
+  }
+  var none = '<span class="people-empty">—</span>';
+  var lk = c.linked.map(refChip).join("");
+  return '<div class="people-strip">' +
+    '<div class="pf-role"><b>Demandeur</b>' + (refChip(c.origin) || none) + "</div>" +
+    '<div class="pf-role"><b>Responsable</b>' + (refChip(c.owner) || none) + "</div>" +
+    '<div class="pf-role"><b>Personnes liées</b>' + (lk || none) + "</div></div>";
+}
+function renderAtt(c, a) {
+  var thumb = a.thumb ? '<img src="' + esc(a.thumb) + '" alt="">' : '<span class="ext">' + esc(extOf(a.name)) + "</span>";
+  var sub = fmtSize(a.size) + (a.addedAt ? " · " + fmtDate(a.addedAt) : "") + " · " + (a.storage === "drive" ? "Drive" : "Local");
+  return '<div class="att"><button type="button" class="att-open" data-act="open-att" data-charge="' + esc(c.id) + '" data-att="' + esc(a.id) + '" title="' + (a.storage === "drive" ? "Ouvrir dans Drive" : (a.thumb ? "Agrandir" : "Télécharger")) + '" aria-label="Ouvrir : ' + esc(a.name) + '">' + thumb + "</button>" +
+    '<div class="att-info"><div class="att-name" title="' + esc(a.name) + '">' + hl(a.name) + '</div><div class="att-sub">' + esc(sub) + "</div></div>" +
+    '<button type="button" class="ibtn danger" data-act="del-att" data-charge="' + esc(c.id) + '" data-att="' + esc(a.id) + '" aria-label="Retirer la pièce jointe" title="Retirer">' + svg("trash") + "</button></div>";
+}
+function renderAtts(c) {
+  var h = '<div class="blk"><div class="blk-title"><span>Pièces jointes (' + c.attachments.length + ')</span><button type="button" class="btn btn-ghost btn-sm" data-act="add-att" data-id="' + esc(c.id) + '">' + svg("plus") + "Photo / document</button></div>";
+  if (c.attachments.length) {
+    h += '<div class="att-grid">';
+    for (var i = 0; i < c.attachments.length; i++) h += renderAtt(c, c.attachments[i]);
+    h += "</div>";
+  } else h += '<div class="empty-inline">Aucune photo ni document joint.</div>';
+  return h + "</div>";
+}
+function renderWhoFilter() {
+  if (!state.people.length && !state.services.length) return "";
+  var h = '<div class="who-filters"><label for="flt-who">Personne / service</label><select id="flt-who" class="sel" data-act="filter-who"><option value="">Toutes les charges</option>', i;
+  if (state.people.length) {
+    h += '<optgroup label="Personnes">';
+    for (i = 0; i < state.people.length; i++) h += '<option value="p:' + esc(state.people[i].id) + '"' + (ui.who === "p:" + state.people[i].id ? " selected" : "") + ">" + esc(state.people[i].name) + "</option>";
+    h += "</optgroup>";
+  }
+  if (state.services.length) {
+    h += '<optgroup label="Services">';
+    for (i = 0; i < state.services.length; i++) h += '<option value="s:' + esc(state.services[i].id) + '"' + (ui.who === "s:" + state.services[i].id ? " selected" : "") + ">" + esc(state.services[i].name) + "</option>";
+    h += "</optgroup>";
+  }
+  h += "</select>";
+  if (ui.who) {
+    var roles = [["any", "Tous les rôles"], ["owner", "Responsable"], ["origin", "Demandeur"], ["linked", "Personne liée"]];
+    h += '<label for="flt-role">Rôle</label><select id="flt-role" class="sel" data-act="filter-role">';
+    for (i = 0; i < roles.length; i++) h += '<option value="' + roles[i][0] + '"' + (ui.role === roles[i][0] ? " selected" : "") + ">" + roles[i][1] + "</option>";
+    h += "</select>";
+  }
+  return h + "</div>";
+}
+function ownerSuffix(c) { var t = refText(c.owner); return t ? " · resp. " + t : ""; }
+
+function renderMeta(c) {
+  var h = '<div class="meta-strip">';
+  if (c.section === "routine") {
+    h += '<span class="mf"><b>Périodicité</b> ' + esc(c.recurrence ? recLabel(c.recurrence) : "aucune") + "</span>";
+    h += '<label class="mf"><b>Prochaine échéance</b> <input type="date" class="mini-inp" data-act="charge-nextdue" data-id="' + esc(c.id) + '" value="' + esc(c.nextDue) + '"></label>';
+    h += '<span class="mf"><b>Dernière réalisation</b> ' + (c.lastDone ? fmtDate(c.lastDone) : "—") + "</span>";
+  } else {
+    h += '<label class="mf"><b>Statut</b> <select class="mini-inp sans" data-act="charge-status" data-id="' + esc(c.id) + '">' + selectOptions(STATUSES, c.status) + "</select></label>";
+    h += '<label class="mf"><b>Échéance</b> <input type="date" class="mini-inp" data-act="charge-due" data-id="' + esc(c.id) + '" value="' + esc(c.dueDate) + '"></label>';
+    if (c.status === "cloture" && c.closedAt) h += '<span class="mf"><b>Clôturé le</b> ' + fmtDate(c.closedAt) + "</span>";
+  }
+  return h + "</div>";
+}
+function renderBanner(c) {
+  var p = progressOf(c);
+  if (!p.total || p.done !== p.total) return "";
+  if (c.section === "routine") {
+    return '<div class="banner">' + svg("check") + 'Toutes les étapes sont cochées. <button type="button" class="btn btn-primary btn-sm" data-act="finish-cycle" data-id="' + esc(c.id) + '">Terminer le cycle</button></div>';
+  }
+  if (c.status === "cloture") return "";
+  return '<div class="banner">' + svg("check") + 'Toutes les actions sont cochées. <button type="button" class="btn btn-primary btn-sm" data-act="close-charge" data-id="' + esc(c.id) + '">Clôturer la charge</button></div>';
+}
+function renderHistory(c) {
+  if (!c.history.length) return "";
+  var open = !!ui.histOpen[c.id];
+  var h = '<div class="blk"><div class="blk-title"><button type="button" class="btn btn-ghost btn-sm" data-act="toggle-history" data-id="' + esc(c.id) + '" aria-expanded="' + open + '">' + svg("clock") + "Historique des cycles (" + c.history.length + ")</button></div>";
+  if (open) {
+    for (var i = 0; i < c.history.length; i++) {
+      var x = c.history[i];
+      h += '<div class="hist-row"><span class="d">' + fmtDate(x.date) + '</span><span class="s">' + x.done + " / " + x.total + ' étape' + (x.total > 1 ? "s" : "") + '</span><button type="button" class="ibtn danger" data-act="del-history" data-id="' + esc(c.id) + '" data-idx="' + i + '" aria-label="Supprimer ce cycle de l’historique" title="Supprimer">' + svg("x") + "</button></div>";
+    }
+  }
+  return h + "</div>";
+}
+
+function renderCard(c, idx, count, open, canReorder) {
+  var isRoutine = c.section === "routine";
+  var p = progressOf(c);
+  var cls = "charge-card";
+  if (isRoutine) { var ds = c.nextDue ? dueState(c.nextDue) : null; if (ds) cls += " is-" + ds; }
+  else cls += " st-" + c.status;
+  var chips = "";
+  if (isRoutine) {
+    chips += '<span class="chip">' + svg("repeat") + esc(c.recurrence ? recLabel(c.recurrence) : "Sans périodicité") + "</span>";
+    if (c.nextDue) chips += dueChip(c.nextDue, "Prochaine");
+    else if (c.recurrence) chips += '<span class="chip c-ochre">Échéance à définir</span>';
+  } else {
+    chips += statusChip(c.status);
+    if (c.status !== "cloture" && c.dueDate) chips += dueChip(c.dueDate, "Échéance");
+    if (c.status === "cloture" && c.closedAt) chips += '<span class="chip c-moss mono">' + svg("check") + "Clôturé le " + fmtDate(c.closedAt) + "</span>";
+  }
+  if (c.owner) chips += '<span class="chip c-indigo">' + svg("user") + "Resp. " + hl(refText(c.owner)) + "</span>";
+  var late = lateActionsCount(c);
+  if (late) chips += '<span class="chip c-brick">' + svg("alert") + late + " action" + (late > 1 ? "s" : "") + " en retard</span>";
+  if (c.locations.length) chips += '<span class="chip" title="Emplacements">' + svg("folder") + c.locations.length + "</span>";
+  if (c.attachments.length) chips += '<span class="chip" title="Pièces jointes">' + svg("paperclip") + c.attachments.length + "</span>";
+
+  var h = '<article class="' + cls + '" id="charge-' + esc(c.id) + '" data-id="' + esc(c.id) + '">';
+  h += '<h3 class="card-h"><button type="button" class="card-head" data-act="toggle" data-id="' + esc(c.id) + '" aria-expanded="' + (open ? "true" : "false") + '">' +
+    svg("chevron", "chev") +
+    '<span class="head-main"><span class="card-title">' + hl(c.title || "(sans titre)") + '</span><span class="chips">' + chips + "</span></span>" +
+    '<span class="head-progress">' + (p.total ? '<span class="bar"><i style="width:' + p.pct + '%"></i></span><span class="prog-num">' + p.done + "/" + p.total + "</span>" : "") + "</span>" +
+    "</button></h3>";
+  if (open) {
+    h += '<div class="card-body">';
+    if (c.note) h += '<p class="card-note">' + hl(c.note) + "</p>";
+    h += renderMeta(c) + renderPeople(c) + renderBanner(c);
+    if (c.items.length) {
+      h += '<ul class="rows">';
+      for (var i = 0; i < c.items.length; i++) h += renderRow(c, c.items[i], i, c.items.length);
+      h += "</ul>";
+    } else {
+      h += '<div class="empty-inline">Aucune ligne pour l’instant — ajoute une action ci-dessous.</div>';
+    }
+    h += '<div class="addrow"><input type="text" class="inp add-item-input" data-charge="' + esc(c.id) + '" placeholder="Ajouter une ligne…  (Entrée pour valider)" aria-label="Nouvelle ligne"><select class="sel add-item-type" data-charge="' + esc(c.id) + '" aria-label="Type de ligne">' +
+      selectOptions(ITEM_TYPES.map(function (t) { return { key: t.key, label: t.key === "action" ? "Action" : (t.key === "note" ? "Note" : "Sous-titre") }; }), "action") +
+      '</select><button type="button" class="btn btn-ghost btn-sm" data-act="add-item" data-id="' + esc(c.id) + '">' + svg("plus") + "Ajouter</button></div>";
+    h += '<div class="blk"><div class="blk-title"><span>Emplacements (' + c.locations.length + ')</span><button type="button" class="btn btn-ghost btn-sm" data-act="add-loc" data-id="' + esc(c.id) + '">' + svg("plus") + "Emplacement</button></div>";
+    if (c.locations.length) { for (var j = 0; j < c.locations.length; j++) h += renderLoc(c, c.locations[j]); }
+    else h += '<div class="empty-inline">Aucun emplacement de stockage renseigné.</div>';
+    h += "</div>";
+    h += renderAtts(c);
+    if (isRoutine) h += renderHistory(c);
+    h += '<div class="card-foot">';
+    if (isRoutine) h += '<button type="button" class="btn btn-primary btn-sm" data-act="finish-cycle" data-id="' + esc(c.id) + '">' + svg("check") + "Terminer le cycle</button>";
+    else if (c.status !== "cloture") h += '<button type="button" class="btn btn-ghost btn-sm" data-act="close-charge" data-id="' + esc(c.id) + '">' + svg("check") + "Clôturer</button>";
+    else h += '<button type="button" class="btn btn-ghost btn-sm" data-act="reopen-charge" data-id="' + esc(c.id) + '">Rouvrir</button>';
+    if (p.done > 0) h += '<button type="button" class="btn btn-ghost btn-sm" data-act="uncheck-all" data-id="' + esc(c.id) + '">Décocher tout</button>';
+    h += '<span class="spacer"></span>';
+    if (canReorder) {
+      h += '<button type="button" class="ibtn" data-act="move-charge" data-dir="-1" data-id="' + esc(c.id) + '" aria-label="Monter la charge" title="Monter"' + (idx === 0 ? " disabled" : "") + ">" + svg("up") + "</button>" +
+        '<button type="button" class="ibtn" data-act="move-charge" data-dir="1" data-id="' + esc(c.id) + '" aria-label="Descendre la charge" title="Descendre"' + (idx === count - 1 ? " disabled" : "") + ">" + svg("down") + "</button>";
+    }
+    h += '<button type="button" class="btn btn-ghost btn-sm" data-act="edit-charge" data-id="' + esc(c.id) + '">' + svg("edit") + "Modifier</button>" +
+      '<button type="button" class="ibtn danger" data-act="delete-charge" data-id="' + esc(c.id) + '" aria-label="Supprimer la charge" title="Supprimer la charge">' + svg("trash") + "</button>";
+    h += "</div></div>";
+  }
+  return h + "</article>";
+}
+
+/* ======================= Rendu : vues ======================= */
+function renderEmpty() {
+  return '<div class="panel-card empty-state">' + svg("clipboard", "big") +
+    "<h2>Aucune donnée pour l’instant</h2>" +
+    "<p>Recharge les données d’origine de ton fichier Excel, importe un fichier JSON, ou crée directement ta première charge.</p>" +
+    '<div class="row-btns"><button type="button" class="btn btn-primary" data-act="load-seed">' + svg("clipboard") + "Charger les données d’origine (Excel)</button>" +
+    '<button type="button" class="btn btn-ghost" data-act="import-empty">' + svg("plus") + "Importer un fichier JSON</button>" +
+    '<button type="button" class="btn btn-ghost" data-act="new-charge" data-section="routine">Créer une première charge</button></div></div>';
+}
+
+function tabDefs() {
+  var counts = {}, locs = 0, i;
+  for (i = 0; i < SECTIONS.length; i++) counts[SECTIONS[i].key] = 0;
+  for (i = 0; i < state.charges.length; i++) { counts[state.charges[i].section]++; locs += state.charges[i].locations.length; }
+  var defs = [{ key: "dashboard", label: "Vue d’ensemble" }];
+  for (i = 0; i < SECTIONS.length; i++) defs.push({ key: SECTIONS[i].key, label: SECTIONS[i].label, n: counts[SECTIONS[i].key] });
+  defs.push({ key: "emplacements", label: "Emplacements", n: locs });
+  return defs;
+}
+function renderTabs() {
+  var defs = tabDefs(), h = "", searching = ui.tokens.length > 0;
+  for (var i = 0; i < defs.length; i++) {
+    var d = defs[i];
+    var active = ui.tab === d.key && !(searching && d.key !== "emplacements");
+    h += '<button type="button" class="tab' + (active ? " active" : "") + '" data-act="tab" data-tab="' + d.key + '">' + esc(d.label) + (d.n !== undefined ? '<span class="tab-count">' + d.n + "</span>" : "") + "</button>";
+  }
+  $("#tabs").innerHTML = h;
+}
+
+function collectAgenda() {
+  var today = todayISO(), horizon = addDays(today, SOON_DAYS), out = [];
+  for (var i = 0; i < state.charges.length; i++) {
+    var c = state.charges[i], active = c.section === "routine" || c.status !== "cloture";
+    if (c.section === "routine") {
+      if (c.nextDue && c.nextDue <= horizon) out.push({ date: c.nextDue, kind: "routine", c: c });
+    } else if (active && c.dueDate && c.dueDate <= horizon) {
+      out.push({ date: c.dueDate, kind: "charge", c: c });
+    }
+    if (active) {
+      for (var j = 0; j < c.items.length; j++) {
+        var it = c.items[j];
+        if (it.type === "action" && !it.done && it.dueDate && it.dueDate <= horizon) out.push({ date: it.dueDate, kind: "item", c: c, it: it });
+      }
+    }
+  }
+  out.sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+  return out;
+}
+function renderDashboard() {
+  var today = todayISO(), horizon = addDays(today, SOON_DAYS), i;
+  var routines = sectionList("routine");
+  var others = state.charges.filter(function (c) { return c.section !== "routine"; });
+  var rLate = routines.filter(function (c) { return c.nextDue && c.nextDue < today; }).length;
+  var rSoon = routines.filter(function (c) { return c.nextDue && c.nextDue >= today && c.nextDue <= horizon; }).length;
+  var rNoDate = routines.filter(function (c) { return c.recurrence && !c.nextDue; }).length;
+  var inProg = others.filter(function (c) { return c.status === "en_cours"; }).length;
+  var late = others.filter(isChargeLate).length;
+  var closed = others.filter(function (c) { return c.status === "cloture"; }).length;
+  var tot = 0, dn = 0;
+  for (i = 0; i < others.length; i++) { var p = progressOf(others[i]); tot += p.total; dn += p.done; }
+  var pct = tot ? Math.round(100 * dn / tot) : 0;
+
+  var h = '<div class="dashboard-grid">' +
+    statCard("Routines en retard", rLate, "échéance dépassée", "a-brick") +
+    statCard("Routines à venir", rSoon, "dans les " + SOON_DAYS + " prochains jours", "") +
+    statCard("Actions en cours", inProg, "court, moyen, long terme et idées", "a-indigo") +
+    statCard("Échéances dépassées", late, "charges ou actions", "a-brick") +
+    statCard("Charges clôturées", closed, "sur " + others.length, "a-moss") +
+    statCard("Avancement des actions", pct + " %", dn + " / " + tot + " cochées", "a-teal") + "</div>";
+
+  if (rNoDate) {
+    h += '<div class="panel-card" style="padding:12px 16px;"><div class="banner warn" style="margin:0;">' + svg("calendar") + rNoDate + " routine" + (rNoDate > 1 ? "s ont" : " a") + " une périodicité mais pas encore de prochaine échéance. " +
+      '<button type="button" class="btn btn-ghost btn-sm" data-act="tab" data-tab="routine">Voir les routines</button></div></div>';
+  }
+
+  var agenda = collectAgenda();
+  h += '<div class="dash-cols"><section class="panel-card"><h2>À traiter<span class="n">' + agenda.length + '</span></h2>';
+  if (!agenda.length) h += '<div class="empty-inline">Rien d’urgent : aucune échéance dépassée ni prévue dans les ' + SOON_DAYS + " prochains jours.</div>";
+  else {
+    h += '<ul class="agenda">';
+    var shown = agenda.slice(0, 30);
+    for (i = 0; i < shown.length; i++) {
+      var a = shown[i], st = dueState(a.date), title, sub, badge;
+      if (a.kind === "item") { title = a.it.text; sub = a.c.title + ownerSuffix(a.c); badge = "Action"; }
+      else if (a.kind === "routine") { title = a.c.title; sub = (a.c.recurrence ? recLabel(a.c.recurrence) : "Routine") + ownerSuffix(a.c); badge = "Routine"; }
+      else { title = a.c.title; sub = "Échéance de la charge" + ownerSuffix(a.c); badge = sectionOf(a.c.section).label; }
+      h += '<li><button type="button" class="ag-btn" data-act="goto" data-id="' + esc(a.c.id) + '"><span class="ag-date ' + st + '">' + fmtDate(a.date) + "<small>" + relText(a.date) + "</small></span>" +
+        '<span class="ag-body"><div class="ag-title">' + esc(shorten(title, 140)) + '</div><div class="ag-sub">' + esc(shorten(sub, 110)) + '</div></span><span class="ag-side chip">' + esc(badge) + "</span></button></li>";
+    }
+    h += "</ul>";
+    if (agenda.length > shown.length) h += '<div class="empty-inline">… et ' + (agenda.length - shown.length) + " autres.</div>";
+  }
+  h += "</section>";
+
+  var running = others.filter(function (c) { return c.status === "en_cours"; });
+  h += '<section class="panel-card"><h2>En cours<span class="n">' + running.length + "</span></h2>";
+  if (!running.length) h += '<div class="empty-inline">Aucune charge « En cours » pour l’instant.</div>';
+  else {
+    h += '<ul class="agenda">';
+    for (i = 0; i < running.length; i++) {
+      var c2 = running[i], pr = progressOf(c2);
+      h += '<li><button type="button" class="ag-btn" data-act="goto" data-id="' + esc(c2.id) + '"><span class="ag-body"><div class="ag-title">' + esc(shorten(c2.title, 120)) + '</div><div class="ag-sub">' + esc(sectionOf(c2.section).title) +
+        (c2.dueDate ? " · échéance " + fmtDate(c2.dueDate) : "") + esc(ownerSuffix(c2)) + '</div></span><span class="ag-side head-progress">' + (pr.total ? '<span class="bar"><i style="width:' + pr.pct + '%"></i></span><span class="prog-num">' + pr.done + "/" + pr.total + "</span>" : "") + "</span></button></li>";
+    }
+    h += "</ul>";
+  }
+  h += "</section></div>";
+
+  var hist = [];
+  for (i = 0; i < routines.length; i++) { for (var k = 0; k < routines[i].history.length; k++) hist.push({ x: routines[i].history[k], c: routines[i] }); }
+  hist.sort(function (a, b) { return a.x.date < b.x.date ? 1 : (a.x.date > b.x.date ? -1 : 0); });
+  h += '<section class="panel-card"><h2>Dernières routines réalisées</h2>';
+  if (!hist.length) h += '<div class="empty-inline">Aucun cycle terminé pour l’instant — utilise « Terminer le cycle » sur une routine.</div>';
+  else {
+    h += '<ul class="agenda">';
+    var hs = hist.slice(0, 8);
+    for (i = 0; i < hs.length; i++) {
+      h += '<li><button type="button" class="ag-btn" data-act="goto" data-id="' + esc(hs[i].c.id) + '"><span class="ag-date">' + fmtDate(hs[i].x.date) + '</span><span class="ag-body"><div class="ag-title">' + esc(shorten(hs[i].c.title, 130)) + '</div></span><span class="ag-side chip c-moss mono">' + hs[i].x.done + " / " + hs[i].x.total + "</span></button></li>";
+    }
+    h += "</ul>";
+  }
+  return h + "</section>";
+}
+function statCard(label, value, sub, cls) {
+  return '<div class="stat-card ' + cls + '"><div class="stat-label">' + esc(label) + '</div><div class="stat-value">' + esc(value) + '</div><div class="stat-sub">' + esc(sub) + "</div></div>";
+}
+
+function renderList(sec) {
+  var S = sectionOf(sec);
+  var all = sectionList(sec), list = all, i;
+  var isRoutine = sec === "routine";
+  if (!isRoutine && ui.statusFilter !== "all") list = all.filter(function (c) { return c.status === ui.statusFilter; });
+  var nAct = 0, nLate = 0;
+  for (i = 0; i < all.length; i++) { nAct += progressOf(all[i]).total; if (isChargeLate(all[i])) nLate++; }
+  var h = '<div class="list-head"><div><h2>' + esc(S.title) + '</h2><div class="sub">' + all.length + " charge" + (all.length > 1 ? "s" : "") + " · " + nAct + " action" + (nAct > 1 ? "s" : "") + (nLate ? " · " + nLate + " en retard" : "") + "</div></div>" +
+    '<div class="list-tools"><button type="button" class="btn btn-ghost btn-sm" data-act="expand-all">Tout déplier</button><button type="button" class="btn btn-ghost btn-sm" data-act="collapse-all">Tout replier</button>' +
+    '<button type="button" class="btn btn-primary" data-act="new-charge" data-section="' + sec + '">' + svg("plus") + "Nouvelle charge</button></div></div>";
+  if (!isRoutine && all.length) {
+    h += '<div class="filters">';
+    var fl = [{ key: "all", label: "Toutes" }].concat(STATUSES);
+    for (i = 0; i < fl.length; i++) {
+      var n = fl[i].key === "all" ? all.length : all.filter(function (c) { return c.status === this.k; }, { k: fl[i].key }).length;
+      h += '<button type="button" class="fchip' + (ui.statusFilter === fl[i].key ? " active" : "") + '" data-act="filter-status" data-status="' + fl[i].key + '">' + esc(fl[i].label) + '<span class="n">' + n + "</span></button>";
+    }
+    h += "</div>";
+  }
+  if (!all.length) return h + '<div class="panel-card"><div class="empty-inline">Aucune charge dans cette rubrique. Utilise « Nouvelle charge » pour en ajouter une.</div></div>';
+  h += renderWhoFilter();
+  if (ui.who) list = list.filter(matchWho);
+  if (!list.length) return h + '<div class="panel-card"><div class="empty-inline">Aucune charge ne correspond à ce filtre.</div></div>';
+  var canReorder = ui.statusFilter === "all" && !ui.who;
+  for (i = 0; i < list.length; i++) h += renderCard(list[i], i, list.length, !!ui.expanded[list[i].id], canReorder);
+  return h;
+}
+function renderResults() {
+  var total = 0, body = "";
+  for (var s = 0; s < SECTIONS.length; s++) {
+    var list = state.charges.filter(function (c) { return c.section === SECTIONS[s].key && matchCharge(c); });
+    if (!list.length) continue;
+    total += list.length;
+    body += '<h2 class="section-title">' + esc(SECTIONS[s].title) + '<span class="n">' + list.length + "</span></h2>";
+    for (var i = 0; i < list.length; i++) body += renderCard(list[i], i, list.length, true, false);
+  }
+  var h = '<div class="list-head"><div><h2>Résultats</h2><div class="sub">' + total + " charge" + (total > 1 ? "s" : "") + " pour « " + esc(ui.query) + " »</div></div></div>";
+  if (!total) h += '<div class="panel-card"><div class="empty-inline">Aucun résultat. Essaie moins de mots ou une orthographe plus courte.</div></div>';
+  return h + body;
+}
+function renderLocations() {
+  var rows = [], s, i, j;
+  for (s = 0; s < SECTIONS.length; s++) {
+    for (i = 0; i < state.charges.length; i++) {
+      var c = state.charges[i];
+      if (c.section !== SECTIONS[s].key) continue;
+      for (j = 0; j < c.locations.length; j++) {
+        var l = c.locations[j];
+        if (!ui.tokens.length || matchTokens(fold([c.title, l.context, l.label, l.path].join(" \n ")))) rows.push({ c: c, l: l });
+      }
+    }
+  }
+  var h = '<div class="list-head"><div><h2>Emplacements de stockage</h2><div class="sub">' + rows.length + " emplacement" + (rows.length > 1 ? "s" : "") + (ui.tokens.length ? " pour « " + esc(ui.query) + " »" : "") + " · un clic sur l’icône copie le chemin (à coller dans l’Explorateur)</div></div></div>";
+  if (!rows.length) return h + '<div class="panel-card"><div class="empty-inline">' + (ui.tokens.length ? "Aucun emplacement ne correspond." : "Aucun emplacement enregistré : ajoute-les depuis une charge.") + "</div></div>";
+  h += '<div class="panel-card">';
+  for (i = 0; i < rows.length; i++) {
+    var r = rows[i], pathHtml = "";
+    if (r.l.path) pathHtml = isUrl(r.l.path) ? '<div class="loc-path"><a href="' + esc(r.l.path) + '" target="_blank" rel="noopener noreferrer">' + hl(r.l.path) + "</a></div>" : '<div class="loc-path">' + hl(r.l.path) + "</div>";
+    h += '<div class="locrow"><div class="who"><span class="chip">' + esc(sectionOf(r.c.section).label) + '</span><br><button type="button" data-act="goto" data-id="' + esc(r.c.id) + '">' + hl(shorten(r.c.title, 110)) + "</button></div>" +
+      '<div class="what">' + (r.l.context ? '<div class="loc-ctx">' + hl(r.l.context) + "</div>" : "") + (r.l.label ? '<div class="loc-label">' + hl(r.l.label) + "</div>" : "") + pathHtml + "</div>" +
+      '<button type="button" class="ibtn" data-act="copy-loc" data-charge="' + esc(r.c.id) + '" data-loc="' + esc(r.l.id) + '" aria-label="Copier" title="' + (r.l.path ? "Copier le chemin" : "Copier le texte") + '">' + svg("copy") + "</button></div>";
+  }
+  return h + "</div>";
+}
+
+function render() {
+  if (ui.who && !whoExists(ui.who)) { ui.who = ""; ui.role = "any"; }
+  renderTabs();
+  var main = $("#app"), h;
+  if (!state.charges.length) h = renderEmpty();
+  else if (ui.tokens.length && ui.tab !== "emplacements") h = renderResults();
+  else if (ui.tab === "dashboard") h = renderDashboard();
+  else if (ui.tab === "emplacements") h = renderLocations();
+  else h = renderList(ui.tab);
+  main.innerHTML = h;
+  if (ui.pendingFocus) {
+    var inp = main.querySelector('.add-item-input[data-charge="' + ui.pendingFocus + '"]');
+    if (inp) inp.focus();
+    ui.pendingFocus = null;
+  }
+  updateGauge();
+}
+
+/* ======================= Toast + modales ======================= */
+var toastTimer = null;
+function toast(msg) {
+  var t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2800);
+}
+var modalCtx = null;
+function openModal(o) {
+  closeModal();
+  var prev = document.activeElement;
+  var ov = document.createElement("div");
+  ov.className = "overlay";
+  var box = document.createElement("div");
+  box.className = "modal" + (o.cls ? " " + o.cls : "");
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.setAttribute("aria-labelledby", "modal-title");
+  box.innerHTML = '<div class="modal-head"><h2 id="modal-title">' + esc(o.title) + '</h2><button type="button" class="ibtn" data-modal-close aria-label="Fermer">' + svg("x") + '</button></div><div class="modal-body">' + o.body + '</div><div class="modal-foot"></div>';
+  var foot = box.querySelector(".modal-foot");
+  (o.buttons || []).forEach(function (b) {
+    if (b.spacer) { var sp = document.createElement("span"); sp.className = "spacer"; foot.appendChild(sp); return; }
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn " + (b.kind === "primary" ? "btn-primary" : (b.kind === "danger" ? "btn-danger" : "btn-ghost"));
+    btn.textContent = b.label;
+    if (b.kind === "primary" || b.kind === "danger") btn.setAttribute("data-primary", "1");
+    btn.addEventListener("click", function () {
+      var r = b.onClick ? b.onClick(box) : undefined;
+      if (r !== false) closeModal();
+    });
+    foot.appendChild(btn);
+  });
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  modalCtx = { el: ov, box: box, prev: prev };
+  box.querySelector("[data-modal-close]").addEventListener("click", closeModal);
+  if (o.onOpen) o.onOpen(box);
+  var af = box.querySelector("[data-autofocus]") || box.querySelector("input:not([type=hidden]), select, textarea");
+  if (af) af.focus();
+  return box;
+}
+function closeModal() {
+  if (!modalCtx) return;
+  var m = modalCtx;
+  modalCtx = null;
+  if (m.el.parentNode) m.el.parentNode.removeChild(m.el);
+  if (m.prev && m.prev.focus && document.body.contains(m.prev)) { try { m.prev.focus(); } catch (e) { /* ignoré */ } }
+}
+function val(box, id) { var el = box.querySelector("#" + id); return el ? el.value : ""; }
+
+/* ---- Modale : charge ---- */
+function pfRow(ref, removable) {
+  var pn = ref && ref.person ? personName(ref.person) : "", sn = ref && ref.service ? serviceName(ref.service) : "";
+  return '<div class="pf-row"><input type="text" class="inp pf-p" list="dl-people" placeholder="Personne" value="' + esc(pn) + '" maxlength="80" autocomplete="off" aria-label="Personne">' +
+    '<input type="text" class="inp pf-s" list="dl-services" placeholder="Service" value="' + esc(sn) + '" data-auto="' + esc(sn) + '" maxlength="80" autocomplete="off" aria-label="Service">' +
+    (removable ? '<button type="button" class="ibtn danger" data-mact="del-link" aria-label="Retirer cette personne" title="Retirer">' + svg("x") + "</button>" : "") + "</div>";
+}
+function peopleFieldsHtml(d) {
+  var dl = '<datalist id="dl-people">' + state.people.map(function (q) { return '<option value="' + esc(q.name) + '"></option>'; }).join("") + "</datalist>" +
+    '<datalist id="dl-services">' + state.services.map(function (s) { return '<option value="' + esc(s.name) + '"></option>'; }).join("") + "</datalist>";
+  var lk = d.linked.map(function (r) { return pfRow(r, true); }).join("");
+  return dl +
+    '<div class="pf-group"><div class="flabel">Demandeur <span style="font-weight:500;color:var(--ink-soft)">— d’où vient l’action</span></div><div id="f-origin">' + pfRow(d.origin, false) + "</div></div>" +
+    '<div class="pf-group"><div class="flabel">Responsable <span style="font-weight:500;color:var(--ink-soft)">— qui doit la gérer</span></div><div id="f-owner">' + pfRow(d.owner, false) + "</div></div>" +
+    '<div class="pf-group"><div class="flabel">Personnes liées</div><div id="f-linked">' + lk + '</div><button type="button" class="btn btn-ghost btn-sm" data-mact="add-link">' + svg("plus") + "Ajouter une personne</button>" +
+    '<div class="hint">Choisis dans la liste ou tape un nom : s’il n’existe pas encore, il est créé (modifiable via « Équipe »). Le service se remplit tout seul.</div></div>';
+}
+function readPfRow(row) {
+  return refFromInputs(row.querySelector(".pf-p").value, row.querySelector(".pf-s").value);
+}
+function bindPeopleFields(box) {
+  box.addEventListener("keydown", function (e) {
+    var t = e.target;   /* Entrée dans un champ personne / service (liste de suggestions) ne doit pas enregistrer la modale */
+    if (e.key === "Enter" && t.classList && (t.classList.contains("pf-p") || t.classList.contains("pf-s"))) e.stopPropagation();
+  });
+  box.addEventListener("change", function (e) {
+    var t = e.target;
+    if (!t.classList || !t.classList.contains("pf-p")) return;
+    var sInp = t.parentNode.querySelector(".pf-s"), auto = sInp.getAttribute("data-auto") || "";
+    var q = findPersonByName(t.value);
+    if (sInp.value && sInp.value !== auto) return;       /* service saisi à la main : on n'y touche pas */
+    var sn = q && q.serviceId ? serviceName(q.serviceId) : "";
+    sInp.value = sn; sInp.setAttribute("data-auto", sn);
+  });
+  box.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target.closest("[data-mact]") : null;
+    if (!t) return;
+    var act = t.getAttribute("data-mact");
+    if (act === "add-link") {
+      var wrap = box.querySelector("#f-linked"), tmp = document.createElement("div");
+      tmp.innerHTML = pfRow(null, true);
+      wrap.appendChild(tmp.firstChild);
+      var ins = wrap.querySelectorAll(".pf-p"); ins[ins.length - 1].focus();
+    } else if (act === "del-link") {
+      var row = t.closest(".pf-row"); if (row && row.parentNode) row.parentNode.removeChild(row);
+    }
+  });
+}
+
+function openChargeModal(c, defaultSection) {
+  var isNew = !c;
+  var d = c || newCharge(validSection(defaultSection) ? defaultSection : "routine");
+  var secOpts = SECTIONS.map(function (S) { return '<option value="' + S.key + '"' + (S.key === d.section ? " selected" : "") + ">" + esc(S.title) + "</option>"; }).join("");
+  var presetKey = recPresetKey(d.recurrence);
+  var recOpts = REC_PRESETS.map(function (p) { return '<option value="' + p[0] + '"' + (p[0] === presetKey ? " selected" : "") + ">" + esc(p[1]) + "</option>"; }).join("");
+  var customN = d.recurrence ? d.recurrence.n : 1, customU = d.recurrence ? d.recurrence.unit : "week";
+  var unitOpts = [["day", "jour(s)"], ["week", "semaine(s)"], ["month", "mois"]].map(function (u) { return '<option value="' + u[0] + '"' + (u[0] === customU ? " selected" : "") + ">" + u[1] + "</option>"; }).join("");
+  var body =
+    '<div class="field"><label for="f-section">Rubrique</label><select id="f-section" class="sel">' + secOpts + "</select></div>" +
+    '<div class="field"><label for="f-title">Charge (titre)</label><textarea id="f-title" class="ta" rows="2" data-autofocus>' + esc(d.title) + "</textarea></div>" +
+    '<div data-only="routine">' +
+    '<div class="field-row"><div class="field"><label for="f-rec">Périodicité</label><select id="f-rec" class="sel">' + recOpts + "</select></div>" +
+    '<div class="field" id="f-rec-custom"><label for="f-rec-n">Tous les</label><div class="field-row"><input type="number" id="f-rec-n" class="inp" min="1" max="999" value="' + customN + '"><select id="f-rec-unit" class="sel">' + unitOpts + "</select></div></div></div>" +
+    '<div class="field"><label for="f-next">Prochaine échéance</label><input type="date" id="f-next" class="inp" value="' + esc(d.nextDue) + '"><div class="hint">Après « Terminer le cycle », la date suivante est calculée automatiquement à partir de la périodicité.</div></div></div>' +
+    '<div data-only="action"><div class="field-row"><div class="field"><label for="f-status">Statut</label><select id="f-status" class="sel">' + selectOptions(STATUSES, d.status) + "</select></div>" +
+    '<div class="field"><label for="f-due">Échéance</label><input type="date" id="f-due" class="inp" value="' + esc(d.dueDate) + '"></div></div></div>' +
+    peopleFieldsHtml(d) +
+    '<div class="field"><label for="f-note">Note (facultatif)</label><textarea id="f-note" class="ta" rows="2">' + esc(d.note) + "</textarea></div>";
+  openModal({
+    title: isNew ? "Nouvelle charge" : "Modifier la charge",
+    body: body,
+    onOpen: function (box) {
+      function sync() {
+        var isR = val(box, "f-section") === "routine";
+        var only = box.querySelectorAll("[data-only]");
+        for (var i = 0; i < only.length; i++) only[i].classList.toggle("hidden", (only[i].getAttribute("data-only") === "routine") !== isR);
+        box.querySelector("#f-rec-custom").classList.toggle("hidden", val(box, "f-rec") !== "custom");
+      }
+      box.querySelector("#f-section").addEventListener("change", sync);
+      box.querySelector("#f-rec").addEventListener("change", sync);
+      bindPeopleFields(box);
+      sync();
+    },
+    buttons: [
+      { label: "Annuler", kind: "ghost" },
+      { label: isNew ? "Créer la charge" : "Enregistrer", kind: "primary", onClick: function (box) {
+        var title = val(box, "f-title").trim();
+        if (!title) { var t = box.querySelector("#f-title"); t.focus(); t.style.outline = "2px solid var(--brick)"; return false; }
+        var section = validSection(val(box, "f-section")) ? val(box, "f-section") : "routine";
+        var target = isNew ? d : c;
+        var oldSection = target.section;
+        target.section = section;
+        target.title = title;
+        target.note = val(box, "f-note").trim();
+        var pk = val(box, "f-rec");
+        if (pk === "") target.recurrence = null;
+        else if (pk === "custom") target.recurrence = normRec({ n: val(box, "f-rec-n"), unit: val(box, "f-rec-unit") });
+        else { var pp = pk.split(":"); target.recurrence = normRec({ n: pp[1], unit: pp[0] }); }
+        target.nextDue = normDate(val(box, "f-next"));
+        var st = val(box, "f-status");
+        if (validStatus(st)) setStatus(target, st);
+        target.dueDate = normDate(val(box, "f-due"));
+        target.origin = readPfRow(box.querySelector("#f-origin .pf-row"));
+        target.owner = readPfRow(box.querySelector("#f-owner .pf-row"));
+        var lkRows = box.querySelectorAll("#f-linked .pf-row"), lkOut = [];
+        for (var li = 0; li < lkRows.length; li++) {
+          var lr = readPfRow(lkRows[li]);
+          if (lr && !lkOut.some(function (y) { return sameRef(lr, y); })) lkOut.push(lr);
+        }
+        target.linked = lkOut;
+        if (isNew) state.charges.push(target);
+        ui.expanded[target.id] = true;
+        if (isNew || oldSection !== section) { ui.tab = section; ui.statusFilter = "all"; }
+        if (isNew) ui.pendingFocus = target.id;
+        saveUI();
+        commit();
+        if (!isNew && oldSection !== section) toast("Charge déplacée vers « " + sectionOf(section).title + " ».");
+        return true;
+      } }
+    ]
+  });
+}
+
+
+/* ---- Modale : personnes et services (paramétrage) ---- */
+function openTeamModal() {
+  var ws = state.services.map(function (s) { return { key: s.id, id: s.id, name: s.name }; });
+  var wp = state.people.map(function (q) { return { key: q.id, id: q.id, name: q.name, sKey: q.serviceId }; });
+  var seq = 0;
+  function svcOptions(sel) {
+    var h = '<option value="">— service —</option>';
+    for (var i = 0; i < ws.length; i++) h += '<option value="' + esc(ws[i].key) + '"' + (ws[i].key === sel ? " selected" : "") + ">" + esc(ws[i].name || "(sans nom)") + "</option>";
+    return h;
+  }
+  function html() {
+    var h = '<p class="hint" style="margin:0 0 14px;">Ces listes alimentent les champs Demandeur, Responsable et Personnes liées. Un nom saisi directement dans une charge est ajouté ici automatiquement. Le service d’une personne est son service par défaut.</p><div class="team-cols"><div class="team-col"><h3>Services</h3>', i;
+    if (!ws.length) h += '<div class="team-empty">Aucun service pour l’instant.</div>';
+    for (i = 0; i < ws.length; i++) h += '<div class="team-row"><input type="text" class="inp tm-s" data-i="' + i + '" value="' + esc(ws[i].name) + '" placeholder="Nom du service" maxlength="80" aria-label="Nom du service"><button type="button" class="ibtn danger" data-tm="del-s" data-i="' + i + '" aria-label="Supprimer ce service" title="Supprimer">' + svg("trash") + "</button></div>";
+    h += '<button type="button" class="btn btn-ghost btn-sm" data-tm="add-s">' + svg("plus") + "Service</button></div>";
+    h += '<div class="team-col"><h3>Personnes</h3>';
+    if (!wp.length) h += '<div class="team-empty">Aucune personne pour l’instant.</div>';
+    for (i = 0; i < wp.length; i++) h += '<div class="team-row"><input type="text" class="inp tm-p" data-i="' + i + '" value="' + esc(wp[i].name) + '" placeholder="Nom de la personne" maxlength="80" aria-label="Nom de la personne"><select class="sel tm-ps" data-i="' + i + '" aria-label="Service par défaut">' + svcOptions(wp[i].sKey) + '</select><button type="button" class="ibtn danger" data-tm="del-p" data-i="' + i + '" aria-label="Supprimer cette personne" title="Supprimer">' + svg("trash") + "</button></div>";
+    h += '<button type="button" class="btn btn-ghost btn-sm" data-tm="add-p">' + svg("plus") + "Personne</button></div></div>";
+    return h;
+  }
+  function paint(box, focusSel) {
+    box.querySelector("#team-root").innerHTML = html();
+    if (focusSel) { var f = box.querySelectorAll(focusSel); if (f.length) f[f.length - 1].focus(); }
+  }
+  openModal({
+    title: "Personnes et services", cls: "wide",
+    body: '<div id="team-root"></div>',
+    onOpen: function (box) {
+      paint(box, null);
+      box.addEventListener("input", function (e) {
+        var t = e.target, i = parseInt(t.getAttribute("data-i"), 10);
+        if (t.classList.contains("tm-p")) wp[i].name = t.value;
+        else if (t.classList.contains("tm-s")) {
+          ws[i].name = t.value;
+          var sels = box.querySelectorAll(".tm-ps");                 /* libellés des listes de services à jour */
+          for (var k = 0; k < sels.length; k++) sels[k].innerHTML = svcOptions(wp[parseInt(sels[k].getAttribute("data-i"), 10)].sKey);
+        }
+      });
+      box.addEventListener("change", function (e) {
+        var t = e.target;
+        if (t.classList.contains("tm-ps")) wp[parseInt(t.getAttribute("data-i"), 10)].sKey = t.value;
+      });
+      box.addEventListener("keydown", function (e) {
+        var t = e.target;
+        if (e.key === "Enter" && t.classList && (t.classList.contains("tm-s") || t.classList.contains("tm-p"))) {
+          e.preventDefault(); e.stopPropagation();                  /* Entrée = ligne suivante (et non « Enregistrer ») */
+          if (t.classList.contains("tm-s")) { ws.push({ key: "n" + (++seq), id: "", name: "" }); paint(box, ".tm-s"); }
+          else { wp.push({ key: "n" + (++seq), id: "", name: "", sKey: "" }); paint(box, ".tm-p"); }
+        }
+      });
+      box.addEventListener("click", function (e) {
+        var t = e.target.closest ? e.target.closest("[data-tm]") : null;
+        if (!t) return;
+        var act = t.getAttribute("data-tm"), i = parseInt(t.getAttribute("data-i"), 10);
+        if (act === "add-s") { ws.push({ key: "n" + (++seq), id: "", name: "" }); paint(box, ".tm-s"); }
+        else if (act === "add-p") { wp.push({ key: "n" + (++seq), id: "", name: "", sKey: "" }); paint(box, ".tm-p"); }
+        else if (act === "del-s") {
+          var gone = ws.splice(i, 1)[0];
+          for (var k = 0; k < wp.length; k++) { if (wp[k].sKey === gone.key) wp[k].sKey = ""; }
+          paint(box, null);
+        } else if (act === "del-p") { wp.splice(i, 1); paint(box, null); }
+      });
+    },
+    buttons: [
+      { label: "Annuler", kind: "ghost" },
+      { label: "Enregistrer", kind: "primary", onClick: function (box) {
+        var i, seenS = {}, seenP = {}, nm, f;
+        for (i = 0; i < ws.length; i++) {
+          nm = ws[i].name.trim(); f = fold(nm);
+          if (!nm) { toast("Un service n’a pas de nom : renseigne-le ou supprime la ligne."); return false; }
+          if (seenS[f]) { toast("Service en double : « " + nm + " »."); return false; }
+          seenS[f] = true;
+        }
+        for (i = 0; i < wp.length; i++) {
+          nm = wp[i].name.trim(); f = fold(nm);
+          if (!nm) { toast("Une personne n’a pas de nom : renseigne-le ou supprime la ligne."); return false; }
+          if (seenP[f]) { toast("Personne en double : « " + nm + " » (ajoute une initiale pour les distinguer)."); return false; }
+          seenP[f] = true;
+        }
+        var keepS = {}, keepP = {}, msgs = [], n;
+        for (i = 0; i < ws.length; i++) { if (ws[i].id) keepS[ws[i].id] = true; }
+        for (i = 0; i < wp.length; i++) { if (wp[i].id) keepP[wp[i].id] = true; }
+        var goneS = state.services.filter(function (s) { return !keepS[s.id]; });
+        var goneP = state.people.filter(function (q) { return !keepP[q.id]; });
+        goneS.forEach(function (s) { n = refUsage("service", s.id); if (n) msgs.push("service « " + s.name + " » : retiré de " + n + " référence" + (n > 1 ? "s" : "")); });
+        goneP.forEach(function (q) { n = refUsage("person", q.id); if (n) msgs.push("personne « " + q.name + " » : retirée de " + n + " référence" + (n > 1 ? "s" : "")); });
+        if (msgs.length && !confirm("Suppression :\n• " + msgs.join("\n• ") + "\n\nLes charges concernées sont conservées (l’autre moitié « personne + service » reste). Continuer ?")) return false;
+        var keyMap = {};
+        var newS = ws.map(function (s) { var id = s.id || uid("s-"); keyMap[s.key] = id; return { id: id, name: s.name.trim() }; });
+        var newP = wp.map(function (q) { return { id: q.id || uid("p-"), name: q.name.trim(), serviceId: q.sKey && keyMap[q.sKey] ? keyMap[q.sKey] : "" }; });
+        goneS.forEach(function (s) { stripRefs("service", s.id); });
+        goneP.forEach(function (q) { stripRefs("person", q.id); });
+        state.services = newS; state.people = newP;
+        commit();
+        toast("Personnes et services enregistrés.");
+        return true;
+      } }
+    ]
+  });
+}
+
+/* ---- Modale : ligne (action / note / sous-titre) ---- */
+function openItemModal(c, it) {
+  var body =
+    '<div class="field"><label for="fi-type">Type de ligne</label><select id="fi-type" class="sel">' + selectOptions(ITEM_TYPES, it.type) + "</select></div>" +
+    '<div class="field"><label for="fi-text">Texte</label><textarea id="fi-text" class="ta" rows="4" data-autofocus>' + esc(it.text) + "</textarea></div>" +
+    '<div data-only-action><div class="field-row"><div class="field"><label for="fi-due">Échéance</label><input type="date" id="fi-due" class="inp" value="' + esc(it.dueDate) + '"></div>' +
+    (it.done ? '<div class="field"><label for="fi-doneat">Réalisée le</label><input type="date" id="fi-doneat" class="inp" value="' + esc(it.doneAt) + '"></div>' : "") + "</div></div>";
+  openModal({
+    title: "Modifier la ligne",
+    body: body,
+    onOpen: function (box) {
+      function sync() { box.querySelector("[data-only-action]").classList.toggle("hidden", val(box, "fi-type") !== "action"); }
+      box.querySelector("#fi-type").addEventListener("change", sync);
+      sync();
+    },
+    buttons: [
+      { label: "Annuler", kind: "ghost" },
+      { label: "Enregistrer", kind: "primary", onClick: function (box) {
+        var text = val(box, "fi-text").trim();
+        if (!text) { box.querySelector("#fi-text").focus(); return false; }
+        var type = validType(val(box, "fi-type")) ? val(box, "fi-type") : "action";
+        it.type = type; it.text = text;
+        if (type === "action") {
+          it.dueDate = normDate(val(box, "fi-due"));
+          if (it.done && box.querySelector("#fi-doneat")) it.doneAt = normDate(val(box, "fi-doneat"));
+        } else { it.done = false; it.doneAt = ""; it.dueDate = ""; }
+        commit();
+        return true;
+      } }
+    ]
+  });
+}
+
+/* ---- Modale : emplacement ---- */
+function openLocModal(c, l) {
+  var isNew = !l;
+  var d = l || { context: "", label: "", path: "" };
+  var body =
+    '<div class="field"><label for="fl-ctx">Contexte (facultatif)</label><input type="text" id="fl-ctx" class="inp" placeholder="ex. Pour les données, Pour la présentation…" value="' + esc(d.context) + '"></div>' +
+    '<div class="field"><label for="fl-label">Nom / description</label><textarea id="fl-label" class="ta" rows="2" placeholder="ex. nom du fichier ou de l’onglet" data-autofocus>' + esc(d.label) + "</textarea></div>" +
+    '<div class="field"><label for="fl-path">Chemin réseau ou lien</label><input type="text" id="fl-path" class="inp mono" placeholder="\\\\serveur\\dossier\\…  ou  https://…" value="' + esc(d.path) + '"><div class="hint">Les chemins réseau ne peuvent pas s’ouvrir depuis une page web : le bouton « copier » les met dans le presse-papiers.</div></div>';
+  openModal({
+    title: isNew ? "Nouvel emplacement" : "Modifier l’emplacement",
+    body: body,
+    buttons: [
+      { label: "Annuler", kind: "ghost" },
+      { label: isNew ? "Ajouter" : "Enregistrer", kind: "primary", onClick: function (box) {
+        var ctx = val(box, "fl-ctx").trim(), label = val(box, "fl-label").trim(), path = val(box, "fl-path").trim();
+        if (!ctx && !label && !path) { box.querySelector("#fl-label").focus(); return false; }
+        if (isNew) { c.locations.push({ id: uid("l-"), context: ctx, label: label, path: path }); ui.expanded[c.id] = true; saveUI(); }
+        else { l.context = ctx; l.label = label; l.path = path; }
+        commit();
+        return true;
+      } }
+    ]
+  });
+}
+
+/* ---- Modale : terminer le cycle d'une routine ---- */
+function openCycleModal(c) {
+  var p = progressOf(c), today = todayISO();
+  var nextInit = computeNextDue(c, today);
+  var warn = p.total && p.done < p.total
+    ? '<div class="banner warn" style="margin:0 0 12px;">' + svg("alert") + (p.total - p.done) + " étape" + (p.total - p.done > 1 ? "s" : "") + " non cochée" + (p.total - p.done > 1 ? "s" : "") + ". Le cycle sera enregistré avec " + p.done + " / " + p.total + ".</div>"
+    : "";
+  var body = warn +
+    '<div class="field-row"><div class="field"><label for="fc-done">Date de réalisation</label><input type="date" id="fc-done" class="inp" value="' + today + '" data-autofocus></div>' +
+    '<div class="field"><label for="fc-next">Prochaine échéance</label><input type="date" id="fc-next" class="inp" value="' + esc(nextInit) + '"></div></div>' +
+    '<div class="hint" style="font-size:12.5px;color:var(--ink-soft);">' + (c.recurrence ? "Prochaine date calculée d’après la périodicité (" + esc(recLabel(c.recurrence).toLowerCase()) + "), modifiable." : "Cette routine n’a pas de périodicité : renseigne la prochaine échéance si tu en veux une.") +
+    " Les étapes seront décochées pour le cycle suivant ; la date et le score (" + p.done + " / " + p.total + ") sont conservés dans l’historique.</div>";
+  openModal({
+    title: "Terminer le cycle",
+    body: body,
+    onOpen: function (box) {
+      var touched = false, dn = box.querySelector("#fc-done"), nx = box.querySelector("#fc-next");
+      nx.addEventListener("input", function () { touched = true; });
+      dn.addEventListener("change", function () { if (!touched && normDate(dn.value)) nx.value = computeNextDue(c, dn.value); });
+    },
+    buttons: [
+      { label: "Annuler", kind: "ghost" },
+      { label: "Terminer le cycle", kind: "primary", onClick: function (box) {
+        var done = normDate(val(box, "fc-done"));
+        if (!done) { box.querySelector("#fc-done").focus(); return false; }
+        var next = normDate(val(box, "fc-next"));
+        finishCycle(c, done, next);
+        commit();
+        toast(next ? "Cycle enregistré · prochaine échéance le " + fmtDate(next) : "Cycle enregistré.");
+        return true;
+      } }
+    ]
+  });
+}
+
+/* ---- Modale : remise à zéro ---- */
+function openResetModal() {
+  var body =
+    '<label class="radio-card is-selected" id="rc-progress"><input type="radio" name="reset-mode" value="progress" checked><span><b>Remettre les avancements à zéro</b><span class="d">Conserve toutes les charges, actions, emplacements, personnes et pièces jointes. Décoche tout, remet les statuts à « À faire » et vide l’historique des cycles.</span></span></label>' +
+    '<div id="rc-dates" style="margin:-2px 0 10px 32px;"><label class="check-line"><input type="checkbox" id="rs-dates"> Effacer aussi les échéances et prochaines dates</label></div>' +
+    '<label class="radio-card" id="rc-seed"><input type="radio" name="reset-mode" value="seed"><span><b>Restaurer les données d’origine</b><span class="d">Remplace toutes les charges par celles du fichier Excel de départ, remises à zéro (utile si tu as modifié ou supprimé des lignes). Les personnes et services sont conservés ; les fichiers déjà envoyés sur Drive y restent.</span></span></label>' +
+    '<label class="radio-card" id="rc-all"><input type="radio" name="reset-mode" value="all"><span><b>Tout effacer</b><span class="d">Supprime toutes les charges (et leurs pièces jointes locales) : l’outil repart vide, avec les personnes et services conservés. Les fichiers déjà envoyés sur Drive y restent.</span></span></label>' +
+    '<label class="check-line" style="margin-top:12px;"><input type="checkbox" id="rs-backup" checked> Télécharger d’abord une sauvegarde JSON (recommandé)</label>';
+  openModal({
+    title: "Remise à zéro",
+    body: body,
+    onOpen: function (box) {
+      function sync() {
+        var mode = box.querySelector("input[name=reset-mode]:checked").value;
+        box.querySelector("#rc-progress").classList.toggle("is-selected", mode === "progress");
+        box.querySelector("#rc-seed").classList.toggle("is-selected", mode === "seed");
+        box.querySelector("#rc-all").classList.toggle("is-selected", mode === "all");
+        box.querySelector("#rc-dates").classList.toggle("hidden", mode !== "progress");
+      }
+      var radios = box.querySelectorAll("input[name=reset-mode]");
+      for (var i = 0; i < radios.length; i++) radios[i].addEventListener("change", sync);
+      sync();
+    },
+    buttons: [
+      { label: "Annuler", kind: "ghost" },
+      { label: "Appliquer", kind: "danger", onClick: function (box) {
+        var mode = box.querySelector("input[name=reset-mode]:checked").value;
+        if (mode === "all" && !confirm("Toutes les charges vont être supprimées. Continuer ?")) return false;
+        if (mode === "seed" && !confirm("Le contenu actuel sera remplacé par les données d’origine du fichier Excel. Continuer ?")) return false;
+        if (box.querySelector("#rs-backup").checked && state.charges.length) doExport("avant remise a zero");
+        if (mode === "all") { state.charges = []; ui.expanded = {}; ui.histOpen = {}; ui.who = ""; ui.role = "any"; ui.tab = "dashboard"; saveUI(); commit(); }
+        else if (mode === "seed") restoreSeed();
+        else { resetProgress(box.querySelector("#rs-dates").checked); commit(); }
+        toast(mode === "all" ? "Outil vidé : toutes les charges ont été supprimées." : mode === "seed" ? "Données d’origine restaurées." : "Avancements remis à zéro.");
+        return true;
+      } }
+    ]
+  });
+}
+
+/* ======================= Import / export JSON ======================= */
+function exportFileName(suffix) {
+  var d = new Date();
+  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + "_Routine Charges - " + (suffix ? suffix + " - " : "") + APP_VERSION + ".json";
+}
+function doExport(suffix) {
+  var out = JSON.parse(JSON.stringify(state));
+  out.exportedAt = new Date().toISOString();
+  var blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = exportFileName(suffix);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+function doImport(file) {
+  var reader = new FileReader();
+  reader.onload = function () {
+    var data;
+    try { data = JSON.parse(reader.result); } catch (err) { alert("Impossible de lire ce fichier JSON."); return; }
+    if (!data || typeof data !== "object" || !Array.isArray(data.charges) || (data.app && data.app !== "routine-charge")) {
+      alert("Fichier invalide : ce n’est pas un export de « Routine & Charges ».");
+      return;
+    }
+    if (state.charges.length && !confirm("Importer ce fichier remplacera toutes les données actuelles. Continuer ?")) return;
+    var keepS = state.services, keepP = state.people;
+    state = normalizeState(data);
+    if (!Array.isArray(data.people) && !Array.isArray(data.services)) { state.services = keepS; state.people = keepP; }   /* ancien export : on garde le paramétrage actuel */
+    ui.expanded = {}; ui.histOpen = {}; ui.statusFilter = "all"; ui.who = ""; ui.role = "any";
+    pruneUI(); saveUI();
+    applyTheme(state.theme, false);
+    saveState();
+    render();
+    var na = 0;
+    for (var i = 0; i < state.charges.length; i++) na += progressOf(state.charges[i]).total;
+    toast("Import réussi : " + state.charges.length + " charges, " + na + " actions.");
+  };
+  reader.readAsText(file);
+}
+
+/* ======================= Thème / navigation ======================= */
+function applyTheme(theme, persist) {
+  state.theme = theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", state.theme);
+  var btn = $("#btn-theme-toggle");
+  if (btn) {
+    btn.innerHTML = state.theme === "dark" ? THEME_ICONS.sun : THEME_ICONS.moon;
+    var label = state.theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre";
+    btn.title = label; btn.setAttribute("aria-label", label);
+  }
+  if (persist) saveState();
+}
+function setTab(key) {
+  if (TAB_KEYS.indexOf(key) === -1) return;
+  clearSearch();
+  ui.tab = key; ui.statusFilter = "all";
+  saveUI();
+  render();
+  window.scrollTo(0, 0);
+}
+function gotoCharge(id) {
+  var c = findCharge(id);
+  if (!c) return;
+  clearSearch();
+  ui.tab = c.section; ui.statusFilter = "all"; ui.expanded[id] = true;
+  saveUI();
+  render();
+  var el = document.getElementById("charge-" + id);
+  if (el) {
+    if (el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("flash");
+    setTimeout(function () { el.classList.remove("flash"); }, 1900);
+  }
+}
+function copyText(text, okMsg) {
+  function fallback() {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    toast(ok ? okMsg : "Copie impossible : sélectionne le texte manuellement.");
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { toast(okMsg); }, fallback);
+  } else fallback();
+}
+
+/* ======================= Événements ======================= */
+var CHANGE_ACTS = { "item-check": 1, "charge-status": 1, "charge-due": 1, "charge-nextdue": 1, "filter-who": 1, "filter-role": 1 };
+
+function handleAct(act, el) {
+  var id = el.getAttribute("data-id"), cid = el.getAttribute("data-charge"), iid = el.getAttribute("data-item");
+  var c = findCharge(id || cid), it = c && iid ? findItem(c, iid) : null, i;
+  switch (act) {
+    case "tab": setTab(el.getAttribute("data-tab")); break;
+    case "goto": gotoCharge(id); break;
+    case "toggle": ui.expanded[id] = !ui.expanded[id]; saveUI(); render(); break;
+    case "expand-all": case "collapse-all":
+      var lst = ui.tab === "dashboard" || ui.tab === "emplacements" ? [] : sectionList(ui.tab);
+      for (i = 0; i < lst.length; i++) { if (act === "expand-all") ui.expanded[lst[i].id] = true; else delete ui.expanded[lst[i].id]; }
+      saveUI(); render(); break;
+    case "filter-status": ui.statusFilter = el.getAttribute("data-status"); render(); break;
+    case "new-charge": openChargeModal(null, el.getAttribute("data-section")); break;
+    case "import-empty": $("#file-input").click(); break;
+    case "load-seed": restoreSeed(); toast("Données d’origine chargées : " + state.charges.length + " charges."); break;
+    case "edit-charge": if (c) openChargeModal(c); break;
+    case "delete-charge":
+      if (c && confirm("Supprimer la charge « " + shorten(c.title, 80) + " » et tout son contenu ?")) {
+        c.attachments.forEach(function (a) { if (a.storage === "drive" && a.driveFileId && typeof window.__driveDeleteFile === "function") window.__driveDeleteFile(a.driveFileId); });
+        state.charges = state.charges.filter(function (x) { return x.id !== c.id; });
+        delete ui.expanded[c.id]; saveUI(); commit(); toast("Charge supprimée.");
+      }
+      break;
+    case "move-charge": moveCharge(id, parseInt(el.getAttribute("data-dir"), 10)); break;
+    case "add-item":
+      var row = el.closest(".addrow");
+      if (row && c) { addItem(c.id, row.querySelector(".add-item-type").value, row.querySelector(".add-item-input").value); }
+      break;
+    case "edit-item": if (c && it) openItemModal(c, it); break;
+    case "del-item":
+      if (c && it && confirm("Supprimer cette ligne ?\n\n« " + shorten(it.text, 120) + " »")) { c.items = c.items.filter(function (x) { return x.id !== it.id; }); commit(); }
+      break;
+    case "move-item":
+      if (c && it) { if (moveInArray(c.items, c.items.indexOf(it), parseInt(el.getAttribute("data-dir"), 10))) commit(); }
+      break;
+    case "add-att": if (c) { attTarget = c.id; var ai = $("#att-input"); ai.value = ""; ai.click(); } break;
+    case "open-att": if (c) openAttachment(c, findAtt(c, el.getAttribute("data-att"))); break;
+    case "del-att": if (c) deleteAttachment(c, findAtt(c, el.getAttribute("data-att"))); break;
+    case "add-loc": if (c) openLocModal(c, null); break;
+    case "edit-loc": var l1 = c && findLoc(c, el.getAttribute("data-loc")); if (l1) openLocModal(c, l1); break;
+    case "del-loc":
+      var l2 = c && findLoc(c, el.getAttribute("data-loc"));
+      if (l2 && confirm("Supprimer cet emplacement ?")) { c.locations = c.locations.filter(function (x) { return x.id !== l2.id; }); commit(); }
+      break;
+    case "copy-loc":
+      var l3 = c && findLoc(c, el.getAttribute("data-loc"));
+      if (l3) { if (l3.path) copyText(l3.path, "Chemin copié dans le presse-papiers."); else copyText(l3.label || l3.context, "Texte copié."); }
+      break;
+    case "finish-cycle": if (c) openCycleModal(c); break;
+    case "toggle-history": ui.histOpen[id] = !ui.histOpen[id]; render(); break;
+    case "del-history":
+      if (c) { var hi = parseInt(el.getAttribute("data-idx"), 10); if (c.history[hi] && confirm("Retirer ce cycle de l’historique ?")) { c.history.splice(hi, 1); commit(); } }
+      break;
+    case "close-charge": if (c) { setStatus(c, "cloture"); commit(); toast("Charge clôturée."); } break;
+    case "reopen-charge": if (c) { setStatus(c, "en_cours"); commit(); toast("Charge rouverte."); } break;
+    case "uncheck-all":
+      if (c && confirm("Décocher toutes les actions de cette charge ?")) {
+        for (i = 0; i < c.items.length; i++) { c.items[i].done = false; c.items[i].doneAt = ""; }
+        reopenIfClosed(c); commit();
+      }
+      break;
+  }
+}
+function handleChange(act, el) {
+  var id = el.getAttribute("data-id"), c;
+  if (act === "item-check") { toggleItem(el.getAttribute("data-charge"), el.getAttribute("data-item"), el.checked); return; }
+  if (act === "filter-who") { ui.who = el.value; ui.role = "any"; render(); return; }
+  if (act === "filter-role") { ui.role = el.value; render(); return; }
+  c = findCharge(id);
+  if (!c) return;
+  if (act === "charge-status") { setStatus(c, el.value); commit(); }
+  else if (act === "charge-due") { c.dueDate = normDate(el.value); commit(); }
+  else if (act === "charge-nextdue") { c.nextDue = normDate(el.value); commit(); }
+}
+
+function bindEvents() {
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target.closest("[data-act]") : null;
+    if (!t) return;
+    var act = t.getAttribute("data-act");
+    if (CHANGE_ACTS[act]) return;
+    handleAct(act, t);
+  });
+  document.addEventListener("change", function (e) {
+    var t = e.target, act = t.getAttribute ? t.getAttribute("data-act") : null;
+    if (act && CHANGE_ACTS[act]) handleChange(act, t);
+  });
+  document.addEventListener("keydown", function (e) {
+    var t = e.target;
+    if (e.key === "Escape") {
+      if (modalCtx) { closeModal(); return; }
+      if (t && t.id === "search" && ui.query) { clearSearch(); render(); return; }
+    }
+    if (modalCtx) {
+      if (e.key === "Enter" && t && t.tagName === "INPUT" && t.type !== "checkbox" && t.type !== "radio") {
+        var pb = modalCtx.box.querySelector("[data-primary]");
+        if (pb) { e.preventDefault(); pb.click(); }
+      }
+      if (e.key === "Tab") {
+        var f = modalCtx.box.querySelectorAll("button, input, select, textarea");
+        var list = [];
+        for (var i = 0; i < f.length; i++) { if (!f[i].disabled && f[i].offsetParent !== null) list.push(f[i]); }
+        if (list.length) {
+          var first = list[0], last = list[list.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      }
+      return;
+    }
+    if (e.key === "Enter" && t && t.classList && t.classList.contains("add-item-input")) {
+      e.preventDefault();
+      var row = t.closest(".addrow");
+      addItem(t.getAttribute("data-charge"), row.querySelector(".add-item-type").value, t.value);
+      return;
+    }
+    if (e.key === "/" && t && !/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) { e.preventDefault(); $("#search").focus(); }
+  });
+  $("#search").addEventListener("input", function () { setQuery(this.value); render(); });
+  $("#search-clear").addEventListener("click", function () { clearSearch(); render(); $("#search").focus(); });
+  $("#btn-export").addEventListener("click", function () { doExport(); });
+  $("#btn-reset").addEventListener("click", openResetModal);
+  $("#btn-team").addEventListener("click", openTeamModal);
+  $("#att-input").addEventListener("change", function () {
+    var files = this.files, cid = attTarget;
+    if (files && files.length && cid) addFiles(cid, files);
+    this.value = "";
+  });
+  $("#btn-theme-toggle").addEventListener("click", function () { applyTheme(state.theme === "dark" ? "light" : "dark", true); });
+  $("#file-input").addEventListener("change", function () {
+    if (this.files && this.files[0]) doImport(this.files[0]);
+    this.value = "";
+  });
+  /* Autre onglet du navigateur qui modifie les données : on recharge l'état. */
+  window.addEventListener("storage", function (e) {
+    if (e.key !== STORAGE_KEY) return;
+    loadState(); pruneUI(); applyTheme(state.theme, false); render();
+  });
+}
+
+/* ======================= Démarrage ======================= */
+function init() {
+  loadState();
+  loadUI();
+  pruneUI();
+  $("#search-clear").innerHTML = svg("x");
+  applyTheme(state.theme, false);
+  bindEvents();
+  render();
+}
+init();
+
+})();
+</script>
+</body>
+</html>
