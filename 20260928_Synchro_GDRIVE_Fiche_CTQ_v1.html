@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche CTQ — Cadrage d'une étude de capabilité</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#f2f4f8;
+    --surface:#ffffff;
+    --surface-alt:#f7f8fb;
+    --border:#dde2ea;
+    --ink:#1a2233;
+    --ink-muted:#647089;
+    --primary:#2955a3;
+    --primary-dark:#1f4280;
+    --primary-tint:#e7edf8;
+    --accent:#b8860b;
+    --accent-tint:#faf3e0;
+    --ok:#1f8a4c;
+    --ok-bg:#e3f6ea;
+    --warn:#b3760a;
+    --warn-bg:#fbf1dc;
+    --danger:#c0392b;
+    --danger-bg:#fbe6e3;
+    --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.05);
+    --shadow-hover:0 10px 24px rgba(20,30,50,.12);
+    --radius:12px;
+    --radius-sm:8px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    /* Propres à l'outil */
+    --rail:#c9d1de; --rail-done:#1f8a4c;
+    --tol-zone:#e3f6ea; --tol-edge:#1f8a4c; --tol-out:#fbe6e3;
+  }
+  html[data-theme="dark"]{
+    --bg:#0f141c;
+    --surface:#171e28;
+    --surface-alt:#1d2531;
+    --border:#2b3444;
+    --ink:#e7ebf3;
+    --ink-muted:#8e9ab0;
+    --primary:#6f9ceb;
+    --primary-dark:#8fb4f0;
+    --primary-tint:#1c2940;
+    --accent:#e0b04a;
+    --accent-tint:#332a14;
+    --ok:#4bcf87;
+    --ok-bg:#123321;
+    --warn:#e0b04a;
+    --warn-bg:#332a14;
+    --danger:#e2685d;
+    --danger-bg:#3a1c1a;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+    --shadow-hover:0 10px 26px rgba(0,0,0,.45);
+    --rail:#3a4658; --rail-done:#4bcf87;
+    --tol-zone:#123321; --tol-edge:#4bcf87; --tol-out:#3a1c1a;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:var(--sans); background:var(--bg); color:var(--ink); padding:18px; -webkit-font-smoothing:antialiased; }
+  button, input, select, textarea{ font-family:inherit; color:inherit; }
+  .container{ max-width:1880px; margin:0 auto; }
+  input[type=file]{ display:none; }
+  .hidden{ display:none !important; }
+
+  /* ---- Header ---- */
+  .app-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .app-header h1{ margin:0 0 4px; font-size:24px; font-weight:800; letter-spacing:-0.01em; }
+  .subtitle{ margin:0; color:var(--ink-muted); font-size:13.5px; }
+  .header-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+  .btn-primary{ background:var(--primary); color:#fff; border:none; padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .btn-secondary{ background:var(--surface); color:var(--ink); border:1px solid var(--border); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; }
+  .btn-secondary:hover{ background:var(--surface-alt); }
+  .btn-outline-danger{ background:transparent; color:var(--danger); border:1px solid var(--danger); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .btn-outline-danger:hover{ background:var(--danger-bg); }
+  .btn-danger{ background:var(--danger); color:#fff; border:none; padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; cursor:pointer; }
+  .btn-danger:hover{ background:#9c2d21; }
+  .btn-icon{ background:var(--surface); border:1px solid var(--border); color:var(--ink); width:36px; height:36px; border-radius:var(--radius-sm); cursor:pointer; font-size:16px; display:inline-flex; align-items:center; justify-content:center; }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-icon:hover{ background:var(--surface-alt); }
+  .btn-tiny{ background:var(--surface-alt); border:1px solid var(--border); color:var(--ink); padding:4px 9px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .btn-tiny:hover{ background:var(--primary-tint); }
+  .btn-tiny.danger{ color:var(--danger); }
+  .btn-tiny.danger:hover{ background:var(--danger-bg); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+
+  .drive-btn{ display:inline-flex; align-items:center; gap:7px; }
+  .drive-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--ink-muted); transition:background .2s ease; }
+  .drive-dot.is-connected{ background:var(--ok); }
+  .drive-dot.is-syncing{ background:var(--warn); animation:drive-pulse 1s ease-in-out infinite; }
+  .drive-dot.is-error{ background:var(--danger); }
+  @keyframes drive-pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* ---- Cartes ---- */
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 20px; margin-bottom:18px; }
+  .card-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .card-header h3{ margin:0; font-size:15px; font-weight:800; }
+  .card-sub{ margin:2px 0 0; font-size:12.5px; color:var(--ink-muted); }
+
+  /* ---- Barre de sélection de fiche ---- */
+  .fiche-bar{ display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; margin-bottom:16px; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+  .fiche-bar .field{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .fiche-bar label{ font-size:11.5px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.03em; }
+  .fiche-bar select{ min-width:280px; max-width:520px; }
+  select, input[type=text], input[type=date], input[type=number], textarea{
+    background:var(--surface); border:1px solid var(--border); color:var(--ink);
+    padding:8px 10px; border-radius:var(--radius-sm); font-size:13.5px;
+  }
+  .spacer{ flex:1; }
+  .progress-block{ display:flex; align-items:center; gap:12px; }
+  .progress-text{ display:flex; flex-direction:column; align-items:flex-end; }
+  .progress-text b{ font-size:18px; font-weight:900; line-height:1.1; }
+  .progress-text span{ font-size:11.5px; color:var(--ink-muted); font-weight:600; }
+  .progress-bar{ width:130px; height:8px; border-radius:4px; background:var(--surface-alt); border:1px solid var(--border); overflow:hidden; }
+  .progress-bar i{ display:block; height:100%; background:var(--ok); transition:width .25s ease; }
+  .status-badge{ display:inline-block; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:800; white-space:nowrap; }
+  .st-ready{ background:var(--ok-bg); color:var(--ok); }
+  .st-draft{ background:var(--primary-tint); color:var(--primary); }
+  .fiche-meta{ font-size:11.5px; color:var(--ink-muted); }
+
+  /* ---- Mise en page : rail + sections ---- */
+  .fiche-layout{ display:grid; grid-template-columns:250px minmax(0,1fr); gap:18px; align-items:start; }
+  .rail{ position:sticky; top:12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 12px; }
+  .rail-title{ font-size:12.5px; font-weight:800; color:var(--ink-muted); margin:0 6px 10px; }
+  .rail ol{ list-style:none; margin:0; padding:0; }
+  .rail li{ position:relative; }
+  .rail li + li::before{ content:""; position:absolute; left:20px; top:-10px; height:14px; width:2px; background:var(--rail); }
+  .rail li.done + li::before{ background:var(--rail-done); }
+  .step-link{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:1px solid transparent; border-radius:9px; padding:7px 8px; cursor:pointer; margin-bottom:6px; }
+  .step-link:hover{ background:var(--surface-alt); }
+  .step-link.active{ background:var(--primary-tint); border-color:var(--primary-tint); }
+  .step-num{ width:26px; height:26px; border-radius:50%; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:800; border:2px solid var(--rail); color:var(--ink-muted); background:var(--surface); }
+  li.done .step-num{ background:var(--ok); border-color:var(--ok); color:#fff; }
+  li.partial .step-num{ border-color:var(--warn); color:var(--warn); background:var(--warn-bg); }
+  .step-txt{ display:flex; flex-direction:column; min-width:0; }
+  .step-txt b{ font-size:13.5px; font-weight:800; }
+  .step-txt small{ font-size:11.5px; color:var(--ink-muted); font-weight:600; }
+  li.partial .step-txt small{ color:var(--warn); }
+  li.done .step-txt small{ color:var(--ok); }
+  .rail-actions{ margin-top:10px; padding-top:10px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; }
+  .rail-actions .btn-secondary{ justify-content:center; }
+  .rail-legend{ font-size:11.5px; color:var(--ink-muted); line-height:1.45; margin:0 4px; }
+  .rail-legend .req-star{ color:var(--danger); font-weight:800; }
+
+  /* ---- Sections (étapes) ---- */
+  .step-card{ scroll-margin-top:14px; }
+  .step-head{ display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+  .step-badge{ width:34px; height:34px; border-radius:10px; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; font-size:15px; font-weight:900; background:var(--primary); color:#fff; }
+  .step-card.done .step-badge{ background:var(--ok); }
+  .step-head h3{ margin:0; font-size:15px; font-weight:800; }
+  .step-head .card-sub{ font-size:13px; }
+  .step-head .spacer{ flex:1; }
+  .step-count{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+  .step-count.miss{ background:var(--warn-bg); color:var(--warn); }
+  .step-count.full{ background:var(--ok-bg); color:var(--ok); }
+  .block + .block{ margin-top:16px; }
+  .block-title{ font-size:13px; font-weight:800; margin:0 0 8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .block-title .card-sub{ margin:0; font-weight:600; }
+
+  .fgrid{ display:grid; grid-template-columns:repeat(var(--cols,4),minmax(0,1fr)); gap:12px 16px; }
+  .fld{ min-width:0; }
+  .fld.span-2{ grid-column:span 2; }
+  .fld.span-3{ grid-column:span 3; }
+  .fld.span-all{ grid-column:1 / -1; }
+  .fld > label{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-muted); margin-bottom:5px; }
+  .fld.req > label::after{ content:" *"; color:var(--danger); }
+  .fld input[type=text], .fld input[type=date], .fld input[type=number], .fld textarea{ width:100%; }
+  .fld textarea{ resize:vertical; min-height:62px; line-height:1.4; overflow:hidden; }
+  .fld .fld-help{ font-size:11.5px; color:var(--ink-muted); margin-top:4px; }
+  .fld.is-missing input, .fld.is-missing textarea{ border-color:var(--warn); box-shadow:inset 3px 0 0 var(--warn); }
+  .fld.is-missing > label{ color:var(--warn); }
+  .fld.is-missing .seg-btn{ border-color:var(--warn); }
+  .fld.flash input, .fld.flash textarea, .fld.flash .seg, td.flash{ animation:flashFocus 1.2s ease; }
+  @keyframes flashFocus{ 0%{ box-shadow:0 0 0 4px var(--warn-bg); } 100%{ box-shadow:none; } }
+
+  /* ---- Choix segmentés (Oui / Non / …) ---- */
+  .seg{ display:inline-flex; gap:5px; flex-wrap:wrap; border-radius:999px; }
+  .seg-btn{ border:1px solid var(--border); background:var(--surface); color:var(--ink-muted); padding:6px 13px; border-radius:999px; font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .seg-btn:hover{ background:var(--surface-alt); color:var(--ink); }
+  .seg-btn.on.t-ok{ background:var(--ok-bg); color:var(--ok); border-color:var(--ok); }
+  .seg-btn.on.t-bad{ background:var(--danger-bg); color:var(--danger); border-color:var(--danger); }
+  .seg-btn.on.t-mid{ background:var(--warn-bg); color:var(--warn); border-color:var(--warn); }
+  .seg-btn.on.t-info{ background:var(--primary-tint); color:var(--primary); border-color:var(--primary); }
+  .seg-btn.on.t-neutral{ background:var(--surface-alt); color:var(--ink); border-color:var(--ink-muted); }
+  .seg-btn.on.t-obl{ background:var(--primary); color:#fff; border-color:var(--primary); }
+  .seg-btn.on.t-utile{ background:var(--accent-tint); color:var(--accent); border-color:var(--accent); }
+  .seg-btn.on.t-nn{ background:var(--surface-alt); color:var(--ink-muted); border-color:var(--ink-muted); }
+  .seg.small .seg-btn{ padding:4px 10px; font-size:12px; }
+
+  /* ---- Question de validation encadrée ---- */
+  .question{ border:1px solid var(--border); border-left:4px solid var(--primary); background:var(--surface-alt); border-radius:var(--radius-sm); padding:12px 14px; }
+  .question .q-label{ font-size:14px; font-weight:800; margin:0 0 10px; }
+  .question .q-row{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:12px 16px; align-items:start; }
+  .question .q-row textarea{ width:100%; min-height:38px; resize:vertical; overflow:hidden; line-height:1.4; }
+  .question .fld > label{ margin-bottom:6px; }
+
+  /* ---- Encarts d'alerte ---- */
+  .alert{ border-radius:9px; padding:10px 14px; font-size:13px; line-height:1.45; background:var(--primary-tint); color:var(--primary-dark); display:flex; gap:10px; align-items:flex-start; }
+  .alert .al-ico{ font-size:16px; line-height:1.2; flex-shrink:0; }
+  .alert .al-body{ min-width:0; flex:1; }
+  .alert strong{ font-weight:800; }
+  .alert.warn{ background:var(--warn-bg); color:var(--warn); }
+  .alert.danger{ background:var(--danger-bg); color:var(--danger); }
+  .alert.ok{ background:var(--ok-bg); color:var(--ok); }
+  .alert ul{ margin:6px 0 0; padding-left:18px; }
+  .alert li{ margin:2px 0; }
+  .dyn:empty{ display:none; }
+  .dyn-msgs{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+  .dyn-msgs:empty{ display:none; }
+  .msg{ font-size:12.5px; font-weight:600; padding:6px 10px; border-radius:7px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .msg.ok{ background:var(--ok-bg); color:var(--ok); }
+  .msg.warn{ background:var(--warn-bg); color:var(--warn); }
+  .msg.danger{ background:var(--danger-bg); color:var(--danger); }
+  .msg.info{ background:var(--primary-tint); color:var(--primary-dark); }
+
+  /* ---- Visualisation de la tolérance ---- */
+  .spec-viz{ border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-alt); padding:10px 12px; }
+  .spec-viz svg{ width:100%; height:auto; display:block; max-height:150px; }
+  .spec-empty{ font-size:12.5px; color:var(--ink-muted); text-align:center; padding:18px 8px; }
+
+  /* ---- Tableaux de lignes ---- */
+  .table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); }
+  table.rows{ border-collapse:collapse; width:100%; font-size:13px; table-layout:fixed; }
+  table.rows thead th{ position:sticky; top:0; background:var(--surface-alt); color:var(--ink-muted); font-size:11px; text-transform:uppercase; letter-spacing:.03em; font-weight:700; text-align:left; padding:9px 8px; border-bottom:1px solid var(--border); z-index:1; }
+  table.rows tbody td{ padding:5px 6px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.rows tbody tr:last-child td{ border-bottom:none; }
+  table.rows td.c-act{ text-align:center; vertical-align:middle; }
+  table.rows input[type=text], table.rows input[type=date], table.rows textarea{ width:100%; border-color:transparent; background:transparent; padding:6px 7px; font-size:13px; }
+  table.rows input[type=text]:hover, table.rows input[type=date]:hover, table.rows textarea:hover{ border-color:var(--border); }
+  table.rows input:focus, table.rows textarea:focus{ border-color:var(--primary); background:var(--surface); }
+  table.rows textarea{ resize:none; overflow:hidden; min-height:32px; line-height:1.4; display:block; }
+  table.rows td.is-missing input, table.rows td.is-missing textarea{ border-color:var(--warn); box-shadow:inset 3px 0 0 var(--warn); }
+  table.rows td.is-missing .seg-btn{ border-color:var(--warn); }
+  table.rows tr.row-nn td{ opacity:.6; }
+  table.rows tr.row-nn td.c-imp{ opacity:1; }
+  .rows-empty{ padding:12px; font-size:12.5px; color:var(--ink-muted); text-align:center; }
+  .rows-foot{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .del-row{ background:none; border:1px solid transparent; border-radius:7px; width:30px; height:30px; color:var(--ink-muted); font-size:15px; cursor:pointer; line-height:1; }
+  .del-row:hover{ color:var(--danger); border-color:var(--danger); background:var(--danger-bg); }
+
+  .cats{ display:grid; grid-template-columns:minmax(0,1fr); gap:18px; }
+  .imp-block{ margin-top:12px; }
+  .imp-block + .cats{ margin-top:16px; }
+  table.rows.data{ min-width:680px; }
+  .cat h4{ margin:0 0 6px; font-size:13.5px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .cat h4 .cat-hint{ font-size:11.5px; font-weight:600; color:var(--ink-muted); }
+  .imp-summary{ display:flex; gap:6px; flex-wrap:wrap; }
+  .pill{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:800; white-space:nowrap; }
+  .pill.p-obl{ background:var(--primary); color:#fff; }
+  .pill.p-utile{ background:var(--accent-tint); color:var(--accent); }
+  .pill.p-nn{ background:var(--surface-alt); color:var(--ink-muted); border:1px solid var(--border); }
+  .pill.p-todo{ background:var(--warn-bg); color:var(--warn); }
+
+  /* ---- Validation ---- */
+  .val-list{ display:flex; flex-direction:column; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+  .val-row{ display:grid; grid-template-columns:minmax(0,1fr) 300px minmax(0,1fr); gap:10px 16px; align-items:center; padding:10px 14px; border-top:1px solid var(--border); background:var(--surface); }
+  .val-row:first-child{ border-top:none; }
+  .val-row.final{ background:var(--surface-alt); border-top:2px solid var(--border); }
+  .val-row .v-label{ font-size:13.5px; font-weight:700; }
+  .val-row.final .v-label{ font-weight:900; }
+  .val-row.is-missing .v-label{ color:var(--warn); }
+  .val-row.is-missing .seg-btn{ border-color:var(--warn); }
+  .v-hint{ font-size:12px; font-weight:600; color:var(--ink-muted); }
+  .v-hint.ok{ color:var(--ok); }
+  .v-hint.warn{ color:var(--warn); }
+  .v-hint.danger{ color:var(--danger); }
+  .v-hint button{ margin-left:6px; }
+
+  /* ---- État vide ---- */
+  .no-fiche{ text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:60px 24px; box-shadow:var(--shadow); }
+  .no-fiche h2{ margin:0 0 8px; font-size:18px; }
+  .no-fiche p{ margin:0 auto 18px; color:var(--ink-muted); font-size:13.5px; max-width:560px; line-height:1.5; }
+  .flow-line{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:0 auto 20px; }
+  .flow-line span{ font-size:12.5px; font-weight:800; color:var(--primary); background:var(--primary-tint); padding:5px 11px; border-radius:20px; }
+  .flow-line i{ font-style:normal; color:var(--ink-muted); align-self:center; }
+
+  /* ---- Modales ---- */
+  .modal-hint{ background:var(--primary-tint); color:var(--primary-dark); border-radius:9px; padding:9px 12px; font-size:12.5px; font-weight:600; margin-bottom:12px; }
+  .modal-hint.warn{ background:var(--warn-bg); color:var(--warn); }
+  .modal-overlay{ position:fixed; inset:0; background:rgba(10,14,22,.5); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000; }
+  .modal-overlay.hidden{ display:none; }
+  .modal{ background:var(--surface); border-radius:var(--radius); max-width:560px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-hover); }
+  .modal-small{ max-width:440px; }
+  .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .modal-header h2{ margin:0; font-size:16.5px; font-weight:800; }
+  .modal-body{ padding:18px 22px 22px; }
+  .modal-body p{ margin:0 0 6px; font-size:13.5px; line-height:1.5; }
+  .modal-footer{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+
+  /* ---- Toasts ---- */
+  #toastContainer{ position:fixed; bottom:20px; right:20px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
+  .toast{ background:var(--ink); color:var(--bg); padding:11px 16px; border-radius:8px; font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; transform:translateY(8px); animation:toastIn .2s ease forwards; }
+  .toast.toast-error{ background:var(--danger); color:#fff; }
+  .toast.toast-success{ background:var(--ok); color:#fff; }
+  .toast.toast-warning{ background:var(--warn); color:#3a2a00; }
+  @keyframes toastIn{ to{ opacity:1; transform:translateY(0); } }
+
+  footer.app-footer{ font-size:12px; color:var(--ink-muted); margin-top:6px; }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 1180px){
+    .fiche-layout{ grid-template-columns:1fr; }
+    .rail{ position:static; }
+    .rail ol{ display:flex; flex-wrap:wrap; gap:4px; }
+    .rail li + li::before{ display:none; }
+    .step-link{ margin-bottom:0; }
+    .rail-actions{ flex-direction:row; flex-wrap:wrap; }
+  }
+  @media (max-width: 860px){
+    .fgrid{ --cols:2 !important; }
+    .fld.span-3{ grid-column:1 / -1; }
+    .val-row{ grid-template-columns:1fr; }
+    .question .q-row{ grid-template-columns:1fr; }
+  }
+  @media (max-width: 600px){
+    body{ padding:12px; }
+    .fgrid{ --cols:1 !important; }
+    .fld.span-2, .fld.span-3{ grid-column:1 / -1; }
+    .fiche-bar select{ min-width:0; width:100%; }
+    .fiche-bar .field{ width:100%; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  /* =====================================================================
+     Impression A4 (rendu dédié, généré dans #printRoot)
+     ===================================================================== */
+  #printRoot{ display:none; }
+  .pr{ font-size:10pt; color:var(--ink); line-height:1.35; }
+  .pr-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10mm; border-bottom:2px solid var(--primary); padding-bottom:3mm; margin-bottom:4mm; }
+  .pr-head h1{ margin:0 0 1mm; font-size:15pt; font-weight:800; }
+  .pr-head .pr-subject{ font-size:12pt; font-weight:700; margin:0; }
+  .pr-head .pr-right{ text-align:right; font-size:9pt; color:var(--ink-muted); }
+  .pr-head .status-badge{ margin-bottom:1.5mm; }
+  .pr-sec{ margin-bottom:4.5mm; }
+  .pr-sec h2{ font-size:11.5pt; font-weight:800; margin:0 0 2mm; padding:1.5mm 2.5mm; background:var(--primary-tint); color:var(--primary-dark); border-radius:2mm; break-after:avoid; page-break-after:avoid; }
+  .pr-sec h2 small{ font-weight:600; color:var(--ink-muted); font-size:9pt; margin-left:2mm; }
+  .pr-sec h3{ font-size:10pt; font-weight:800; margin:2.5mm 0 1.2mm; break-after:avoid; page-break-after:avoid; }
+  table.pr-t{ width:100%; border-collapse:collapse; table-layout:fixed; }
+  table.pr-t th, table.pr-t td{ border:0.25mm solid var(--border); padding:1.3mm 2mm; vertical-align:top; overflow-wrap:anywhere; }
+  table.pr-t th{ background:var(--surface-alt); color:var(--ink-muted); font-size:8pt; font-weight:700; text-align:left; text-transform:uppercase; letter-spacing:.02em; }
+  table.pr-t td.lb{ background:var(--surface-alt); color:var(--ink-muted); font-weight:700; font-size:8.5pt; }
+  table.pr-t td.lb.req::after{ content:" *"; color:var(--danger); }
+  table.pr-t td.vl{ white-space:pre-wrap; font-weight:600; }
+  table.pr-t td.ck{ text-align:center; }
+  table.pr-t tr{ break-inside:avoid; page-break-inside:avoid; }
+  table.pr-t thead{ display:table-header-group; }
+  tr.pr-nn td{ color:var(--ink-muted); }
+  .pr-blank{ display:block; min-height:4.5mm; }
+  .pr-blank.tall{ min-height:12mm; }
+  .pr-opts{ white-space:nowrap; }
+  .pr-opts span{ margin-right:3mm; }
+  .pr-opts span.on{ font-weight:800; }
+  .pr-note{ font-size:8.5pt; padding:1.5mm 2.5mm; border-left:1mm solid var(--warn); background:var(--warn-bg); margin:2mm 0; break-inside:avoid; }
+  .pr-viz{ border:0.25mm solid var(--border); padding:1.5mm; margin-top:2mm; break-inside:avoid; }
+  .pr-viz svg{ width:100%; height:auto; display:block; max-height:32mm; }
+  .pr-foot{ margin-top:4mm; font-size:8pt; color:var(--ink-muted); text-align:right; }
+  .pr-keep{ break-inside:avoid; page-break-inside:avoid; }
+
+  @media print{
+    @page{ size:A4 portrait; margin:11mm 10mm; }
+    html, body{ background:#fff !important; }
+    body{ padding:0; }
+    .container, #toastContainer, .modal-overlay{ display:none !important; }
+    #printRoot{ display:block !important; }
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="app-header">
+    <div>
+      <h1>🎯 Fiche CTQ</h1>
+      <p class="subtitle">Cadrer un problème, sa caractéristique mesurable et le plan de collecte avant une étude de capabilité</p>
+    </div>
+    <div class="header-actions">
+      <button id="themeToggleBtn" class="btn-icon" title="Changer de thème">🌙</button>
+      <button id="btnUndo" class="btn-icon" title="Annuler la dernière modification" disabled>↩️</button>
+      <button id="btn-drive-connect" class="btn-secondary drive-btn" title="Connecter Google Drive">
+        <span id="drive-dot" class="drive-dot"></span><span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button id="btn-drive-force" class="btn-secondary" title="Forcer la synchro">Forcer synchro</button>
+      <button id="btnExport" class="btn-secondary">Exporter (JSON)</button>
+      <button id="btnImport" class="btn-secondary">Importer (JSON)</button>
+      <button id="btnLocalCopy" class="btn-secondary" title="Enregistre une copie horodatée des données dans un dossier choisi (le gabarit HTML de l'outil n'est écrit qu'une fois par version)">📁 Copie locale</button>
+      <button id="btnPrintPdf" class="btn-secondary" title="Imprimer / exporter en PDF la fiche courante (A4)">🖨️ Imprimer PDF</button>
+      <input type="file" id="importInput" accept="application/json,.json">
+    </div>
+  </header>
+
+  <div class="fiche-bar" id="ficheBar">
+    <div class="field">
+      <label for="ficheSelect">Fiche</label>
+      <select id="ficheSelect"></select>
+    </div>
+    <button class="btn-primary" id="btnNewFiche">➕ Nouvelle fiche</button>
+    <button class="btn-secondary" id="btnDupFiche" title="Créer une copie de la fiche courante">⧉ Dupliquer</button>
+    <button class="btn-secondary" id="btnResetFiche" title="Vider tous les champs de la fiche courante">♻️ Réinitialiser</button>
+    <button class="btn-outline-danger" id="btnDelFiche">🗑️ Supprimer</button>
+    <div class="spacer"></div>
+    <div class="progress-block">
+      <div class="progress-text"><b id="progressPct">0 %</b><span id="progressLabel">champs obligatoires</span></div>
+      <div class="progress-bar"><i id="progressFill" style="width:0%"></i></div>
+      <span class="status-badge st-draft" id="statusBadge">Cadrage en cours</span>
+    </div>
+  </div>
+
+  <div id="noFicheState" class="no-fiche hidden">
+    <h2>Aucune fiche pour l'instant</h2>
+    <p>Une fiche CTQ se remplit en réunion avec l'équipe projet. Elle guide le groupe du problème constaté jusqu'au plan de collecte des données, étape par étape.</p>
+    <div class="flow-line"><span>Problème</span><i>›</i><span>CTQ</span><i>›</i><span>Spécifications</span><i>›</i><span>Mesure</span><i>›</i><span>Données</span><i>›</i><span>Plan de collecte</span><i>›</i><span>Validation</span></div>
+    <button class="btn-primary" id="btnNewFicheEmpty">➕ Créer une fiche</button>
+  </div>
+
+  <div class="fiche-layout" id="ficheLayout">
+    <nav class="rail" id="rail" aria-label="Étapes de la fiche">
+      <p class="rail-title">Déroulé de la réunion</p>
+      <ol id="railList"></ol>
+      <div class="rail-actions">
+        <button class="btn-secondary" id="btnNextMissing" title="Aller au prochain champ obligatoire non renseigné">🔎 Champ manquant suivant</button>
+        <p class="rail-legend"><span class="req-star">*</span> champ obligatoire. Un contour orangé signale un champ obligatoire encore vide.</p>
+      </div>
+    </nav>
+    <main id="ficheRoot"></main>
+  </div>
+
+  <footer class="app-footer">Outil autonome : données stockées dans ce navigateur (localStorage) et synchronisables avec Google Drive. Aucun calcul de capabilité ici : la fiche prépare la collecte.</footer>
+</div>
+
+<div id="printRoot"></div>
+
+<datalist id="dl-services">
+  <option value="Production"></option>
+  <option value="Assurance Qualité"></option>
+  <option value="Contrôle Qualité"></option>
+  <option value="Méthodes"></option>
+  <option value="Maintenance"></option>
+  <option value="Amélioration Continue"></option>
+  <option value="Engineering"></option>
+  <option value="Supply Chain"></option>
+</datalist>
+
+<div id="confirmOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal modal-small">
+    <div class="modal-body">
+      <p id="confirmMessage">Confirmer ?</p>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="confirmCancelBtn">Annuler</button>
+        <button type="button" class="btn-danger" id="confirmOkBtn">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — se branche sur la clé
+   localStorage de l'appli (STORAGE_KEY) au lieu de la remplacer.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'fichectq';
+  var APP_STORAGE_KEY = 'axelFicheCTQ_v1';
+  var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
+  var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  function getLocalRecord() {
+    var value = null;
+    try { value = localStorage.getItem(APP_STORAGE_KEY); } catch (e) { value = null; }
+    if (!value) return null;
+    var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10);
+    if (!modified) modified = Date.now();
+    return { value: value, modified: modified };
+  }
+
+  function setLocalRecord(value, modified) {
+    try {
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connecté', connected: 'Drive : connecté', ok: 'Drive : synchronisé', sync: 'Drive : synchro…', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName() { return 'storage__' + APP_NS + '__state.json'; }
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  function driveCreateFile(record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(record) {
+    return driveFindFile().then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(record); });
+  }
+
+  async function syncFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var local = getLocalRecord();
+      var existing = await driveFindFile();
+      if (!existing) {
+        if (local) await drivePushRecord(local);
+        setSyncStatus('ok');
+        return;
+      }
+      var remote = await driveGetRecord(existing.id);
+      if (!remote) { setSyncStatus('ok'); return; }
+
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        setLocalRecord(remote.value, remote.modified);
+        setSyncStatus('ok');
+        if (changed) {
+          setSyncStatus('sync');
+          setTimeout(function () { location.reload(); }, 700);
+        }
+      } else if (local.modified > remote.modified) {
+        await driveUpdateFile(existing.id, local);
+        setSyncStatus('ok');
+      } else {
+        setSyncStatus('ok');
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord à Drive (bouton "Drive : non connecté").'); return; }
+      var local = getLocalRecord();
+      if (!local) { alert('Rien en local à synchroniser.'); return; }
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () {
+        setSyncStatus('ok');
+        alert('Synchro forcée : OK (' + Math.round(local.value.length / 1024) + ' Ko envoyés)');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        alert('Erreur : ' + e.message);
+      });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  window.__driveNotifySave = function () {
+    var modified = Date.now();
+    localStorage.setItem(MODIFIED_KEY, String(modified));
+    if (hasValidToken()) {
+      var local = getLocalRecord();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] Échec de la sauvegarde vers Drive :', e);
+      });
+    }
+  };
+})();
+</script>
+<script>
+/* ===================================================================
+   Fiche CTQ — cadrage d'une future étude de capabilité
+   Problème → CTQ → Spécifications → Mesure → Données → Plan → Validation
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var APP_ID = 'fichectq';
+  var STORAGE_KEY = 'axelFicheCTQ_v1'; /* doit rester identique à APP_STORAGE_KEY du module Drive */
+  var SCHEMA_VERSION = 1;
+  var TOOL_VERSION = 'v1'; // à incrémenter à chaque nouvelle version livrée du fichier
+  var pristineHtmlTemplate = null;
+  try { pristineHtmlTemplate = '<!DOCTYPE html>\n' + document.documentElement.outerHTML; } catch (e) { pristineHtmlTemplate = null; }
+
+  var state = null;
+  var lastGoodSnapshot = null;
+  var dirtyFiche = false;
+  var saveTimer = null;
+
+  /* ================= Utilitaires ================= */
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function uid() { return 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function isEmpty(v) { return v == null || String(v).trim() === ''; }
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+  function frDate(iso) {
+    if (!iso) return '';
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : iso;
+  }
+  function frDateTime(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' à ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  /* Lecture d'un nombre saisi à la française (virgule, espaces) ; NaN si vide ou non numérique */
+  function parseNum(v) {
+    if (isEmpty(v)) return NaN;
+    var s = String(v).replace(/\s/g, '').replace(',', '.');
+    if (!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(s)) return NaN;
+    return parseFloat(s);
+  }
+  /* Premier nombre trouvé dans un texte libre (ex. « 0,01 mm ») */
+  function firstNum(v) {
+    if (isEmpty(v)) return NaN;
+    var m = /[-+]?\d+(?:[.,]\d+)?/.exec(String(v).replace(/\s(?=\d{3}\b)/g, ''));
+    return m ? parseFloat(m[0].replace(',', '.')) : NaN;
+  }
+  function fmtNum(n) {
+    if (!isFinite(n)) return '';
+    var r = Math.round(n * 1e6) / 1e6;
+    return String(r).replace('.', ',');
+  }
+  function getPath(obj, path) {
+    var parts = path.split('.');
+    var cur = obj;
+    for (var i = 0; i < parts.length; i++) { if (cur == null) return undefined; cur = cur[parts[i]]; }
+    return cur;
+  }
+  function setPath(obj, path, value) {
+    var parts = path.split('.');
+    var cur = obj;
+    for (var i = 0; i < parts.length - 1; i++) { if (cur[parts[i]] == null) cur[parts[i]] = {}; cur = cur[parts[i]]; }
+    cur[parts[parts.length - 1]] = value;
+  }
+
+  /* ================= Options des choix segmentés ================= */
+  var OPTS = {
+    onc: [['oui', 'Oui', 'ok'], ['non', 'Non', 'bad'], ['aconfirmer', 'À confirmer', 'mid']],
+    on: [['oui', 'Oui', 'ok'], ['non', 'Non', 'bad']],
+    msa: [['oui', 'Oui', 'info'], ['non', 'Non', 'neutral'], ['adeterminer', 'À déterminer', 'mid']],
+    sys: [['oui', 'Oui', 'ok'], ['non', 'Non', 'bad'], ['afaire', 'À faire', 'mid']],
+    imp: [['obligatoire', 'Obligatoire', 'obl'], ['utile', 'Utile', 'utile'], ['non', 'Non nécessaire', 'nn']]
+  };
+  function optLabel(kind, v) {
+    var o = OPTS[kind] || [];
+    for (var i = 0; i < o.length; i++) if (o[i][0] === v) return o[i][1];
+    return '';
+  }
+
+  /* ================= Catégories de données ================= */
+  var DATA_CATS = [
+    { key: 'produit', label: 'Produit', hint: 'ce qui entre dans le procédé', defaults: ['Référence', 'Format', 'Lot', 'Fournisseur', 'Matière / caractéristiques pertinentes'] },
+    { key: 'procede', label: 'Procédé', hint: 'comment la machine tourne', defaults: ['Ligne / machine', 'Réglage', 'Paramètres critiques', 'Cadence', 'Format machine', 'Conditions particulières'] },
+    { key: 'resultat', label: 'Résultat', hint: 'ce qui est mesuré', defaults: ['Valeur du CTQ', 'OK / NOK', 'Type de défaut', 'Date / heure'] },
+    { key: 'contexte', label: 'Contexte', hint: 'ce qui peut expliquer un écart', defaults: ['Équipe', 'Poste (horaire)', 'Changement de format', 'Maintenance récente', 'Autres événements pouvant influencer le résultat'] }
+  ];
+  var DEFAULT_OBLIGATOIRE = { 'Valeur du CTQ': true, 'Date / heure': true };
+
+  /* ================= Listes (lignes ajoutables) ================= */
+  var LISTS = {
+    'sujet.participants': {
+      cols: [
+        { k: 'nom', label: 'Nom', type: 'text', w: '45%', ph: 'Nom Prénom' },
+        { k: 'service', label: 'Service / fonction', type: 'text', list: 'dl-services', ph: 'Production, Qualité…' }
+      ],
+      add: '➕ Ajouter un participant', empty: 'Aucun participant saisi.', printBlank: 4
+    },
+    'points': {
+      cols: [
+        { k: 'texte', label: 'Point à clarifier', type: 'textarea', ph: 'Question ouverte, information manquante…' },
+        { k: 'qui', label: 'Responsable', type: 'text', w: '22%' },
+        { k: 'quand', label: 'Échéance', type: 'date', w: '150px' }
+      ],
+      add: '➕ Ajouter un point', empty: 'Aucun point à clarifier pour l\'instant.', printBlank: 3
+    },
+    'decisions': {
+      cols: [
+        { k: 'texte', label: 'Décision', type: 'textarea', ph: 'Ce qui a été acté en réunion' },
+        { k: 'qui', label: 'Porteur', type: 'text', w: '22%' }
+      ],
+      add: '➕ Ajouter une décision', empty: 'Aucune décision enregistrée.', printBlank: 3
+    }
+  };
+  DATA_CATS.forEach(function (c) {
+    LISTS['donnees.' + c.key] = {
+      cols: [
+        { k: 'label', label: 'Donnée', type: 'textarea', w: '26%', ph: 'Nom de la donnée', req: true },
+        { k: 'detail', label: 'Précisions (où, comment la relever)', type: 'textarea', ph: 'Source, format, qui la relève…' },
+        { k: 'importance', label: 'Importance', type: 'seg', opts: 'imp', w: '310px', req: true }
+      ],
+      add: '➕ Ajouter une donnée', empty: 'Aucune donnée dans cette catégorie.', printBlank: 0, isData: true
+    };
+  });
+  function listCols(path) { return LISTS[path].cols; }
+
+  /* ================= Structure des étapes ================= */
+  var VALIDATION_ITEMS = [
+    { k: 'probleme', label: 'Problème clairement défini', opts: 'on', step: 1 },
+    { k: 'ctq', label: 'CTQ clairement défini', opts: 'on', step: 2 },
+    { k: 'specs', label: 'Spécifications disponibles', opts: 'onc', step: 3 },
+    { k: 'methode', label: 'Méthode de mesure définie', opts: 'on', step: 4 },
+    { k: 'systeme', label: 'Système de mesure validé', opts: 'sys', step: 4 },
+    { k: 'donnees', label: 'Données nécessaires identifiées', opts: 'on', step: 5 },
+    { k: 'plan', label: 'Plan de collecte défini', opts: 'on', step: 6 },
+    { k: 'pret', label: 'Prêt pour la collecte', opts: 'on', step: 0, final: true }
+  ];
+
+  var STEPS = [
+    { n: 1, short: 'Problème', title: 'Identification du sujet', q: 'Quel est précisément le problème étudié ?', blocks: [
+      { type: 'fields', cols: 4, fields: [
+        { f: 'sujet.nom', label: 'Nom du sujet', span: 2, ph: 'Titre court et explicite' },
+        { f: 'sujet.date', label: 'Date', type: 'date' },
+        { f: 'sujet.pilote', label: 'Pilote du sujet' },
+        { f: 'sujet.processus', label: 'Processus / ligne' },
+        { f: 'sujet.equipement', label: 'Équipement' },
+        { f: 'sujet.references', label: 'Référence(s) concernée(s)', span: 2 }
+      ] },
+      { type: 'list', list: 'sujet.participants', title: 'Participants' },
+      { type: 'fields', cols: 3, fields: [
+        { f: 'sujet.description', label: 'Description du problème', type: 'textarea', ph: 'Quoi, où, depuis quand, à quelle fréquence ? S\'en tenir aux faits constatés.' },
+        { f: 'sujet.impact', label: 'Impact constaté', type: 'textarea', ph: 'Rebuts, réclamations, arrêts, déviations, risque qualité…' },
+        { f: 'sujet.objectif', label: 'Objectif de l\'étude', type: 'textarea', ph: 'Ce que l\'étude doit permettre de savoir ou de décider' }
+      ] }
+    ] },
+    { n: 2, short: 'CTQ', title: 'Caractéristique critique pour la qualité (CTQ)', q: 'Quelle caractéristique mesurable permet d\'objectiver ce problème ?', blocks: [
+      { type: 'fields', cols: 3, fields: [
+        { f: 'ctq.nom', label: 'Nom du CTQ', ph: 'Ex. couple de dévissage, poids net, hauteur de remplissage' },
+        { f: 'ctq.definition', label: 'Définition précise', type: 'textarea', span: 2, ph: 'Ce qui est mesuré, à quel endroit du produit, dans quelles conditions' },
+        { f: 'ctq.pourquoi', label: 'Pourquoi ce CTQ est représentatif du problème', type: 'textarea', span: 3, ph: 'Lien entre la valeur mesurée et le défaut ou l\'impact constaté' }
+      ] },
+      { type: 'question', f: 'ctq.validation', comment: 'ctq.validationComment', opts: 'onc', label: 'Le CTQ choisi permet-il réellement d\'objectiver le problème constaté ?', dyn: 'ctqFollow' }
+    ] },
+    { n: 3, short: 'Spécifications', title: 'Spécifications applicables', q: 'Quelles limites s\'appliquent à cette caractéristique ?', blocks: [
+      { type: 'fields', cols: 4, fields: [
+        { f: 'spec.unite', label: 'Unité de mesure', ph: 'mm, g, N·cm, %…' },
+        { f: 'spec.cible', label: 'Valeur cible', num: true, ph: 'Valeur nominale' },
+        { f: 'spec.lsl', label: 'Limite basse (LSL)', num: true, ph: 'Vide si aucune', help: 'Au moins une des deux limites est requise.' },
+        { f: 'spec.usl', label: 'Limite haute (USL)', num: true, ph: 'Vide si aucune' },
+        { f: 'spec.source', label: 'Source des spécifications', type: 'textarea', span: 4, ph: 'Dossier d\'enregistrement, plan, cahier des charges, spécification interne… avec référence et version' }
+      ] },
+      { type: 'specviz' }
+    ] },
+    { n: 4, short: 'Mesure', title: 'Méthode et système de mesure', q: 'Comment mesure-t-on ce CTQ, et peut-on se fier à la mesure ?', blocks: [
+      { type: 'fields', cols: 4, fields: [
+        { f: 'mesure.methode', label: 'Méthode de mesure', type: 'textarea', span: 2, ph: 'Mode opératoire, référence de la procédure' },
+        { f: 'mesure.moyen', label: 'Moyen de mesure', type: 'textarea', span: 2, ph: 'Instrument, n° d\'identification' },
+        { f: 'mesure.resolution', label: 'Résolution / précision', ph: 'Ex. 0,01 mm' },
+        { f: 'mesure.frequence', label: 'Fréquence de mesure actuelle', ph: 'Ex. 5 unités / heure' },
+        { f: 'mesure.operateurs', label: 'Opérateur(s)', span: 2, ph: 'Qui mesure aujourd\'hui (fonction, équipes)' },
+        { f: 'mesure.etalonnage', label: 'Étalonnage / vérification', type: 'textarea', span: 4, ph: 'Dernier étalonnage, vérification avant usage, étalon utilisé…' }
+      ] },
+      { type: 'dyn', id: 'resMsg' },
+      { type: 'question', f: 'mesure.msa', comment: 'mesure.msaComment', opts: 'msa', label: 'Une étude MSA / R&R (répétabilité et reproductibilité de la mesure) est-elle nécessaire ?', dyn: 'msaFollow' },
+      { type: 'alert', tone: 'warn', ico: '⚠️', html: '<strong>Avant toute étude de capabilité, vérifier que le système de mesure est suffisamment fiable.</strong> Si la mesure varie autant que le produit, l\'étude ne dira rien du procédé.' }
+    ] },
+    { n: 5, short: 'Données', title: 'Données à collecter', q: 'Quelles informations relever avec chaque mesure pour pouvoir expliquer les écarts ?', blocks: [
+      { type: 'datacats' }
+    ] },
+    { n: 6, short: 'Plan de collecte', title: 'Plan de collecte', q: 'Combien de mesures, sur quel périmètre, à quel rythme et par qui ?', blocks: [
+      { type: 'fields', cols: 5, fields: [
+        { f: 'plan.nbMesures', label: 'Nombre de mesures souhaité', type: 'number' },
+        { f: 'plan.nbLots', label: 'Nombre de lots', type: 'number' },
+        { f: 'plan.nbRefs', label: 'Nombre de références', type: 'number' },
+        { f: 'plan.nbMachines', label: 'Nombre de machines / lignes', type: 'number' },
+        { f: 'plan.nbEquipes', label: 'Nombre d\'équipes', type: 'number' }
+      ] },
+      { type: 'fields', cols: 4, fields: [
+        { f: 'plan.duree', label: 'Durée de collecte', ph: 'Ex. 3 semaines' },
+        { f: 'plan.frequence', label: 'Fréquence de prélèvement', ph: 'Ex. toutes les heures' },
+        { f: 'plan.responsable', label: 'Responsable de la collecte', span: 2 },
+        { f: 'plan.echantillonnage', label: 'Mode d\'échantillonnage', type: 'textarea', span: 2, ph: 'Ex. 5 unités consécutives prélevées en sortie de machine' },
+        { f: 'plan.conditions', label: 'Conditions de fonctionnement', type: 'textarea', span: 2, ph: 'Production normale, démarrages inclus ou non, formats concernés…' }
+      ] },
+      { type: 'alert', tone: 'info', ico: '🎯', html: '<strong>Objectif : un échantillon représentatif de la variabilité réelle du procédé.</strong> Couvrir plusieurs lots, équipes, références et conditions habituelles de production, et pas seulement une période où tout se passe bien.', dyn: 'planChecks' }
+    ] },
+    { n: 7, short: 'Validation', title: 'Validation de la fiche', q: 'La fiche est-elle prête pour lancer la collecte ?', blocks: [
+      { type: 'validation' },
+      { type: 'list', list: 'points', title: 'Points à clarifier avant lancement' },
+      { type: 'list', list: 'decisions', title: 'Décisions prises lors de la réunion' }
+    ] }
+  ];
+
+  /* Champs obligatoires (source unique : sert aux indicateurs, au rail, à l'impression) */
+  var REQ = {
+    1: ['sujet.nom', 'sujet.date', 'sujet.pilote', 'sujet.processus', 'sujet.description', 'sujet.impact', 'sujet.objectif'],
+    2: ['ctq.nom', 'ctq.definition', 'ctq.pourquoi', 'ctq.validation'],
+    3: ['spec.unite', 'spec.source', { any: ['spec.lsl', 'spec.usl'] }],
+    4: ['mesure.methode', 'mesure.moyen', 'mesure.resolution', 'mesure.msa'],
+    6: ['plan.nbMesures', 'plan.duree', 'plan.frequence', 'plan.responsable', 'plan.echantillonnage'],
+    7: VALIDATION_ITEMS.map(function (it) { return 'validation.' + it.k; })
+  };
+  function reqPathsFlat() {
+    var out = {};
+    Object.keys(REQ).forEach(function (n) {
+      REQ[n].forEach(function (r) {
+        if (typeof r === 'string') out[r] = true;
+        else r.any.forEach(function (p) { out[p] = true; });
+      });
+    });
+    return out;
+  }
+  var REQ_FLAT = reqPathsFlat();
+
+  /* ================= Modèle de données ================= */
+  function blankRow(path) {
+    var r = { id: uid() };
+    listCols(path).forEach(function (c) { r[c.k] = ''; });
+    return r;
+  }
+  function defaultDataRows(cat) {
+    return cat.defaults.map(function (label) {
+      var r = blankRow('donnees.' + cat.key);
+      r.label = label;
+      if (DEFAULT_OBLIGATOIRE[label]) r.importance = 'obligatoire';
+      return r;
+    });
+  }
+  function blankFiche() {
+    var now = new Date().toISOString();
+    var donnees = {};
+    DATA_CATS.forEach(function (c) { donnees[c.key] = defaultDataRows(c); });
+    var validation = {};
+    VALIDATION_ITEMS.forEach(function (it) { validation[it.k] = ''; });
+    return {
+      id: uid(), createdAt: now, updatedAt: now,
+      sujet: { nom: '', date: todayStr(), pilote: '', processus: '', equipement: '', references: '', participants: [], description: '', impact: '', objectif: '' },
+      ctq: { nom: '', definition: '', pourquoi: '', validation: '', validationComment: '' },
+      spec: { unite: '', cible: '', lsl: '', usl: '', source: '' },
+      mesure: { methode: '', moyen: '', resolution: '', frequence: '', operateurs: '', etalonnage: '', msa: '', msaComment: '' },
+      donnees: donnees,
+      plan: { nbMesures: '', nbLots: '', nbRefs: '', nbMachines: '', nbEquipes: '', duree: '', frequence: '', responsable: '', echantillonnage: '', conditions: '' },
+      validation: validation,
+      points: [],
+      decisions: []
+    };
+  }
+  function defaultState() { return { schema: SCHEMA_VERSION, theme: 'light', currentId: null, fiches: [] }; }
+
+  /* Normalisation / migration : complète toute fiche avec la structure courante sans rien perdre */
+  function normalizeList(path, arr) {
+    if (!Array.isArray(arr)) return null;
+    var cols = listCols(path);
+    return arr.filter(function (r) { return r && typeof r === 'object'; }).map(function (r) {
+      var o = {};
+      for (var k in r) if (Object.prototype.hasOwnProperty.call(r, k)) o[k] = r[k];
+      if (!o.id) o.id = uid();
+      cols.forEach(function (c) { if (o[c.k] == null) o[c.k] = ''; else o[c.k] = String(o[c.k]); });
+      return o;
+    });
+  }
+  function normalizeFiche(f) {
+    var base = blankFiche();
+    if (!f || typeof f !== 'object') return base;
+    var out = {};
+    for (var k in f) if (Object.prototype.hasOwnProperty.call(f, k)) out[k] = f[k];
+    out.id = f.id || base.id;
+    out.createdAt = f.createdAt || base.createdAt;
+    out.updatedAt = f.updatedAt || out.createdAt;
+    ['sujet', 'ctq', 'spec', 'mesure', 'plan', 'validation'].forEach(function (sec) {
+      var src = (f[sec] && typeof f[sec] === 'object') ? f[sec] : {};
+      var merged = {};
+      for (var k2 in src) if (Object.prototype.hasOwnProperty.call(src, k2)) merged[k2] = src[k2];
+      for (var bk in base[sec]) {
+        if (!Object.prototype.hasOwnProperty.call(base[sec], bk)) continue;
+        if (merged[bk] == null) merged[bk] = base[sec][bk];
+        else if (!Array.isArray(base[sec][bk])) merged[bk] = String(merged[bk]);
+      }
+      out[sec] = merged;
+    });
+    out.sujet.participants = normalizeList('sujet.participants', src0(f, 'sujet', 'participants')) || [];
+    var d = (f.donnees && typeof f.donnees === 'object') ? f.donnees : {};
+    out.donnees = {};
+    for (var dk in d) if (Object.prototype.hasOwnProperty.call(d, dk)) out.donnees[dk] = d[dk];
+    DATA_CATS.forEach(function (c) {
+      var rows = normalizeList('donnees.' + c.key, d[c.key]);
+      out.donnees[c.key] = rows || defaultDataRows(c);
+    });
+    out.points = normalizeList('points', f.points) || [];
+    out.decisions = normalizeList('decisions', f.decisions) || [];
+    return out;
+  }
+  function src0(f, a, b) { return f && f[a] && typeof f[a] === 'object' ? f[a][b] : null; }
+
+  function migrateState(s) {
+    if (!s || typeof s !== 'object' || !Array.isArray(s.fiches)) return defaultState();
+    var out = {};
+    for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) out[k] = s[k];
+    out.schema = SCHEMA_VERSION;
+    out.theme = s.theme === 'dark' ? 'dark' : 'light';
+    out.fiches = s.fiches.map(normalizeFiche);
+    if (!out.fiches.some(function (f) { return f.id === s.currentId; })) out.currentId = out.fiches.length ? out.fiches[0].id : null;
+    return out;
+  }
+
+  function loadState() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    var parsed = null;
+    if (raw) { try { parsed = JSON.parse(raw); } catch (e) { parsed = null; } }
+    state = migrateState(parsed);
+    /* La migration ne modifie pas le stockage tant qu'aucun changement réel n'est fait ;
+       on garde comme référence ce qui est réellement stocké pour le change-gating. */
+    lastGoodSnapshot = raw || null;
+  }
+
+  function currentFiche() {
+    if (!state || !state.currentId) return null;
+    for (var i = 0; i < state.fiches.length; i++) if (state.fiches[i].id === state.currentId) return state.fiches[i];
+    return null;
+  }
+
+  /* ================= Sauvegarde (uniquement sur changement réel) ================= */
+  var undoStack = [];
+  var UNDO_STACK_MAX = 40;
+  function saveState() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    var cur = currentFiche();
+    if (dirtyFiche && cur) cur.updatedAt = new Date().toISOString();
+    dirtyFiche = false;
+    var serialized;
+    try { serialized = JSON.stringify(state); } catch (e) {
+      alert('Erreur interne : impossible de préparer les données pour la sauvegarde.');
+      return false;
+    }
+    if (serialized === lastGoodSnapshot) return true;
+    try {
+      localStorage.setItem(STORAGE_KEY, serialized);
+      if (lastGoodSnapshot) {
+        undoStack.push(lastGoodSnapshot);
+        if (undoStack.length > UNDO_STACK_MAX) undoStack.shift();
+      }
+      lastGoodSnapshot = serialized;
+      updateUndoButtonState();
+      if (window.__driveNotifySave) window.__driveNotifySave();
+      return true;
+    } catch (e) {
+      if (lastGoodSnapshot) { try { state = migrateState(JSON.parse(lastGoodSnapshot)); } catch (e2) {} }
+      var sizeMo = (serialized.length / (1024 * 1024)).toFixed(2);
+      alert('Impossible d\'enregistrer : le stockage local de ce navigateur est plein.\n\nTaille actuelle des données : environ ' + sizeMo + ' Mo.\n\nCette dernière modification n\'a PAS été sauvegardée.');
+      return false;
+    }
+  }
+  function scheduleSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveState, 450);
+  }
+  function updateUndoButtonState() {
+    var btn = document.getElementById('btnUndo');
+    if (btn) btn.disabled = undoStack.length === 0;
+  }
+  function performUndo() {
+    if (saveTimer) saveState();
+    if (!undoStack.length) { showToast('Rien à annuler.'); return; }
+    var previous = undoStack.pop();
+    var parsed;
+    try { parsed = JSON.parse(previous); } catch (e) { showToast('Impossible de revenir en arrière (donnée corrompue).', 'warning'); return; }
+    state = migrateState(parsed);
+    try { localStorage.setItem(STORAGE_KEY, previous); } catch (e) {}
+    lastGoodSnapshot = previous;
+    if (window.__driveNotifySave) window.__driveNotifySave();
+    applyTheme(state.theme);
+    renderAll();
+    updateUndoButtonState();
+    showToast('Dernière modification annulée.', 'success');
+  }
+
+  /* ================= Toasts & confirmation ================= */
+  function showToast(msg, type) {
+    var container = document.getElementById('toastContainer');
+    var el = document.createElement('div');
+    el.className = 'toast' + (type ? ' toast-' + type : '');
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 3200);
+  }
+  var pendingConfirmAction = null;
+  function requestConfirm(message, okLabel, onConfirm) {
+    pendingConfirmAction = onConfirm;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmOkBtn').textContent = okLabel || 'Confirmer';
+    document.getElementById('confirmOverlay').classList.remove('hidden');
+    document.getElementById('confirmCancelBtn').focus();
+  }
+  function closeConfirm() { pendingConfirmAction = null; document.getElementById('confirmOverlay').classList.add('hidden'); }
+  document.getElementById('confirmOkBtn').addEventListener('click', function () {
+    var action = pendingConfirmAction;
+    closeConfirm();
+    if (action) action();
+  });
+  document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirm);
+  document.getElementById('confirmOverlay').addEventListener('click', function (e) { if (e.target === this) closeConfirm(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeConfirm(); });
+
+  /* ================= Calcul des manquants ================= */
+  function rowMissing(path, row) {
+    var miss = [];
+    listCols(path).forEach(function (c) { if (c.req && isEmpty(row[c.k])) miss.push(c.k); });
+    return miss;
+  }
+  function stepStatus(f, n) {
+    var req = 0, miss = 0;
+    if (n === 5) {
+      var anyObl = false;
+      DATA_CATS.forEach(function (c) {
+        f.donnees[c.key].forEach(function (r) {
+          req += 2;
+          miss += rowMissing('donnees.' + c.key, r).length;
+          if (r.importance === 'obligatoire') anyObl = true;
+        });
+      });
+      req += 1;
+      if (!anyObl) miss += 1;
+      return { req: req, miss: miss, anyObl: anyObl };
+    }
+    (REQ[n] || []).forEach(function (r) {
+      req += 1;
+      if (typeof r === 'string') { if (isEmpty(getPath(f, r))) miss += 1; }
+      else {
+        var ok = r.any.some(function (p) { return !isEmpty(getPath(f, p)); });
+        if (!ok) miss += 1;
+      }
+    });
+    return { req: req, miss: miss };
+  }
+  function ficheStatus(f) {
+    var steps = {}, req = 0, miss = 0;
+    STEPS.forEach(function (s) {
+      var st = stepStatus(f, s.n);
+      steps[s.n] = st; req += st.req; miss += st.miss;
+    });
+    return { steps: steps, req: req, miss: miss, pct: req ? Math.round(100 * (req - miss) / req) : 0 };
+  }
+  function pathIsMissing(f, path) {
+    if (!REQ_FLAT[path]) return false;
+    if (path === 'spec.lsl' || path === 'spec.usl') return isEmpty(f.spec.lsl) && isEmpty(f.spec.usl);
+    return isEmpty(getPath(f, path));
+  }
+
+  /* ================= Analyses d'aide (sans calcul de capabilité) ================= */
+  function specAnalysis(f) {
+    var s = f.spec;
+    var a = { lsl: parseNum(s.lsl), usl: parseNum(s.usl), cible: parseNum(s.cible), msgs: [] };
+    [['lsl', 'La limite basse'], ['usl', 'La limite haute'], ['cible', 'La valeur cible']].forEach(function (p) {
+      if (!isEmpty(s[p[0]]) && !isFinite(a[p[0]])) a.msgs.push(['danger', p[1] + ' n\'est pas un nombre (« ' + s[p[0]] + ' »).']);
+    });
+    var hasL = isFinite(a.lsl), hasU = isFinite(a.usl), hasC = isFinite(a.cible);
+    if (hasL && hasU) {
+      if (a.lsl >= a.usl) a.msgs.push(['danger', 'La limite basse doit être inférieure à la limite haute.']);
+      else {
+        a.tol = a.usl - a.lsl;
+        a.msgs.push(['info', 'Intervalle de tolérance : ' + fmtNum(a.tol) + (s.unite ? ' ' + s.unite : '') + '.']);
+        if (hasC && (a.cible < a.lsl || a.cible > a.usl)) a.msgs.push(['warn', 'La valeur cible est en dehors des limites.']);
+      }
+    } else if (hasL || hasU) {
+      a.msgs.push(['info', 'Spécification unilatérale : seule la limite ' + (hasL ? 'basse' : 'haute') + ' est définie.']);
+      if (hasC && ((hasL && a.cible < a.lsl) || (hasU && a.cible > a.usl))) a.msgs.push(['warn', 'La valeur cible est en dehors de la limite.']);
+    }
+    return a;
+  }
+  function resolutionMsg(f) {
+    var a = specAnalysis(f);
+    var res = firstNum(f.mesure.resolution);
+    if (!isFinite(res) || res <= 0) return null;
+    if (!a.tol) return null;
+    var grads = a.tol / res;
+    var unit = f.spec.unite ? ' (' + f.spec.unite + ')' : '';
+    if (grads < 10) return ['warn', 'La résolution ne donne qu\'environ ' + fmtNum(Math.round(grads * 10) / 10) + ' graduations dans l\'intervalle de tolérance' + unit + '. Repère courant : au moins 10. Le moyen de mesure risque d\'être trop grossier (à vérifier, les deux valeurs doivent être dans la même unité).'];
+    return ['ok', 'Résolution cohérente avec la tolérance : environ ' + fmtNum(Math.round(grads)) + ' graduations dans l\'intervalle' + unit + '.'];
+  }
+  function planChecks(f) {
+    var p = f.plan, out = [];
+    var n = parseNum(p.nbMesures), lots = parseNum(p.nbLots), eq = parseNum(p.nbEquipes), refs = parseNum(p.nbRefs);
+    if (isFinite(n) && n > 0 && n < 30) out.push(['warn', 'Moins de 30 mesures : c\'est souvent trop peu pour juger la variabilité du procédé.']);
+    if (isFinite(lots) && lots === 1) out.push(['warn', 'Un seul lot : la variation d\'un lot à l\'autre ne sera pas visible.']);
+    if (isFinite(eq) && eq === 1) out.push(['warn', 'Une seule équipe : les écarts entre équipes ne seront pas visibles.']);
+    if (isFinite(refs) && refs > 1) out.push(['info', 'Plusieurs références : prévoir assez de mesures par référence pour pouvoir les comparer.']);
+    if (isFinite(n) && isFinite(lots) && lots > 0 && n > 0 && n / lots < 5) out.push(['warn', 'Moins de 5 mesures par lot en moyenne : la variation à l\'intérieur d\'un lot sera mal estimée.']);
+    return out;
+  }
+
+  /* ================= SVG : visualisation des limites ================= */
+  function specSvg(f) {
+    var a = specAnalysis(f);
+    var hasL = isFinite(a.lsl), hasU = isFinite(a.usl), hasC = isFinite(a.cible);
+    if (!hasL && !hasU) return '<div class="spec-empty">Renseigner au moins une limite pour visualiser la zone de tolérance.</div>';
+    if (hasL && hasU && a.lsl >= a.usl) return '<div class="spec-empty">Limites incohérentes : la visualisation s\'affichera une fois la limite basse inférieure à la limite haute.</div>';
+    var vals = [];
+    if (hasL) vals.push(a.lsl);
+    if (hasU) vals.push(a.usl);
+    if (hasC) vals.push(a.cible);
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    var span = hi - lo;
+    if (span <= 0) span = Math.abs(hi) * 0.2 || 1;
+    var min, max;
+    if (hasL && hasU) { min = lo - span * 0.3; max = hi + span * 0.3; }
+    else if (hasL) { min = lo - span * 0.6; max = hi + span * 1.2; if (!hasC) { min = a.lsl - span * 0.6; max = a.lsl + span * 1.6; } }
+    else { min = lo - span * 1.2; max = hi + span * 0.6; if (!hasC) { min = a.usl - span * 1.6; max = a.usl + span * 0.6; } }
+    var W = 640, H = 120, x0 = 20, x1 = W - 20, yAxis = 72, zoneTop = 40, zoneH = 32;
+    function X(v) { return x0 + (v - min) / (max - min) * (x1 - x0); }
+    var unit = f.spec.unite ? ' ' + esc(f.spec.unite) : '';
+    var zl = hasL ? X(a.lsl) : x0, zr = hasU ? X(a.usl) : x1;
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Zone de tolérance du CTQ">';
+    if (hasL) s += '<rect x="' + x0 + '" y="' + zoneTop + '" width="' + Math.max(0, zl - x0) + '" height="' + zoneH + '" fill="var(--tol-out)"/>';
+    if (hasU) s += '<rect x="' + zr + '" y="' + zoneTop + '" width="' + Math.max(0, x1 - zr) + '" height="' + zoneH + '" fill="var(--tol-out)"/>';
+    s += '<rect x="' + zl + '" y="' + zoneTop + '" width="' + Math.max(0, zr - zl) + '" height="' + zoneH + '" fill="var(--tol-zone)"/>';
+    s += '<text x="' + ((zl + zr) / 2) + '" y="' + (zoneTop + 20) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ok)">Zone conforme</text>';
+    if (hasL && zl - x0 > 70) s += '<text x="' + ((x0 + zl) / 2) + '" y="' + (zoneTop + 20) + '" text-anchor="middle" font-size="11" font-weight="600" fill="var(--danger)">Hors tolérance</text>';
+    if (hasU && x1 - zr > 70) s += '<text x="' + ((zr + x1) / 2) + '" y="' + (zoneTop + 20) + '" text-anchor="middle" font-size="11" font-weight="600" fill="var(--danger)">Hors tolérance</text>';
+    s += '<line x1="' + x0 + '" y1="' + yAxis + '" x2="' + x1 + '" y2="' + yAxis + '" stroke="var(--ink-muted)" stroke-width="1.5"/>';
+    function limit(v, label) {
+      var x = X(v);
+      return '<line x1="' + x + '" y1="' + (zoneTop - 6) + '" x2="' + x + '" y2="' + (yAxis + 6) + '" stroke="var(--tol-edge)" stroke-width="2.5"/>' +
+        '<text x="' + x + '" y="' + (zoneTop - 12) + '" text-anchor="middle" font-size="12" font-weight="800" fill="var(--ink)">' + label + '</text>' +
+        '<text x="' + x + '" y="' + (yAxis + 22) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">' + esc(fmtNum(v)) + unit + '</text>';
+    }
+    if (hasL) s += limit(a.lsl, 'LSL');
+    if (hasU) s += limit(a.usl, 'USL');
+    if (hasC) {
+      var xc = X(a.cible);
+      s += '<path d="M' + xc + ' ' + (yAxis - 8) + ' L' + (xc + 7) + ' ' + yAxis + ' L' + xc + ' ' + (yAxis + 8) + ' L' + (xc - 7) + ' ' + yAxis + ' Z" fill="var(--primary)"/>' +
+        '<text x="' + xc + '" y="' + (yAxis + 38) + '" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--primary)">Cible ' + esc(fmtNum(a.cible)) + unit + '</text>';
+    }
+    s += '</svg>';
+    return s;
+  }
+
+  /* ================= Construction du formulaire ================= */
+  function segHtml(kind, attrs, value, small) {
+    var h = '<div class="seg' + (small ? ' small' : '') + '" role="radiogroup" ' + attrs + '>';
+    OPTS[kind].forEach(function (o) {
+      var on = value === o[0];
+      h += '<button type="button" class="seg-btn t-' + o[2] + (on ? ' on' : '') + '" data-v="' + o[0] + '" role="radio" aria-checked="' + (on ? 'true' : 'false') + '">' + esc(o[1]) + '</button>';
+    });
+    return h + '</div>';
+  }
+  function fieldId(path) { return 'f-' + path.replace(/\./g, '-'); }
+  function fieldHtml(fd) {
+    var cls = 'fld' + (fd.span ? (fd.span >= 4 ? ' span-all' : ' span-' + fd.span) : '') + (REQ_FLAT[fd.f] ? ' req' : '');
+    var id = fieldId(fd.f);
+    var h = '<div class="' + cls + '" data-fld="' + fd.f + '"><label for="' + id + '">' + esc(fd.label) + '</label>';
+    var ph = fd.ph ? ' placeholder="' + esc(fd.ph) + '"' : '';
+    if (fd.type === 'textarea') h += '<textarea id="' + id + '" data-f="' + fd.f + '"' + ph + '></textarea>';
+    else if (fd.type === 'date') h += '<input type="date" id="' + id + '" data-f="' + fd.f + '">';
+    else if (fd.type === 'number') h += '<input type="number" min="0" step="1" id="' + id + '" data-f="' + fd.f + '"' + ph + '>';
+    else h += '<input type="text"' + (fd.num ? ' inputmode="decimal"' : '') + ' id="' + id + '" data-f="' + fd.f + '"' + ph + '>';
+    if (fd.help) h += '<div class="fld-help">' + esc(fd.help) + '</div>';
+    return h + '</div>';
+  }
+  function blockHtml(b) {
+    var h = '<div class="block">';
+    if (b.type === 'fields') {
+      h += '<div class="fgrid" style="--cols:' + b.cols + '">' + b.fields.map(fieldHtml).join('') + '</div>';
+    } else if (b.type === 'list') {
+      h += '<p class="block-title">' + esc(b.title) + '</p><div id="list-' + b.list.replace(/\./g, '-') + '"></div>';
+    } else if (b.type === 'question') {
+      h += '<div class="question"><p class="q-label">' + esc(b.label) + '</p><div class="q-row">' +
+        '<div class="fld' + (REQ_FLAT[b.f] ? ' req' : '') + '" data-fld="' + b.f + '"><label>Réponse</label>' + segHtml(b.opts, 'data-f="' + b.f + '" data-opts="' + b.opts + '" aria-label="' + esc(b.label) + '"', '') + '</div>' +
+        '<div class="fld"><label for="' + fieldId(b.comment) + '">Commentaire</label><textarea id="' + fieldId(b.comment) + '" data-f="' + b.comment + '" placeholder="Arguments, réserves, éléments à vérifier…"></textarea></div>' +
+        '</div><div class="dyn-msgs" id="' + b.dyn + '"></div></div>';
+    } else if (b.type === 'specviz') {
+      h += '<p class="block-title">Visualisation des limites <span class="card-sub">(mise à jour en direct)</span></p><div class="spec-viz" id="specViz"></div><div class="dyn-msgs" id="specMsgs"></div>';
+    } else if (b.type === 'dyn') {
+      h += '<div class="dyn-msgs" id="' + b.id + '"></div>';
+    } else if (b.type === 'alert') {
+      h += '<div class="alert ' + (b.tone || '') + '"><span class="al-ico">' + b.ico + '</span><div class="al-body">' + b.html + (b.dyn ? '<div class="dyn-msgs" id="' + b.dyn + '"></div>' : '') + '</div></div>';
+    } else if (b.type === 'datacats') {
+      h += '<div class="alert"><span class="al-ico">💡</span><div class="al-body">Pour chaque donnée, décider en équipe si elle est <strong>obligatoire</strong> (relevée à chaque mesure), <strong>utile</strong> (relevée si possible) ou <strong>non nécessaire</strong>. Les données de contexte servent à expliquer les écarts une fois les mesures analysées.</div></div>' +
+        '<div class="imp-block"><div class="imp-summary" id="dataSummary"></div><div class="dyn-msgs" id="dataMsgs"></div></div>' +
+        '<div class="block cats">' + DATA_CATS.map(function (c) {
+          return '<div class="cat"><h4>' + esc(c.label) + ' <span class="cat-hint">' + esc(c.hint) + '</span></h4><div id="list-donnees-' + c.key + '"></div></div>';
+        }).join('') + '</div>';
+    } else if (b.type === 'validation') {
+      h += '<div class="val-list">' + VALIDATION_ITEMS.map(function (it) {
+        var p = 'validation.' + it.k;
+        return '<div class="val-row' + (it.final ? ' final' : '') + '" data-fld="' + p + '"><span class="v-label">' + esc(it.label) + ' <span style="color:var(--danger)">*</span></span>' +
+          segHtml(it.opts, 'data-f="' + p + '" data-opts="' + it.opts + '" aria-label="' + esc(it.label) + '"', '') +
+          '<span class="v-hint" id="vh-' + it.k + '"></span></div>';
+      }).join('') + '</div>';
+    }
+    return h + '</div>';
+  }
+  function buildForm() {
+    var root = document.getElementById('ficheRoot');
+    root.innerHTML = STEPS.map(function (s) {
+      return '<section class="card step-card" id="step-' + s.n + '" aria-labelledby="step-title-' + s.n + '">' +
+        '<div class="step-head"><span class="step-badge">' + s.n + '</span><div><h3 id="step-title-' + s.n + '">' + esc(s.title) + '</h3><p class="card-sub">' + esc(s.q) + '</p></div>' +
+        '<span class="spacer"></span><span class="step-count" id="step-count-' + s.n + '"></span></div>' +
+        s.blocks.map(blockHtml).join('') + '</section>';
+    }).join('');
+    document.getElementById('railList').innerHTML = STEPS.map(function (s) {
+      return '<li id="rail-' + s.n + '"><button type="button" class="step-link" data-goto="' + s.n + '"><span class="step-num">' + s.n + '</span><span class="step-txt"><b>' + esc(s.short) + '</b><small id="rail-sub-' + s.n + '"></small></span></button></li>';
+    }).join('');
+  }
+
+  /* ================= Rendu des listes ================= */
+  function renderList(path) {
+    var f = currentFiche();
+    var host = document.getElementById('list-' + path.replace(/\./g, '-'));
+    if (!host || !f) return;
+    var def = LISTS[path];
+    var rows = getPath(f, path) || [];
+    var h = '<div class="table-wrap"><table class="rows' + (def.isData ? ' data' : '') + '"><colgroup>';
+    def.cols.forEach(function (c) { h += '<col' + (c.w ? ' style="width:' + c.w + '"' : '') + '>'; });
+    h += '<col style="width:44px"></colgroup><thead><tr>';
+    def.cols.forEach(function (c) { h += '<th>' + esc(c.label) + (c.req ? ' *' : '') + '</th>'; });
+    h += '<th></th></tr></thead><tbody>';
+    if (!rows.length) h += '<tr><td colspan="' + (def.cols.length + 1) + '"><div class="rows-empty">' + esc(def.empty) + '</div></td></tr>';
+    rows.forEach(function (r) {
+      var trCls = def.isData && r.importance === 'non' ? ' class="row-nn"' : '';
+      h += '<tr data-row="' + r.id + '"' + trCls + '>';
+      def.cols.forEach(function (c) {
+        var attrs = 'data-list="' + path + '" data-id="' + r.id + '" data-k="' + c.k + '" aria-label="' + esc(c.label) + '"';
+        h += '<td class="c-' + (c.k === 'importance' ? 'imp' : c.k) + '" data-cell="' + c.k + '">';
+        if (c.type === 'seg') h += segHtml(c.opts, attrs, r[c.k], true);
+        else if (c.type === 'textarea') h += '<textarea rows="1" ' + attrs + (c.ph ? ' placeholder="' + esc(c.ph) + '"' : '') + '>' + esc(r[c.k]) + '</textarea>';
+        else if (c.type === 'date') h += '<input type="date" ' + attrs + ' value="' + esc(r[c.k]) + '">';
+        else h += '<input type="text" ' + attrs + (c.list ? ' list="' + c.list + '"' : '') + (c.ph ? ' placeholder="' + esc(c.ph) + '"' : '') + ' value="' + esc(r[c.k]) + '">';
+        h += '</td>';
+      });
+      h += '<td class="c-act"><button type="button" class="del-row" data-del-list="' + path + '" data-id="' + r.id + '" title="Supprimer la ligne" aria-label="Supprimer la ligne">✕</button></td></tr>';
+    });
+    h += '</tbody></table></div><div class="rows-foot"><button type="button" class="btn-tiny" data-add-list="' + path + '">' + esc(def.add) + '</button></div>';
+    host.innerHTML = h;
+    Array.prototype.forEach.call(host.querySelectorAll('textarea'), autosize);
+  }
+  function renderAllLists() { Object.keys(LISTS).forEach(renderList); }
+
+  /* ================= Remplissage du formulaire ================= */
+  function autosize(el) {
+    if (!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+    var h = el.scrollHeight;
+    if (h > 0) el.style.height = (h + 2) + 'px';
+  }
+  function setSegValue(seg, value) {
+    Array.prototype.forEach.call(seg.querySelectorAll('.seg-btn'), function (b) {
+      var on = b.getAttribute('data-v') === value;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
+  function fillForm() {
+    var f = currentFiche();
+    if (!f) return;
+    Array.prototype.forEach.call(document.querySelectorAll('#ficheRoot [data-f]'), function (el) {
+      var v = getPath(f, el.getAttribute('data-f'));
+      if (el.classList.contains('seg')) setSegValue(el, v || '');
+      else { el.value = v == null ? '' : v; autosize(el); }
+    });
+    renderAllLists();
+    refreshDynamic();
+  }
+
+  /* ================= Mise à jour des indicateurs ================= */
+  function msgsHtml(list) {
+    return list.map(function (m) { return '<div class="msg ' + m[0] + '">' + esc(m[1]) + (m[2] || '') + '</div>'; }).join('');
+  }
+  function refreshDynamic() {
+    var f = currentFiche();
+    if (!f) return;
+    var st = ficheStatus(f);
+
+    /* Champs simples */
+    Array.prototype.forEach.call(document.querySelectorAll('#ficheRoot [data-fld]'), function (w) {
+      w.classList.toggle('is-missing', pathIsMissing(f, w.getAttribute('data-fld')));
+    });
+    /* Lignes de données */
+    DATA_CATS.forEach(function (c) {
+      var path = 'donnees.' + c.key;
+      f.donnees[c.key].forEach(function (r) {
+        var tr = document.querySelector('#list-donnees-' + c.key + ' tr[data-row="' + r.id + '"]');
+        if (!tr) return;
+        var miss = rowMissing(path, r);
+        Array.prototype.forEach.call(tr.querySelectorAll('td[data-cell]'), function (td) {
+          td.classList.toggle('is-missing', miss.indexOf(td.getAttribute('data-cell')) !== -1);
+        });
+        tr.classList.toggle('row-nn', r.importance === 'non');
+      });
+    });
+
+    /* Rail et en-têtes d'étapes */
+    STEPS.forEach(function (s) {
+      var ss = st.steps[s.n];
+      var li = document.getElementById('rail-' + s.n);
+      var sub = document.getElementById('rail-sub-' + s.n);
+      var cnt = document.getElementById('step-count-' + s.n);
+      var card = document.getElementById('step-' + s.n);
+      var done = ss.miss === 0;
+      li.classList.toggle('done', done);
+      li.classList.toggle('partial', !done && ss.miss < ss.req);
+      card.classList.toggle('done', done);
+      sub.textContent = done ? 'Complète' : ss.miss + ' à compléter';
+      cnt.className = 'step-count ' + (done ? 'full' : 'miss');
+      cnt.textContent = done ? '✓ Étape complète' : ss.miss + ' champ' + (ss.miss > 1 ? 's' : '') + ' obligatoire' + (ss.miss > 1 ? 's' : '') + ' à compléter';
+    });
+
+    /* Barre de progression et statut */
+    document.getElementById('progressPct').textContent = st.pct + ' %';
+    document.getElementById('progressLabel').textContent = (st.req - st.miss) + ' / ' + st.req + ' champs obligatoires';
+    document.getElementById('progressFill').style.width = st.pct + '%';
+    var badge = document.getElementById('statusBadge');
+    var ready = f.validation.pret === 'oui';
+    badge.className = 'status-badge ' + (ready ? 'st-ready' : 'st-draft');
+    badge.textContent = ready ? 'Prête pour la collecte' : 'Cadrage en cours';
+
+    /* Spécifications */
+    var sa = specAnalysis(f);
+    document.getElementById('specViz').innerHTML = specSvg(f);
+    document.getElementById('specMsgs').innerHTML = msgsHtml(sa.msgs);
+
+    /* Mesure */
+    var rm = resolutionMsg(f);
+    document.getElementById('resMsg').innerHTML = rm ? msgsHtml([rm]) : '';
+
+    /* Questions de validation intermédiaires */
+    var addBtn = function (txt) { return ' <button type="button" class="btn-tiny" data-add-point="' + esc(txt) + '">➕ Ajouter aux points à clarifier</button>'; };
+    var cf = [];
+    if (f.ctq.validation === 'non') cf.push(['danger', 'Revoir le choix du CTQ avant d\'aller plus loin : sans caractéristique qui objective le problème, la collecte ne permettra pas de conclure.']);
+    if (f.ctq.validation === 'aconfirmer') cf.push(['warn', 'Pertinence du CTQ à confirmer.', addBtn('Confirmer que le CTQ « ' + (f.ctq.nom || '…') + ' » objective bien le problème')]);
+    document.getElementById('ctqFollow').innerHTML = msgsHtml(cf);
+    var mf = [];
+    if (f.mesure.msa === 'oui') mf.push(['info', 'Prévoir l\'étude MSA / R&R avant l\'étude de capabilité.', addBtn('Planifier l\'étude MSA / R&R du moyen de mesure')]);
+    if (f.mesure.msa === 'adeterminer') mf.push(['warn', 'Besoin d\'une étude MSA / R&R à déterminer.', addBtn('Déterminer si une étude MSA / R&R est nécessaire')]);
+    document.getElementById('msaFollow').innerHTML = msgsHtml(mf);
+
+    /* Données */
+    var counts = { obligatoire: 0, utile: 0, non: 0, todo: 0 };
+    DATA_CATS.forEach(function (c) { f.donnees[c.key].forEach(function (r) { if (counts[r.importance] != null) counts[r.importance]++; else counts.todo++; }); });
+    document.getElementById('dataSummary').innerHTML =
+      '<span class="pill p-obl">' + counts.obligatoire + ' obligatoire' + (counts.obligatoire > 1 ? 's' : '') + '</span>' +
+      '<span class="pill p-utile">' + counts.utile + ' utile' + (counts.utile > 1 ? 's' : '') + '</span>' +
+      '<span class="pill p-nn">' + counts.non + ' non nécessaire' + (counts.non > 1 ? 's' : '') + '</span>' +
+      (counts.todo ? '<span class="pill p-todo">' + counts.todo + ' à classer</span>' : '');
+    document.getElementById('dataMsgs').innerHTML = st.steps[5].anyObl ? '' : msgsHtml([['warn', 'Aucune donnée marquée obligatoire : au minimum la valeur du CTQ doit être relevée.']]);
+
+    /* Plan */
+    document.getElementById('planChecks').innerHTML = msgsHtml(planChecks(f));
+
+    /* Validation finale */
+    VALIDATION_ITEMS.forEach(function (it) {
+      var el = document.getElementById('vh-' + it.k);
+      var v = f.validation[it.k];
+      var txt = '', cls = '';
+      if (it.final) {
+        var notOk = VALIDATION_ITEMS.filter(function (o) { return !o.final && f.validation[o.k] !== 'oui'; }).length;
+        if (v === 'oui' && notOk) { txt = '⚠️ ' + notOk + ' point' + (notOk > 1 ? 's' : '') + ' ci-dessus non validé' + (notOk > 1 ? 's' : '') + ' « Oui ».'; cls = 'warn'; }
+        else if (v === 'oui' && st.miss - st.steps[7].miss > 0) { txt = '⚠️ Des champs obligatoires restent vides dans la fiche.'; cls = 'warn'; }
+        else if (!notOk) { txt = '✓ Tous les points sont validés.'; cls = 'ok'; }
+        else { txt = notOk + ' point' + (notOk > 1 ? 's' : '') + ' encore à valider.'; }
+      } else {
+        var ss = st.steps[it.step];
+        if (v === 'oui' && ss.miss > 0) { txt = '⚠️ « Oui » alors que l\'étape ' + it.step + ' a ' + ss.miss + ' champ' + (ss.miss > 1 ? 's' : '') + ' obligatoire' + (ss.miss > 1 ? 's' : '') + ' vide' + (ss.miss > 1 ? 's' : '') + '.'; cls = 'warn'; }
+        else if (ss.miss > 0) { txt = 'Étape ' + it.step + ' : ' + ss.miss + ' champ' + (ss.miss > 1 ? 's' : '') + ' à compléter.'; cls = ''; }
+        else { txt = '✓ Étape ' + it.step + ' complète.'; cls = 'ok'; }
+      }
+      el.className = 'v-hint' + (cls ? ' ' + cls : '');
+      el.innerHTML = esc(txt) + ' <button type="button" class="btn-tiny" data-goto="' + (it.final ? 1 : it.step) + '">Voir</button>';
+    });
+
+    refreshSelectLabel();
+  }
+
+  /* ================= Sélecteur de fiche ================= */
+  function ficheLabel(f) {
+    var nom = f.sujet.nom && f.sujet.nom.trim() ? f.sujet.nom.trim() : 'Fiche sans titre';
+    return nom + (f.sujet.date ? ' (' + frDate(f.sujet.date) + ')' : '');
+  }
+  function renderSelect() {
+    var sel = document.getElementById('ficheSelect');
+    var sorted = state.fiches.slice().sort(function (a, b) { return (b.updatedAt || '').localeCompare(a.updatedAt || ''); });
+    sel.innerHTML = sorted.map(function (f) {
+      return '<option value="' + esc(f.id) + '"' + (f.id === state.currentId ? ' selected' : '') + '>' + esc(ficheLabel(f)) + '</option>';
+    }).join('');
+  }
+  function refreshSelectLabel() {
+    var f = currentFiche();
+    if (!f) return;
+    var opt = document.querySelector('#ficheSelect option[value="' + f.id + '"]');
+    if (opt) opt.textContent = ficheLabel(f);
+  }
+  function renderGate() {
+    var has = state.fiches.length > 0 && !!currentFiche();
+    document.getElementById('noFicheState').classList.toggle('hidden', has);
+    document.getElementById('ficheLayout').classList.toggle('hidden', !has);
+    ['ficheSelect', 'btnDupFiche', 'btnResetFiche', 'btnDelFiche'].forEach(function (id) { document.getElementById(id).disabled = !has; });
+    document.querySelector('.progress-block').classList.toggle('hidden', !has);
+  }
+  function renderAll() {
+    if (state.fiches.length && !currentFiche()) state.currentId = state.fiches[0].id;
+    renderGate();
+    renderSelect();
+    if (currentFiche()) fillForm();
+  }
+
+  /* ================= Actions sur les fiches ================= */
+  function newFiche() {
+    if (saveTimer) saveState();
+    var f = blankFiche();
+    state.fiches.push(f);
+    state.currentId = f.id;
+    saveState();
+    renderAll();
+    window.scrollTo(0, 0);
+    var el = document.getElementById(fieldId('sujet.nom'));
+    if (el) el.focus();
+    showToast('Nouvelle fiche créée.', 'success');
+  }
+  document.getElementById('btnNewFiche').addEventListener('click', newFiche);
+  document.getElementById('btnNewFicheEmpty').addEventListener('click', newFiche);
+  document.getElementById('btnDupFiche').addEventListener('click', function () {
+    var f = currentFiche();
+    if (!f) return;
+    if (saveTimer) saveState();
+    var c = deepClone(f);
+    var now = new Date().toISOString();
+    c.id = uid(); c.createdAt = now; c.updatedAt = now;
+    c.sujet.nom = (f.sujet.nom || 'Fiche sans titre') + ' (copie)';
+    ['sujet.participants', 'points', 'decisions'].concat(DATA_CATS.map(function (d) { return 'donnees.' + d.key; })).forEach(function (p) {
+      (getPath(c, p) || []).forEach(function (r) { r.id = uid(); });
+    });
+    state.fiches.push(c);
+    state.currentId = c.id;
+    saveState();
+    renderAll();
+    showToast('Fiche dupliquée.', 'success');
+  });
+  document.getElementById('btnResetFiche').addEventListener('click', function () {
+    var f = currentFiche();
+    if (!f) return;
+    requestConfirm('Réinitialiser la fiche « ' + ficheLabel(f) + ' » ? Tous ses champs seront vidés (la liste des données reprend ses valeurs par défaut). Le bouton ↩️ permet d\'annuler.', 'Réinitialiser', function () {
+      var b = blankFiche();
+      b.id = f.id; b.createdAt = f.createdAt;
+      for (var i = 0; i < state.fiches.length; i++) if (state.fiches[i].id === f.id) state.fiches[i] = b;
+      dirtyFiche = true;
+      saveState();
+      renderAll();
+      showToast('Fiche réinitialisée.', 'success');
+    });
+  });
+  document.getElementById('btnDelFiche').addEventListener('click', function () {
+    var f = currentFiche();
+    if (!f) return;
+    requestConfirm('Supprimer définitivement la fiche « ' + ficheLabel(f) + ' » ? Le bouton ↩️ permet d\'annuler juste après.', 'Supprimer', function () {
+      state.fiches = state.fiches.filter(function (x) { return x.id !== f.id; });
+      state.currentId = state.fiches.length ? state.fiches[0].id : null;
+      saveState();
+      renderAll();
+      showToast('Fiche supprimée.', 'success');
+    });
+  });
+  document.getElementById('ficheSelect').addEventListener('change', function () {
+    if (saveTimer) saveState();
+    state.currentId = this.value;
+    saveState();
+    renderAll();
+    window.scrollTo(0, 0);
+  });
+
+  /* ================= Saisie (délégation d'événements) ================= */
+  var root = document.getElementById('ficheRoot');
+  function handleFieldInput(el) {
+    var f = currentFiche();
+    if (!f) return;
+    if (el.hasAttribute('data-f')) {
+      var p = el.getAttribute('data-f');
+      if (getPath(f, p) !== el.value) { setPath(f, p, el.value); dirtyFiche = true; }
+    } else if (el.hasAttribute('data-list')) {
+      var row = findRow(f, el.getAttribute('data-list'), el.getAttribute('data-id'));
+      var k = el.getAttribute('data-k');
+      if (row && row[k] !== el.value) { row[k] = el.value; dirtyFiche = true; }
+    }
+    autosize(el);
+    refreshDynamic();
+    scheduleSave();
+  }
+  root.addEventListener('input', function (e) { handleFieldInput(e.target); });
+  root.addEventListener('change', function (e) { if (e.target.type === 'date' || e.target.type === 'number') { handleFieldInput(e.target); saveState(); } });
+  function findRow(f, path, id) {
+    var rows = getPath(f, path) || [];
+    for (var i = 0; i < rows.length; i++) if (rows[i].id === id) return rows[i];
+    return null;
+  }
+  root.addEventListener('click', function (e) {
+    var f = currentFiche();
+    if (!f) return;
+    var t = e.target;
+    var segBtn = t.closest ? t.closest('.seg-btn') : null;
+    if (segBtn) {
+      var seg = segBtn.parentNode;
+      var v = segBtn.getAttribute('data-v');
+      if (seg.hasAttribute('data-f')) {
+        var p = seg.getAttribute('data-f');
+        var nv = getPath(f, p) === v ? '' : v;
+        setPath(f, p, nv);
+        setSegValue(seg, nv);
+      } else if (seg.hasAttribute('data-list')) {
+        var row = findRow(f, seg.getAttribute('data-list'), seg.getAttribute('data-id'));
+        var k = seg.getAttribute('data-k');
+        if (row) { row[k] = row[k] === v ? '' : v; setSegValue(seg, row[k]); }
+      }
+      dirtyFiche = true;
+      refreshDynamic();
+      saveState();
+      return;
+    }
+    var add = t.closest ? t.closest('[data-add-list]') : null;
+    if (add) {
+      var lp = add.getAttribute('data-add-list');
+      var nr = blankRow(lp);
+      getPath(f, lp).push(nr);
+      dirtyFiche = true;
+      renderList(lp);
+      refreshDynamic();
+      saveState();
+      var first = document.querySelector('[data-list="' + lp + '"][data-id="' + nr.id + '"]');
+      if (first && first.focus) first.focus();
+      return;
+    }
+    var del = t.closest ? t.closest('[data-del-list]') : null;
+    if (del) {
+      var dp = del.getAttribute('data-del-list');
+      var did = del.getAttribute('data-id');
+      setPath(f, dp, getPath(f, dp).filter(function (r) { return r.id !== did; }));
+      dirtyFiche = true;
+      renderList(dp);
+      refreshDynamic();
+      saveState();
+      return;
+    }
+    var ap = t.closest ? t.closest('[data-add-point]') : null;
+    if (ap) {
+      var txt = ap.getAttribute('data-add-point');
+      var exists = f.points.some(function (r) { return r.texte === txt; });
+      if (exists) { showToast('Ce point figure déjà dans les points à clarifier.'); return; }
+      var pr = blankRow('points');
+      pr.texte = txt;
+      f.points.push(pr);
+      dirtyFiche = true;
+      renderList('points');
+      refreshDynamic();
+      saveState();
+      showToast('Ajouté aux points à clarifier (étape 7).', 'success');
+      return;
+    }
+    var go = t.closest ? t.closest('[data-goto]') : null;
+    if (go) { gotoStep(parseInt(go.getAttribute('data-goto'), 10)); }
+  });
+  document.getElementById('rail').addEventListener('click', function (e) {
+    var go = e.target.closest ? e.target.closest('[data-goto]') : null;
+    if (go) gotoStep(parseInt(go.getAttribute('data-goto'), 10));
+  });
+  function gotoStep(n) {
+    var el = document.getElementById('step-' + n);
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* Champ obligatoire manquant suivant (dans l'ordre de la page, à partir de la position courante) */
+  function missingTargets() {
+    return Array.prototype.slice.call(document.querySelectorAll('#ficheRoot .is-missing'));
+  }
+  document.getElementById('btnNextMissing').addEventListener('click', function () {
+    var list = missingTargets();
+    if (!list.length) { showToast('Tous les champs obligatoires sont renseignés.', 'success'); return; }
+    var active = document.activeElement;
+    var idx = -1;
+    for (var i = 0; i < list.length; i++) { if (list[i].contains(active)) { idx = i; break; } }
+    var target = list[(idx + 1) % list.length];
+    if (target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var focusable = target.querySelector('input, textarea, .seg-btn');
+    if (focusable) setTimeout(function () { focusable.focus({ preventScroll: true }); }, 250);
+    target.classList.remove('flash'); void target.offsetWidth; target.classList.add('flash');
+  });
+
+  /* Étape active dans le rail selon le défilement */
+  function updateActiveStep() {
+    var active = 1;
+    STEPS.forEach(function (s) {
+      var el = document.getElementById('step-' + s.n);
+      if (el && el.getBoundingClientRect().top <= 140) active = s.n;
+    });
+    if (window.innerHeight + window.pageYOffset >= document.body.scrollHeight - 4) active = STEPS[STEPS.length - 1].n;
+    STEPS.forEach(function (s) {
+      var b = document.querySelector('#rail-' + s.n + ' .step-link');
+      if (b) b.classList.toggle('active', s.n === active);
+    });
+  }
+  window.addEventListener('scroll', updateActiveStep, { passive: true });
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { Array.prototype.forEach.call(document.querySelectorAll('#ficheRoot textarea'), autosize); }, 150);
+  });
+
+  /* ================= Thème ================= */
+  function applyTheme(theme) {
+    themeBeforePrint = null; // un changement de thème explicite annule toute restauration post-impression en attente
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+    var btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  document.getElementById('themeToggleBtn').addEventListener('click', function () {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(state.theme);
+    saveState();
+  });
+  document.getElementById('btnUndo').addEventListener('click', performUndo);
+
+  /* ================= Import / Export JSON ================= */
+  function exportPayload() { return { app: APP_ID, version: SCHEMA_VERSION, exportedAt: new Date().toISOString(), state: state }; }
+  function downloadJson(json, filename) {
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function dateStamp(withTime) {
+    var d = new Date();
+    var s = d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate());
+    return withTime ? s + '_' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds()) : s;
+  }
+  document.getElementById('btnExport').addEventListener('click', function () {
+    if (saveTimer) saveState();
+    downloadJson(JSON.stringify(exportPayload(), null, 2), dateStamp(false) + '_Fiche_CTQ - export.json');
+  });
+  document.getElementById('btnImport').addEventListener('click', function () { document.getElementById('importInput').click(); });
+  function importData(data) {
+    if (!data || typeof data !== 'object' || data.app !== APP_ID) {
+      alert('Ce fichier n\'est pas un export de l\'outil Fiche CTQ (champ « app » absent ou différent).');
+      return false;
+    }
+    var v = parseInt(data.version, 10) || 1;
+    if (v > SCHEMA_VERSION) {
+      alert('Ce fichier provient d\'une version plus récente de l\'outil (format ' + v + '). Mets à jour l\'outil avant de l\'importer.');
+      return false;
+    }
+    if (!data.state || !Array.isArray(data.state.fiches)) {
+      alert('Fichier incomplet : aucune fiche trouvée.');
+      return false;
+    }
+    var n = data.state.fiches.length;
+    requestConfirm('Importer ce fichier (' + n + ' fiche' + (n > 1 ? 's' : '') + ') remplacera toutes les fiches actuelles de l\'outil. Continuer ?', 'Importer', function () {
+      state = migrateState(data.state);
+      saveState();
+      applyTheme(state.theme);
+      renderAll();
+      showToast('Import réussi.', 'success');
+    });
+    return true;
+  }
+  document.getElementById('importInput').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var data;
+      try { data = JSON.parse(ev.target.result); } catch (err) { alert('Fichier JSON invalide.'); return; }
+      importData(data);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  /* ================= Copie locale horodatée ================= */
+  var localCopyDirHandle = null;
+  function downloadLocalCopyFallback(json, filename) {
+    downloadJson(json, filename);
+    showToast('Copie locale téléchargée (' + filename + ').', 'success');
+  }
+  function templateFileName() { return 'Fiche_CTQ_trame_' + TOOL_VERSION + '.html'; }
+  function writeTemplateIfNeeded(dirHandle) {
+    if (!pristineHtmlTemplate) return Promise.resolve();
+    var name = templateFileName();
+    return dirHandle.getFileHandle(name, { create: false }).then(function () {
+      // déjà présente pour cette version : rien à faire
+    }).catch(function () {
+      return dirHandle.getFileHandle(name, { create: true }).then(function (fileHandle) {
+        return fileHandle.createWritable().then(function (writable) {
+          return writable.write(pristineHtmlTemplate).then(function () { return writable.close(); });
+        });
+      });
+    });
+  }
+  document.getElementById('btnLocalCopy').addEventListener('click', function () {
+    if (saveTimer) saveState();
+    var json = JSON.stringify(exportPayload(), null, 2);
+    var filename = 'Fiche_CTQ_copie_' + dateStamp(true) + '.json';
+    if (!window.showDirectoryPicker) { downloadLocalCopyFallback(json, filename); return; }
+    (function trySaveToFolder(retryAfterReset) {
+      var ensureHandle = localCopyDirHandle
+        ? Promise.resolve(localCopyDirHandle)
+        : window.showDirectoryPicker({ mode: 'readwrite' }).then(function (h) { localCopyDirHandle = h; return h; });
+      ensureHandle.then(function (dirHandle) {
+        return dirHandle.getFileHandle(filename, { create: true }).then(function (fileHandle) {
+          return fileHandle.createWritable().then(function (writable) {
+            return writable.write(json).then(function () { return writable.close(); });
+          });
+        }).then(function () { return writeTemplateIfNeeded(dirHandle); });
+      }).then(function () {
+        showToast('Copie locale enregistrée dans le dossier (' + filename + ').', 'success');
+      }).catch(function (err) {
+        if (err && err.name === 'AbortError') return;
+        localCopyDirHandle = null;
+        if (!retryAfterReset) { trySaveToFolder(true); return; }
+        downloadLocalCopyFallback(json, filename);
+      });
+    })(false);
+  });
+
+  /* ================= Impression A4 ================= */
+  function pv(v, tall) { return isEmpty(v) ? '<span class="pr-blank' + (tall ? ' tall' : '') + '"></span>' : esc(v); }
+  function prOpts(kind, v) {
+    return '<span class="pr-opts">' + OPTS[kind].map(function (o) {
+      return '<span class="' + (o[0] === v ? 'on' : '') + '">' + (o[0] === v ? '☒' : '☐') + ' ' + esc(o[1]) + '</span>';
+    }).join('') + '</span>';
+  }
+  function prFields(f, fields) {
+    var h = '<table class="pr-t"><colgroup><col style="width:19%"><col style="width:31%"><col style="width:19%"><col style="width:31%"></colgroup><tbody>';
+    var pending = null;
+    fields.forEach(function (fd) {
+      var v = getPath(f, fd.f);
+      var val = fd.type === 'date' ? frDate(v) : v;
+      var lb = '<td class="lb' + (REQ_FLAT[fd.f] ? ' req' : '') + '">' + esc(fd.label) + '</td>';
+      if (fd.type === 'textarea') {
+        if (pending) { h += '<tr>' + pending + '<td class="lb"></td><td></td></tr>'; pending = null; }
+        h += '<tr>' + lb + '<td class="vl" colspan="3">' + pv(val, true) + '</td></tr>';
+      } else {
+        var c = lb + '<td class="vl">' + pv(val) + '</td>';
+        if (pending) { h += '<tr>' + pending + c + '</tr>'; pending = null; }
+        else pending = c;
+      }
+    });
+    if (pending) h += '<tr>' + pending + '<td class="lb"></td><td></td></tr>';
+    return h + '</tbody></table>';
+  }
+  function prList(f, path, title) {
+    var def = LISTS[path];
+    var rows = getPath(f, path) || [];
+    var h = (title ? '<h3>' + esc(title) + '</h3>' : '') + '<table class="pr-t"><colgroup>';
+    def.cols.forEach(function (c) {
+      if (c.type === 'seg') OPTS[c.opts].forEach(function () { h += '<col style="width:13%">'; });
+      else h += '<col' + (c.w && c.w.indexOf('%') > 0 ? ' style="width:' + c.w + '"' : (c.type === 'date' ? ' style="width:18%"' : '')) + '>';
+    });
+    h += '</colgroup><thead><tr>';
+    def.cols.forEach(function (c) {
+      if (c.type === 'seg') OPTS[c.opts].forEach(function (o) { h += '<th style="text-align:center">' + esc(o[1]) + '</th>'; });
+      else h += '<th>' + esc(c.label) + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr' + (def.isData && r.importance === 'non' ? ' class="pr-nn"' : '') + '>';
+      def.cols.forEach(function (c) {
+        if (c.type === 'seg') OPTS[c.opts].forEach(function (o) { h += '<td class="ck">' + (r[c.k] === o[0] ? '☒' : '☐') + '</td>'; });
+        else h += '<td class="vl">' + pv(c.type === 'date' ? frDate(r[c.k]) : r[c.k]) + '</td>';
+      });
+      h += '</tr>';
+    });
+    var blanks = rows.length ? 0 : (def.printBlank || 0);
+    for (var i = 0; i < blanks; i++) {
+      h += '<tr>';
+      def.cols.forEach(function (c) {
+        if (c.type === 'seg') OPTS[c.opts].forEach(function () { h += '<td class="ck">☐</td>'; });
+        else h += '<td><span class="pr-blank"></span></td>';
+      });
+      h += '</tr>';
+    }
+    return h + '</tbody></table>';
+  }
+  function prQuestion(f, b) {
+    return '<table class="pr-t pr-keep" style="margin-top:2mm"><colgroup><col style="width:50%"><col></colgroup><tbody>' +
+      '<tr><td class="lb req">' + esc(b.label) + '</td><td>' + prOpts(b.opts, getPath(f, b.f)) + '</td></tr>' +
+      '<tr><td class="lb">Commentaire</td><td class="vl">' + pv(getPath(f, b.comment), true) + '</td></tr></tbody></table>';
+  }
+  function buildPrint(f) {
+    var st = ficheStatus(f);
+    var ready = f.validation.pret === 'oui';
+    var now = new Date();
+    var h = '<div class="pr">';
+    h += '<div class="pr-head"><div><h1>Fiche de caractérisation CTQ</h1><p class="pr-subject">' + esc(f.sujet.nom || 'Sujet non renseigné') + '</p></div>' +
+      '<div class="pr-right"><span class="status-badge ' + (ready ? 'st-ready' : 'st-draft') + '">' + (ready ? 'Prête pour la collecte' : 'Cadrage en cours') + '</span><br>' +
+      'Pilote : ' + esc(f.sujet.pilote || '—') + ' | Réunion du ' + esc(frDate(f.sujet.date) || '—') + '<br>' +
+      'Champs obligatoires renseignés : ' + (st.req - st.miss) + ' / ' + st.req + '</div></div>';
+    STEPS.forEach(function (s) {
+      h += '<div class="pr-sec"><h2>' + s.n + '. ' + esc(s.title) + '<small>' + esc(s.q) + '</small></h2>';
+      s.blocks.forEach(function (b) {
+        if (b.type === 'fields') h += prFields(f, b.fields);
+        else if (b.type === 'list') h += prList(f, b.list, b.title);
+        else if (b.type === 'question') h += prQuestion(f, b);
+        else if (b.type === 'specviz') {
+          var sa = specAnalysis(f);
+          if (isFinite(sa.lsl) || isFinite(sa.usl)) h += '<div class="pr-viz">' + specSvg(f) + '</div>';
+        } else if (b.type === 'alert') h += '<div class="pr-note">' + b.html + '</div>';
+        else if (b.type === 'dyn' && b.id === 'resMsg') { var rm = resolutionMsg(f); if (rm && rm[0] === 'warn') h += '<div class="pr-note">' + esc(rm[1]) + '</div>'; }
+        else if (b.type === 'datacats') {
+          DATA_CATS.forEach(function (c) { h += prList(f, 'donnees.' + c.key, c.label); });
+        } else if (b.type === 'validation') {
+          h += '<table class="pr-t pr-keep"><colgroup><col style="width:46%"><col></colgroup><tbody>' + VALIDATION_ITEMS.map(function (it) {
+            return '<tr><td class="lb req"' + (it.final ? ' style="font-weight:900;color:var(--ink)"' : '') + '>' + esc(it.label) + '</td><td>' + prOpts(it.opts, f.validation[it.k]) + '</td></tr>';
+          }).join('') + '</tbody></table>';
+        }
+      });
+      if (s.n === 6) { var pc = planChecks(f).filter(function (m) { return m[0] === 'warn'; }); if (pc.length) h += '<div class="pr-note">' + pc.map(function (m) { return esc(m[1]); }).join('<br>') + '</div>'; }
+      h += '</div>';
+    });
+    h += '<div class="pr-foot">* champ obligatoire | Imprimé le ' + now.toLocaleDateString('fr-FR') + ' à ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ' | Dernière modification : ' + esc(frDateTime(f.updatedAt)) + '</div>';
+    return h + '</div>';
+  }
+  var themeBeforePrint = null;
+  function preparePrint() {
+    var f = currentFiche();
+    document.getElementById('printRoot').innerHTML = f ? buildPrint(f) : '';
+    if (themeBeforePrint === null) {
+      themeBeforePrint = document.documentElement.getAttribute('data-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }
+  function restoreAfterPrint() {
+    if (themeBeforePrint !== null) {
+      document.documentElement.setAttribute('data-theme', themeBeforePrint);
+      themeBeforePrint = null;
+    }
+  }
+  window.addEventListener('beforeprint', preparePrint);
+  window.addEventListener('afterprint', restoreAfterPrint);
+  document.getElementById('btnPrintPdf').addEventListener('click', function () {
+    if (!currentFiche()) { showToast('Crée ou sélectionne une fiche avant d\'imprimer.', 'warning'); return; }
+    if (saveTimer) saveState();
+    preparePrint();
+    window.print();
+  });
+
+  /* Sauvegarde immédiate si l'onglet est fermé pendant la temporisation */
+  window.addEventListener('beforeunload', function () { if (saveTimer) saveState(); });
+
+  /* ================= Initialisation ================= */
+  loadState();
+  applyTheme(state.theme);
+  buildForm();
+  renderAll();
+  updateActiveStep();
+  updateUndoButtonState();
+
+  /* Points d'accès pour les tests automatisés (sans effet sur l'utilisation normale) */
+  window.__ficheCTQ = {
+    getState: function () { return state; }, saveState: saveState, migrateState: migrateState,
+    ficheStatus: ficheStatus, specAnalysis: specAnalysis, resolutionMsg: resolutionMsg, planChecks: planChecks,
+    buildPrint: buildPrint, importData: importData, parseNum: parseNum, firstNum: firstNum, blankFiche: blankFiche
+  };
+})();
+</script>
+</body>
+</html>
