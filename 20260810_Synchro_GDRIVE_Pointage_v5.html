@@ -1,0 +1,2211 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pointage — Suivi du temps de travail</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  /* =====================================================================
+     Charte visuelle commune (référence : outil Workshop)
+     ===================================================================== */
+  :root{
+    --bg:#f2f4f8; --surface:#ffffff; --surface-alt:#f7f8fb; --border:#dde2ea;
+    --ink:#1a2233; --ink-muted:#647089;
+    --primary:#2955a3; --primary-dark:#1f4280; --primary-tint:#e7edf8;
+    --accent:#b8860b; --accent-tint:#faf3e0;
+    --ok:#1f8a4c; --ok-bg:#e3f6ea; --warn:#b3760a; --warn-bg:#fbf1dc; --danger:#c0392b; --danger-bg:#fbe6e3;
+    --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.05);
+    --shadow-hover:0 10px 24px rgba(20,30,50,.12);
+    --radius:12px; --radius-sm:8px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    /* Variables propres à Pointage : couleur des types de journée (paire clair / sombre) */
+    --travail:#0f766e; --travail-bg:#e0f2ef;
+    --teletravail:#6d3fd1; --teletravail-bg:#eee8fb;
+    --deplacement:#c2266b; --deplacement-bg:#fbe4ee;
+    --absence:#b8860b; --absence-bg:#faf3e0;
+    --off-stripe:#eef1f6;
+  }
+  html[data-theme="dark"]{
+    --bg:#0f141c; --surface:#171e28; --surface-alt:#1d2531; --border:#2b3444;
+    --ink:#e7ebf3; --ink-muted:#8e9ab0;
+    --primary:#6f9ceb; --primary-dark:#8fb4f0; --primary-tint:#1c2940;
+    --accent:#e0b04a; --accent-tint:#332a14;
+    --ok:#4bcf87; --ok-bg:#123321; --warn:#e0b04a; --warn-bg:#332a14; --danger:#e2685d; --danger-bg:#3a1c1a;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+    --shadow-hover:0 10px 26px rgba(0,0,0,.45);
+    --travail:#4fd1bf; --travail-bg:#12302c;
+    --teletravail:#b39cf5; --teletravail-bg:#261d3d;
+    --deplacement:#f08dbb; --deplacement-bg:#3a1a2a;
+    --absence:#e0b04a; --absence-bg:#332a14;
+    --off-stripe:#1b222d;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:var(--sans); background:var(--bg); color:var(--ink); padding:18px; -webkit-font-smoothing:antialiased; }
+  button, input, select, textarea{ font-family:inherit; color:inherit; }
+  .container{ max-width:1880px; margin:0 auto; }
+  input[type=file]{ display:none; }
+  .hidden{ display:none !important; }
+
+  /* ---- En-tête ---- */
+  .app-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .app-header h1{ margin:0 0 4px; font-size:24px; font-weight:800; letter-spacing:-0.01em; }
+  .subtitle{ margin:0; color:var(--ink-muted); font-size:13.5px; }
+  .header-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+  /* ---- Boutons ---- */
+  .btn-primary{ background:var(--primary); color:#fff; border:none; padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .btn-secondary{ background:var(--surface); color:var(--ink); border:1px solid var(--border); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; }
+  .btn-secondary:hover{ background:var(--surface-alt); }
+  .btn-outline-danger{ background:transparent; color:var(--danger); border:1px solid var(--danger); padding:9px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; }
+  .btn-outline-danger:hover{ background:var(--danger-bg); }
+  .btn-danger{ background:var(--danger); color:#fff; border:none; padding:10px 16px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:700; cursor:pointer; }
+  .btn-icon{ background:var(--surface); border:1px solid var(--border); color:var(--ink); width:36px; height:36px; border-radius:var(--radius-sm); cursor:pointer; font-size:16px; display:inline-flex; align-items:center; justify-content:center; }
+  .btn-icon:hover{ background:var(--surface-alt); }
+  .btn-tiny{ background:var(--surface-alt); border:1px solid var(--border); color:var(--ink); padding:4px 9px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .btn-tiny:hover{ background:var(--primary-tint); }
+  .btn-tiny.danger{ color:var(--danger); }
+  .btn-tiny.danger:hover{ background:var(--danger-bg); }
+  .btn-dashed{ width:100%; margin-top:6px; background:transparent; border:1px dashed var(--primary); color:var(--primary); padding:7px 10px; border-radius:var(--radius-sm); font-size:12.5px; font-weight:600; cursor:pointer; }
+  .btn-dashed:hover{ background:var(--primary-tint); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .day-cell:focus-visible, tr.clickable:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+
+  /* ---- Bouton Drive (module canonique) ---- */
+  .drive-btn{ display:inline-flex; align-items:center; gap:7px; }
+  .drive-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--ink-muted); transition:background .2s ease; }
+  .drive-dot.is-connected{ background:var(--ok); }
+  .drive-dot.is-syncing{ background:var(--warn); animation:drive-pulse 1s ease-in-out infinite; }
+  .drive-dot.is-error{ background:var(--danger); }
+  @keyframes drive-pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* ---- Champs ---- */
+  select, input[type=text], input[type=date], input[type=number], input[type=time], textarea{
+    background:var(--surface); border:1px solid var(--border); color:var(--ink);
+    padding:8px 10px; border-radius:var(--radius-sm); font-size:13.5px;
+  }
+  input[type=time], input[type=number]{ font-variant-numeric:tabular-nums; }
+
+  /* ---- Onglets ---- */
+  .tabs{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .tab{ padding:10px 18px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface); color:var(--ink); cursor:pointer; font-weight:700; font-size:13.5px; display:inline-flex; align-items:center; gap:7px; }
+  .tab:hover{ background:var(--surface-alt); }
+  .tab.active{ background:var(--primary); border-color:var(--primary); color:#fff; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  /* ---- Barre de navigation de période ---- */
+  .period-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+  .period-label{ font-size:17px; font-weight:800; min-width:170px; text-align:center; }
+  .spacer{ flex:1; }
+
+  /* ---- Cartes ---- */
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 20px; margin-bottom:18px; }
+  .card-header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .card-header h3{ margin:0; font-size:15px; font-weight:800; }
+  .card-sub{ margin:2px 0 0; font-size:12.5px; color:var(--ink-muted); }
+
+  /* ---- Cartes de synthèse (aujourd'hui / semaine / mois / année) ---- */
+  .summary-row{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+  .summary-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px; }
+  .sc-label{ font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .sc-real{ font-size:26px; font-weight:800; line-height:1.1; font-variant-numeric:tabular-nums; }
+  .sc-theo{ font-size:12.5px; color:var(--ink-muted); margin-top:3px; font-variant-numeric:tabular-nums; }
+  .ecart-badge{ display:inline-block; margin-top:8px; font-size:12.5px; font-weight:800; padding:3px 10px; border-radius:20px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .ecart-pos{ background:var(--ok-bg); color:var(--ok); }
+  .ecart-neg{ background:var(--danger-bg); color:var(--danger); }
+  .ecart-zero{ background:var(--surface-alt); color:var(--ink-muted); border:1px solid var(--border); }
+
+  /* ---- Compteurs (pastilles) ---- */
+  .counters-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .counter-pill{ display:inline-flex; align-items:center; gap:8px; background:var(--surface-alt); border:1px solid var(--border); border-radius:20px; padding:6px 13px; font-size:12.5px; font-weight:600; }
+  .counter-pill b{ font-variant-numeric:tabular-nums; font-weight:800; }
+  .breakdown-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; flex:none; }
+  .dot-travail{ background:var(--travail); } .dot-teletravail{ background:var(--teletravail); }
+  .dot-deplacement{ background:var(--deplacement); } .dot-absence{ background:var(--absence); } .dot-ink{ background:var(--ink); }
+
+  /* ---- Calendrier ---- */
+  .cal-weekdays{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; font-size:11px; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.04em; font-weight:700; padding:0 2px 8px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
+  .day-cell{ border:1px solid var(--border); border-radius:var(--radius-sm); min-height:96px; padding:7px 8px 22px; cursor:pointer; position:relative; background:var(--surface); transition:box-shadow .12s ease, transform .12s ease; display:flex; flex-direction:column; align-items:flex-start; gap:4px; min-width:0; }
+  .day-cell:hover{ box-shadow:var(--shadow-hover); transform:translateY(-1px); }
+  .day-cell.other-month{ opacity:.4; }
+  .day-cell.today{ border:2px solid var(--primary); }
+  .day-cell.cell-off{ background:repeating-linear-gradient(135deg, var(--surface), var(--surface) 7px, var(--off-stripe) 7px, var(--off-stripe) 14px); }
+  .day-cell.cell-holiday{ background:repeating-linear-gradient(135deg, var(--surface), var(--surface) 7px, var(--accent-tint) 7px, var(--accent-tint) 14px); }
+  .day-num{ font-size:12.5px; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .cell-off .day-num{ color:var(--ink-muted); }
+  .day-tag{ font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:6px; display:inline-block; max-width:100%; overflow-wrap:anywhere; line-height:1.3; }
+  .day-tag.half{ font-weight:700; font-size:10px; }
+  .tag-travail{ background:var(--travail-bg); color:var(--travail); }
+  .tag-teletravail{ background:var(--teletravail-bg); color:var(--teletravail); }
+  .tag-deplacement{ background:var(--deplacement-bg); color:var(--deplacement); }
+  .tag-deleted{ background:var(--surface-alt); color:var(--ink-muted); border:1px dashed var(--border); font-style:italic; }
+  .day-off-label{ font-size:10.5px; font-weight:700; color:var(--accent); overflow-wrap:anywhere; }
+  .day-hours{ position:absolute; bottom:6px; right:8px; font-size:11px; font-weight:700; color:var(--ink-muted); font-variant-numeric:tabular-nums; }
+  .cal-legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--ink-muted); font-weight:600; }
+  .cal-legend span{ display:inline-flex; align-items:center; gap:6px; }
+
+  /* ---- Tableaux ---- */
+  .table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); }
+  table.data{ border-collapse:collapse; width:100%; table-layout:fixed; font-size:13px; }
+  table.data thead th{ position:sticky; top:0; background:var(--surface-alt); color:var(--ink-muted); font-size:11px; text-transform:uppercase; letter-spacing:.03em; font-weight:700; text-align:right; padding:9px 10px; border-bottom:1px solid var(--border); z-index:1; overflow-wrap:anywhere; }
+  table.data thead th:first-child, table.data tbody td:first-child{ text-align:left; }
+  table.data tbody td{ padding:8px 10px; border-bottom:1px solid var(--border); text-align:right; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; vertical-align:middle; }
+  table.data tbody tr:last-child td{ border-bottom:none; }
+  /* Petit tableau (absences et droits) : largeur selon le contenu, en-têtes coupés aux espaces seulement */
+  table.data.auto-layout{ table-layout:auto; }
+  table.data.auto-layout thead th{ overflow-wrap:normal; }
+  table.data tr.future-row td{ color:var(--ink-muted); }
+  table.data tr.clickable{ cursor:pointer; }
+  table.data tr.clickable:hover{ background:var(--primary-tint); }
+  table.data tr.total-row td{ font-weight:800; background:var(--surface-alt); border-top:2px solid var(--border); }
+  table.data td.muted{ color:var(--ink-muted); }
+  .val-pos{ color:var(--ok); font-weight:700; }
+  .val-neg{ color:var(--danger); font-weight:700; }
+  .quota-bar{ min-width:70px; height:7px; border-radius:4px; background:var(--surface-alt); border:1px solid var(--border); overflow:hidden; margin-top:4px; }
+  .quota-bar > span{ display:block; height:100%; border-radius:4px; }
+
+  /* ---- Cartes statistiques (bilan annuel) ---- */
+  .stat-cards-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
+  .stat-card{ background:var(--surface-alt); border:1px solid var(--border); border-radius:9px; padding:12px 14px; }
+  .stat-label{ font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px; }
+  .stat-value{ font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .stat-sub{ font-size:11.5px; color:var(--ink-muted); margin-top:3px; }
+  .chart-svg{ width:100%; height:auto; display:block; }
+  .chart-legend{ display:flex; gap:16px; margin-top:8px; flex-wrap:wrap; font-size:12px; color:var(--ink-muted); font-weight:600; }
+  .chart-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend-swatch{ width:14px; height:10px; border-radius:2px; display:inline-block; }
+  .legend-line{ width:16px; height:0; border-top:2px solid var(--primary); display:inline-block; }
+  .bilan-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; }
+  .bilan-grid > .card{ margin-bottom:0; }
+  .empty-state{ text-align:center; padding:26px 16px; color:var(--ink-muted); font-size:13.5px; }
+
+  /* ---- Badges ---- */
+  .badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:11.5px; font-weight:700; white-space:nowrap; line-height:1.3; }
+  .b-neutral{ background:var(--surface-alt); color:var(--ink-muted); border:1px solid var(--border); }
+  .b-primary{ background:var(--primary-tint); color:var(--primary); }
+
+  /* ---- Modales ---- */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(10,14,22,.5); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000; }
+  .modal-overlay.hidden{ display:none; }
+  .modal{ background:var(--surface); border-radius:var(--radius); max-width:560px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-hover); }
+  .modal-small{ max-width:440px; }
+  .modal-wide{ max-width:760px; }
+  .modal-header{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:16px 22px; border-bottom:1px solid var(--border); }
+  .modal-header h2{ margin:0; font-size:16.5px; font-weight:800; }
+  .modal-header .card-sub{ text-transform:none; }
+  .close-btn{ background:none; border:none; font-size:22px; color:var(--ink-muted); cursor:pointer; line-height:1; padding:4px; }
+  .close-btn:hover{ color:var(--ink); }
+  .modal-body{ padding:18px 22px 22px; }
+  .modal-footer{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  .modal-footer .left{ margin-right:auto; }
+  .modal-hint{ background:var(--primary-tint); color:var(--primary-dark); border-radius:9px; padding:9px 12px; font-size:12.5px; font-weight:600; margin-bottom:12px; }
+  .modal-hint.warn{ background:var(--warn-bg); color:var(--warn); }
+  .form-group{ margin-bottom:12px; }
+  .form-group > label, .field-label{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-muted); margin-bottom:5px; }
+  .form-group input, .form-group select{ width:100%; }
+  .form-row{ display:flex; gap:12px; }
+  .form-row .form-group{ flex:1; min-width:0; }
+  .form-hint{ font-size:12px; color:var(--ink-muted); margin-top:4px; }
+  .form-error{ background:var(--danger-bg); color:var(--danger); border-radius:8px; padding:8px 11px; font-size:12.5px; font-weight:600; margin-bottom:12px; }
+  .checkbox-inline-label{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; cursor:pointer; }
+  .checkbox-inline-label input{ width:auto; margin:0; }
+  .radio-row{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
+  .radio-row label{ display:flex; align-items:center; gap:7px; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .sub-block{ background:var(--surface-alt); border:1px solid var(--border); border-radius:9px; padding:12px 14px; margin-top:6px; }
+  .sub-block-title{ font-size:12.5px; font-weight:800; margin:0 0 8px; }
+
+  /* Sélecteur segmenté du type de journée */
+  .seg{ display:flex; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; margin-bottom:16px; flex-wrap:wrap; }
+  .seg button{ flex:1 1 25%; padding:10px 6px; border:none; background:var(--surface); cursor:pointer; font-size:12.5px; font-weight:700; color:var(--ink-muted); border-right:1px solid var(--border); }
+  .seg button:last-child{ border-right:none; }
+  .seg button:hover{ background:var(--surface-alt); }
+  .seg button.active[data-type="travail"]{ background:var(--travail-bg); color:var(--travail); }
+  .seg button.active[data-type="teletravail"]{ background:var(--teletravail-bg); color:var(--teletravail); }
+  .seg button.active[data-type="deplacement"]{ background:var(--deplacement-bg); color:var(--deplacement); }
+  .seg button.active[data-type="absence"]{ background:var(--absence-bg); color:var(--absence); }
+  .day-modal-total{ font-size:13px; font-weight:700; color:var(--ink-muted); margin-top:4px; }
+  .day-modal-total b{ color:var(--ink); }
+
+  /* Paramètres */
+  .params-section{ margin-bottom:20px; }
+  .params-section h3{ font-size:13.5px; font-weight:800; margin:0 0 8px; }
+  .weekday-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .weekday-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 9px; background:var(--surface-alt); }
+  .weekday-row label{ font-size:13px; font-weight:600; }
+  .weekday-row input{ width:78px; padding:5px 7px; }
+  .list-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .list-row input[type=text]{ flex:1; min-width:0; }
+  .list-row input.quota-input{ width:90px; flex:0 0 90px; }
+  .list-row input[type=color]{ width:36px; height:34px; padding:2px; border:1px solid var(--border); border-radius:6px; cursor:pointer; flex:0 0 36px; background:var(--surface); }
+  .list-row input[type=date]{ flex:0 0 150px; }
+  .list-head{ display:flex; gap:8px; font-size:11px; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.03em; margin-bottom:5px; }
+
+  /* Mode d'emploi */
+  .help-body h3{ font-size:15px; margin:20px 0 6px; }
+  .help-body h3:first-of-type{ margin-top:4px; }
+  .help-body p, .help-body li{ font-size:13px; line-height:1.55; }
+  .help-body ul, .help-body ol{ padding-left:20px; margin:6px 0 10px; }
+  .help-body code{ background:var(--surface-alt); border:1px solid var(--border); border-radius:4px; padding:0 4px; font-size:12px; }
+  .help-toc{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .help-toc a{ text-decoration:none; }
+
+  /* Toasts */
+  #toastContainer{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:2000; display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; }
+  .toast{ background:var(--ink); color:var(--bg); padding:11px 18px; border-radius:8px; font-size:13px; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.25); max-width:90vw; opacity:0; transform:translateY(8px); animation:toastIn .2s ease forwards; }
+  .toast.toast-error{ background:var(--danger); color:#fff; }
+  .toast.toast-success{ background:var(--ok); color:#fff; }
+  .toast.toast-warning{ background:var(--warn); color:#fff; }
+  @keyframes toastIn{ to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .toast{ animation:none; opacity:1; transform:none; } }
+
+  footer{ text-align:center; color:var(--ink-muted); font-size:12px; padding:22px 0 6px; }
+
+  @media (max-width: 900px){
+    .summary-row{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .bilan-grid{ grid-template-columns:1fr; }
+  }
+  @media (max-width: 640px){
+    body{ padding:12px; }
+    .form-row{ flex-direction:column; gap:0; }
+    .weekday-grid{ grid-template-columns:1fr; }
+    .day-cell{ min-height:70px; padding:5px 5px 18px; }
+    .day-tag{ font-size:9.5px; padding:1px 4px; }
+  }
+
+  /* =====================================================================
+     Impression / PDF : seul le bilan (#printArea) est imprimé
+     ===================================================================== */
+  .print-only{ display:none; }
+  @media print{
+    @page{ size:A4; margin:11mm 10mm; }
+    body{ background:#fff; padding:0; font-size:11px; }
+    .container, .modal-overlay, #toastContainer{ display:none !important; }
+    #printArea{ display:block !important; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+  /* Mise en forme du bilan imprimé (visible uniquement à l'impression) */
+  #printArea{ color:#1a2233; }
+  #printArea .pr-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; border-bottom:2px solid #1a2233; padding-bottom:6px; margin-bottom:12px; }
+  #printArea .pr-head h1{ margin:0; font-size:18px; font-weight:800; }
+  #printArea .pr-head .pr-meta{ font-size:10.5px; color:#555; text-align:right; }
+  #printArea h2{ font-size:13px; font-weight:800; margin:14px 0 6px; padding-bottom:3px; border-bottom:1px solid #999; break-after:avoid; page-break-after:avoid; }
+  #printArea .pr-section{ margin-bottom:10px; }
+  #printArea .pr-keep{ break-inside:avoid; page-break-inside:avoid; }
+  #printArea .stat-cards-grid{ grid-template-columns:repeat(5,1fr); gap:6px; }
+  #printArea .stat-card{ padding:6px 8px; border-color:#bbb; background:#f7f8fb; }
+  #printArea .stat-value{ font-size:14px; }
+  #printArea .stat-label{ font-size:9px; }
+  #printArea .stat-sub{ font-size:9px; }
+  #printArea table.data{ font-size:9.5px; table-layout:auto; }
+  #printArea table.data thead th{ position:static; padding:4px 5px; font-size:8.5px; background:#eef0f4; color:#444; }
+  #printArea table.data tbody td{ padding:3px 5px; }
+  #printArea table.data tr{ break-inside:avoid; page-break-inside:avoid; }
+  #printArea table.data thead{ display:table-header-group; }
+  #printArea .table-wrap{ overflow:visible; box-shadow:none; border-color:#bbb; }
+  #printArea tr.week-row td{ background:#eef0f4; font-weight:700; }
+  #printArea .pr-sign{ display:flex; gap:20px; margin-top:16px; break-inside:avoid; }
+  #printArea .pr-sign div{ flex:1; border:1px solid #999; border-radius:6px; height:60px; padding:5px 8px; font-size:10px; color:#555; }
+  #printArea .chart-svg{ max-height:200px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="app-header">
+    <div>
+      <h1>⏱️ Pointage</h1>
+      <p class="subtitle">Suivi du temps de travail : heures réelles et théoriques, présentiel / télétravail / déplacement, absences et bilans annuels</p>
+    </div>
+    <div class="header-actions">
+      <button id="themeToggleBtn" class="btn-icon" title="Changer de thème" aria-label="Changer de thème">🌙</button>
+      <button id="btn-drive-connect" class="btn-secondary drive-btn" title="Connecter Google Drive pour synchroniser les données entre vos appareils">
+        <span id="drive-dot" class="drive-dot"></span><span id="drive-status-label">Drive : non connecté</span>
+      </button>
+      <button id="btn-drive-force" class="btn-secondary" title="Envoyer immédiatement les données de ce poste vers Drive">Forcer synchro</button>
+      <button id="btnExport" class="btn-secondary" title="Exporter toutes les données dans un fichier JSON">Exporter (JSON)</button>
+      <button id="btnImport" class="btn-secondary" title="Importer un fichier JSON (remplace les données actuelles après confirmation)">Importer (JSON)</button>
+      <button id="btnLocalCopy" class="btn-secondary" title="Enregistre une copie horodatée des données dans un dossier (Ctrl+S). La trame HTML vide de l'outil n'y est écrite qu'une fois par version.">📁 Copie locale</button>
+      <button id="btnPrintPdf" class="btn-secondary" title="Imprimer ou enregistrer en PDF un bilan mensuel ou annuel">🖨️ Imprimer PDF</button>
+      <button id="btnHelp" class="btn-secondary" title="Mode d'emploi détaillé">📖 Mode d'emploi</button>
+      <button id="btnParams" class="btn-secondary" title="Heures théoriques, types d'absence et droits annuels, jours fériés">⚙️ Paramètres</button>
+      <input type="file" id="importInput" accept="application/json,.json">
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="calendar" role="tab">📅 Calendrier</button>
+    <button class="tab" data-tab="bilan" role="tab">📊 Bilan annuel</button>
+  </nav>
+
+  <!-- ================= Onglet Calendrier ================= -->
+  <section class="tab-panel active" id="panel-calendar">
+    <div class="period-bar">
+      <button id="prevMonth" class="btn-icon" title="Mois précédent" aria-label="Mois précédent">‹</button>
+      <div id="monthLabel" class="period-label">—</div>
+      <button id="nextMonth" class="btn-icon" title="Mois suivant" aria-label="Mois suivant">›</button>
+      <button id="todayBtn" class="btn-secondary">Aujourd'hui</button>
+      <div class="spacer"></div>
+      <span class="card-sub">Cliquez sur un jour pour saisir ou modifier la journée.</span>
+    </div>
+
+    <section class="summary-row" id="summaryRow"></section>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 id="monthCountersTitle">Compteurs du mois</h3>
+          <p class="card-sub">En jours (une demi-journée compte pour 0,5)</p>
+        </div>
+      </div>
+      <div class="counters-row" id="countersRow"></div>
+      <div class="breakdown-row" id="breakdownRow"></div>
+    </div>
+
+    <div class="card">
+      <div class="cal-weekdays">
+        <div>Lun</div><div>Mar</div><div>Mer</div><div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span><span class="dot dot-travail"></span>Présentiel</span>
+        <span><span class="dot dot-teletravail"></span>Télétravail</span>
+        <span><span class="dot dot-deplacement"></span>Déplacement</span>
+        <span><span class="dot dot-absence"></span>Absence (couleur du type)</span>
+        <span>▨ Jour non travaillé / férié</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Onglet Bilan annuel ================= -->
+  <section class="tab-panel" id="panel-bilan">
+    <div class="period-bar">
+      <button id="prevYear" class="btn-icon" title="Année précédente" aria-label="Année précédente">‹</button>
+      <div id="yearLabel" class="period-label">—</div>
+      <button id="nextYear" class="btn-icon" title="Année suivante" aria-label="Année suivante">›</button>
+      <button id="thisYearBtn" class="btn-secondary">Année en cours</button>
+      <div class="spacer"></div>
+      <button id="btnPrintYear" class="btn-secondary" title="Imprimer le bilan de cette année">🖨️ Imprimer ce bilan</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3>Compteurs de l'année</h3>
+          <p class="card-sub" id="yearCountersSub">Jours passés et journées déjà saisies à l'avance</p>
+        </div>
+      </div>
+      <div class="stat-cards-grid" id="yearStatCards"></div>
+    </div>
+
+    <div class="bilan-grid">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>Absences et droits annuels</h3>
+            <p class="card-sub">Solde = droit annuel − jours pris − jours planifiés (droits à renseigner dans ⚙️ Paramètres)</p>
+          </div>
+        </div>
+        <div id="absenceQuotaTable"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>Écart mensuel et cumulé</h3>
+            <p class="card-sub">Barres : écart réel − théorique du mois · Courbe : écart cumulé depuis janvier</p>
+          </div>
+        </div>
+        <div id="yearChart"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <div class="card-header">
+        <div>
+          <h3>Mois par mois</h3>
+          <p class="card-sub">Cliquez sur un mois pour l'ouvrir dans le calendrier</p>
+        </div>
+      </div>
+      <div class="table-wrap" id="monthTableWrap"></div>
+    </div>
+  </section>
+
+  <footer>Données conservées dans ce navigateur et synchronisées avec Google Drive une fois connecté. « 📁 Copie locale » garde en plus un historique horodaté dans un dossier.</footer>
+</div>
+
+<!-- Zone construite à la demande pour l'impression du bilan -->
+<div id="printArea" class="print-only"></div>
+
+<!-- ===== Modale : journée ===== -->
+<div id="dayModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="dayModalTitle">Journée</h2>
+        <p class="card-sub" id="modalDateLabel"></p>
+      </div>
+      <button type="button" class="close-btn" data-close="dayModal" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="dayFormError" class="form-error hidden"></div>
+      <div class="seg" id="typeSeg">
+        <button data-type="travail" type="button">Présentiel</button>
+        <button data-type="teletravail" type="button">Télétravail</button>
+        <button data-type="deplacement" type="button">Déplacement</button>
+        <button data-type="absence" type="button">Absence</button>
+      </div>
+
+      <!-- Journée travaillée -->
+      <div id="workFields">
+        <div class="form-row">
+          <div class="form-group"><label for="fArrivee">Arrivée</label><input type="time" id="fArrivee"></div>
+          <div class="form-group"><label for="fSortie">Sortie</label><input type="time" id="fSortie"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="fPauseDebut">Début pause</label><input type="time" id="fPauseDebut"></div>
+          <div class="form-group"><label for="fPauseFin">Fin pause</label><input type="time" id="fPauseFin"></div>
+        </div>
+        <p class="form-hint" style="margin-top:-4px;">La pause est facultative — laissez vide si absente.</p>
+        <p class="day-modal-total" id="dayWorkedPreview"></p>
+
+        <div class="sub-block">
+          <p class="sub-block-title">🌗 Demi-journée d'absence</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fDemiPeriode">Période absente</label>
+              <select id="fDemiPeriode">
+                <option value="">Aucune (journée entière travaillée)</option>
+                <option value="matin">Matin</option>
+                <option value="apresmidi">Après-midi</option>
+              </select>
+            </div>
+            <div class="form-group" id="demiTypeGroup">
+              <label for="fDemiType">Type d'absence</label>
+              <select id="fDemiType"></select>
+            </div>
+          </div>
+          <p class="form-hint" style="margin-top:0;">La moitié des heures théoriques du jour est retirée ; saisissez les horaires de la demi-journée travaillée.</p>
+        </div>
+      </div>
+
+      <!-- Journée d'absence -->
+      <div id="absenceFields" class="hidden">
+        <div class="form-group">
+          <label for="fAbsenceType" id="fAbsenceTypeLabel">Type d'absence</label>
+          <select id="fAbsenceType"></select>
+        </div>
+        <label class="checkbox-inline-label" style="margin-bottom:10px;">
+          <input type="checkbox" id="fAbsenceSplit"> Types différents le matin et l'après-midi
+        </label>
+        <div class="form-group hidden" id="absencePmGroup">
+          <label for="fAbsenceTypePm">Type d'absence de l'après-midi</label>
+          <select id="fAbsenceTypePm"></select>
+        </div>
+        <p class="form-hint">Une journée d'absence ne compte ni dans les heures réelles, ni dans les heures théoriques. Pour une demi-journée d'absence avec une demi-journée travaillée, choisissez plutôt Présentiel / Télétravail / Déplacement puis « Demi-journée d'absence ».</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-outline-danger left" id="dayDeleteBtn" type="button">🗑️ Effacer la journée</button>
+        <button class="btn-secondary" data-close="dayModal" type="button">Annuler</button>
+        <button class="btn-primary" id="daySaveBtn" type="button">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modale : paramètres ===== -->
+<div id="paramsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="paramsModalTitle">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 id="paramsModalTitle">⚙️ Paramètres</h2>
+      <button type="button" class="close-btn" data-close="paramsModal" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="paramsFormError" class="form-error hidden"></div>
+      <div class="params-section">
+        <h3>Heures théoriques par jour</h3>
+        <div class="weekday-grid" id="weekdayGrid"></div>
+        <p class="form-hint">En heures décimales (ex : 7.5 = 7 h 30). Mettre 0 pour un jour non travaillé — ces jours sont hachurés dans le calendrier.</p>
+      </div>
+      <div class="params-section">
+        <h3>Types d'absence et droits annuels</h3>
+        <div class="list-head"><span style="width:36px;"></span><span style="flex:1;">Libellé</span><span style="width:90px;">Droit / an</span><span style="width:34px;"></span></div>
+        <div id="absenceTypesList"></div>
+        <button class="btn-dashed" id="addAbsenceTypeBtn" type="button">+ Ajouter un type d'absence</button>
+        <p class="form-hint">Droit annuel en jours (facultatif, ex. 25 pour les congés payés) : il alimente le solde affiché dans le bilan annuel. Laisser vide pour un simple décompte.</p>
+      </div>
+      <div class="params-section">
+        <h3>Jours fériés</h3>
+        <div id="holidaysList"></div>
+        <button class="btn-dashed" id="addHolidayBtn" type="button">+ Ajouter un jour férié</button>
+        <button class="btn-dashed" id="quickHolidayBtn" type="button">🇫🇷 Ajouter les jours fériés France de l'année affichée</button>
+        <p class="form-hint">Un jour férié est hachuré dans le calendrier et ne compte pas dans les heures théoriques.</p>
+      </div>
+      <div class="params-section">
+        <h3>Bilan imprimé</h3>
+        <div class="form-group">
+          <label for="pNomBilan">Nom affiché sur le bilan (facultatif)</label>
+          <input type="text" id="pNomBilan" placeholder="Ex. : Prénom Nom — service">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close="paramsModal" type="button">Annuler</button>
+        <button class="btn-primary" id="paramsSaveBtn" type="button">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modale : impression du bilan ===== -->
+<div id="printModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="printModalTitle">
+  <div class="modal modal-small">
+    <div class="modal-header">
+      <h2 id="printModalTitle">🖨️ Imprimer un bilan</h2>
+      <button type="button" class="close-btn" data-close="printModal" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="radio-row">
+        <label><input type="radio" name="printKind" value="year" id="printKindYear"> Bilan annuel</label>
+        <label><input type="radio" name="printKind" value="month" id="printKindMonth"> Bilan mensuel</label>
+      </div>
+      <div class="form-row">
+        <div class="form-group" id="printMonthGroup">
+          <label for="printMonth">Mois</label>
+          <select id="printMonth"></select>
+        </div>
+        <div class="form-group">
+          <label for="printYear">Année</label>
+          <input type="number" id="printYear" min="2000" max="2100" step="1">
+        </div>
+      </div>
+      <label class="checkbox-inline-label"><input type="checkbox" id="printDetail"> Inclure le détail jour par jour (avec sous-totaux par semaine)</label>
+      <p class="form-hint">Dans la fenêtre d'impression, choisissez « Enregistrer au format PDF » comme imprimante pour obtenir un fichier PDF.</p>
+      <div class="modal-footer">
+        <button class="btn-secondary" data-close="printModal" type="button">Annuler</button>
+        <button class="btn-primary" id="printGoBtn" type="button">🖨️ Imprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modale : mode d'emploi ===== -->
+<div id="helpModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 id="helpModalTitle">📖 Mode d'emploi — Pointage</h2>
+      <button type="button" class="close-btn" data-close="helpModal" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body help-body" id="helpBody"></div>
+  </div>
+</div>
+
+<div id="toastContainer" aria-live="polite"></div>
+
+<script>
+/* ===================================================================
+   Module de synchronisation Google Drive — se branche sur la clé
+   localStorage existante de l'appli (APP_STORAGE_KEY) au lieu de la
+   remplacer. Réutilisable : changer APP_NS pour un autre outil.
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var DRIVE_CLIENT_ID = '1032081391210-5515mnbact7e9t77fssh753330hs5ago.apps.googleusercontent.com';
+  var DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  var APP_NS = 'pointage';
+  var APP_STORAGE_KEY = 'axelPointage_v1'; /* doit rester identique au STORAGE_KEY du script principal */
+  var MODIFIED_KEY = 'gdsync__' + APP_NS + '__modified';
+  var CONNECTED_FLAG = 'gdsync__' + APP_NS + '__connected';
+  var SILENT_REFRESH_MS = 45 * 60 * 1000;
+
+  var tokenClient = null;
+  var accessToken = null;
+  var tokenExpiresAt = 0;
+
+  function getLocalRecord() {
+    var value = null;
+    try { value = localStorage.getItem(APP_STORAGE_KEY); } catch (e) { value = null; }
+    if (!value) return null;
+    var modified = parseInt(localStorage.getItem(MODIFIED_KEY), 10);
+    if (!modified) modified = Date.now();
+    return { value: value, modified: modified };
+  }
+
+  function setLocalRecord(value, modified) {
+    try {
+      localStorage.setItem(APP_STORAGE_KEY, value);
+      localStorage.setItem(MODIFIED_KEY, String(modified));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function setSyncStatus(mode) {
+    var dot = document.getElementById('drive-dot');
+    var label = document.getElementById('drive-status-label');
+    if (!dot || !label) return;
+    dot.className = 'drive-dot' + (mode === 'connected' || mode === 'ok' ? ' is-connected' : mode === 'sync' ? ' is-syncing' : mode === 'error' ? ' is-error' : '');
+    var texts = { idle: 'Drive : non connect\u00E9', connected: 'Drive : connect\u00E9', ok: 'Drive : synchronis\u00E9', sync: 'Drive : synchro\u2026', error: 'Drive : erreur' };
+    label.textContent = texts[mode] || texts.idle;
+  }
+
+  function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 5000; }
+
+  function driveFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + accessToken;
+    return fetch(url, opts).then(function (res) { if (!res.ok) throw new Error('Drive API ' + res.status); return res; });
+  }
+  function driveFileName() { return 'storage__' + APP_NS + '__state.json'; }
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "' and trashed=false");
+    var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=' + q + '&fields=files(id,name)';
+    return driveFetch(url).then(function (res) { return res.json(); }).then(function (data) { return (data.files && data.files[0]) || null; });
+  }
+  function driveGetRecord(fileId) {
+    return driveFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')
+      .then(function (res) { return res.text(); })
+      .then(function (txt) { try { return JSON.parse(txt); } catch (e) { return null; } });
+  }
+  function driveCreateFile(record) {
+    var boundary = 'gdsyncbound';
+    var metadata = { name: driveFileName(), parents: ['appDataFolder'] };
+    var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n' +
+      '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + JSON.stringify(record) + '\r\n' + '--' + boundary + '--';
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + boundary }, body: body
+    });
+  }
+  function driveUpdateFile(fileId, record) {
+    return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record)
+    });
+  }
+  function drivePushRecord(record) {
+    return driveFindFile().then(function (existing) { return existing ? driveUpdateFile(existing.id, record) : driveCreateFile(record); });
+  }
+
+  async function syncFromDrive(firstConnect) {
+    setSyncStatus('sync');
+    try {
+      var local = getLocalRecord();
+      var existing = await driveFindFile();
+      if (!existing) {
+        if (local) await drivePushRecord(local);
+        setSyncStatus('ok');
+        return;
+      }
+      var remote = await driveGetRecord(existing.id);
+      if (!remote) { setSyncStatus('ok'); return; }
+
+      if (firstConnect || !local || remote.modified > local.modified) {
+        var changed = !(local && local.value === remote.value);
+        setLocalRecord(remote.value, remote.modified);
+        setSyncStatus('ok');
+        if (changed) {
+          setSyncStatus('sync');
+          setTimeout(function () { location.reload(); }, 700);
+        }
+      } else if (local.modified > remote.modified) {
+        await driveUpdateFile(existing.id, local);
+        setSyncStatus('ok');
+      } else {
+        setSyncStatus('ok');
+      }
+    } catch (e) {
+      setSyncStatus('error');
+      console.error('[DriveSync]', e);
+    }
+  }
+
+  function onTokenReceived(resp) {
+    if (resp.error) { setSyncStatus('error'); return; }
+    var isFirstConnect = localStorage.getItem(CONNECTED_FLAG) !== '1';
+    accessToken = resp.access_token;
+    tokenExpiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem(CONNECTED_FLAG, '1');
+    setSyncStatus('connected');
+    syncFromDrive(isFirstConnect);
+  }
+
+  function initGis() {
+    if (!window.google || !google.accounts || !google.accounts.oauth2) { setTimeout(initGis, 300); return; }
+    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: DRIVE_CLIENT_ID, scope: DRIVE_SCOPE, callback: onTokenReceived });
+    document.getElementById('btn-drive-connect').addEventListener('click', function () {
+      tokenClient.requestAccessToken({ prompt: hasValidToken() ? '' : 'consent' });
+    });
+    document.getElementById('btn-drive-force').addEventListener('click', function () {
+      if (!hasValidToken()) { alert('Connecte-toi d\'abord \u00E0 Drive (bouton "Drive : non connect\u00E9").'); return; }
+      var local = getLocalRecord();
+      if (!local) { alert('Rien en local \u00E0 synchroniser.'); return; }
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () {
+        setSyncStatus('ok');
+        alert('Synchro forc\u00E9e : OK (' + Math.round(local.value.length / 1024) + ' Ko envoy\u00E9s)');
+      }).catch(function (e) {
+        setSyncStatus('error');
+        alert('Erreur : ' + e.message);
+      });
+    });
+    if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' });
+    setInterval(function () { if (localStorage.getItem(CONNECTED_FLAG) === '1') tokenClient.requestAccessToken({ prompt: '' }); }, SILENT_REFRESH_MS);
+  }
+  initGis();
+
+  window.__driveNotifySave = function () {
+    var modified = Date.now();
+    localStorage.setItem(MODIFIED_KEY, String(modified));
+    if (hasValidToken()) {
+      var local = getLocalRecord();
+      if (!local) return;
+      setSyncStatus('sync');
+      drivePushRecord(local).then(function () { setSyncStatus('ok'); }).catch(function (e) {
+        setSyncStatus('error');
+        console.error('[DriveSync] \u00C9chec de la sauvegarde vers Drive :', e);
+      });
+    }
+  };
+})();
+
+</script><script>
+/* =====================================================================
+   POINTAGE — script principal
+   ---------------------------------------------------------------------
+   Organisation du fichier (chercher les bandeaux « ==== N. ») :
+     1. Constantes et état
+     2. Utilitaires (dates, heures, nombres, échappement, couleurs)
+     3. Modèle de données : valeurs par défaut, migration, localStorage
+     4. Moteur de calcul (journée, période, bilan annuel)
+     5. Jours fériés France
+     6. Thème (préférence propre au poste)
+     7. Rendu : onglet Calendrier
+     8. Rendu : onglet Bilan annuel (+ graphique SVG)
+     9. Modale « Journée »
+    10. Modale « Paramètres »
+    11. Export / import JSON
+    12. Copie locale dans un dossier (API File System Access)
+    13. Impression du bilan (PDF)
+    14. Mode d'emploi
+    15. Reprise des données de la v4 (IndexedDB)
+    16. Événements et initialisation
+
+   Persistance : l'état complet est stocké dans localStorage sous
+   STORAGE_KEY (source de vérité locale) ; le module Google Drive
+   (script précédent) synchronise cette même clé avec Drive. Après chaque
+   écriture réelle, saveState() appelle window.__driveNotifySave().
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  /* ==== 1. Constantes et état ======================================= */
+  var APP_ID = 'pointage';                 // champ « app » des exports (= APP_NS du module Drive)
+  var TOOL_VERSION = 'v5';                 // utilisé pour le nom de la trame HTML de la copie locale
+  var EXPORT_VERSION = 2;                  // version du format de données (1 = outil v4, sans enveloppe)
+  var STORAGE_KEY = 'axelPointage_v1';     // DOIT rester identique à APP_STORAGE_KEY du module Drive
+  var DRIVE_MODIFIED_KEY = 'gdsync__pointage__modified'; // horodatage du module Drive (servi seulement par la reprise v4)
+  var THEME_KEY = 'axelPointage_theme';    // préférence du poste, jamais synchronisée ni exportée
+  var LEGACY_DONE_KEY = 'axelPointage_legacyV4Checked'; // reprise v4 déjà tentée sur ce poste
+  var FILE_PREFIX = 'Pointage';            // préfixe des copies locales et de la trame
+
+  var WORK_TYPES = ['travail', 'teletravail', 'deplacement'];
+  var TYPE_LABELS = { travail: 'Présentiel', teletravail: 'Télétravail', deplacement: 'Déplacement', absence: 'Absence' };
+  var PERIODE_LABELS = { matin: 'matin', apresmidi: 'après-midi' };
+  var WEEKDAY_KEYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']; // index = Date.getDay()
+  var WEEKDAY_ORDER = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+  var WEEKDAY_LABELS = { lundi: 'Lundi', mardi: 'Mardi', mercredi: 'Mercredi', jeudi: 'Jeudi', vendredi: 'Vendredi', samedi: 'Samedi', dimanche: 'Dimanche' };
+  var WEEKDAY_SHORT = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+  var MONTH_LABELS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  var MONTH_SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+  /* Trame HTML vierge de l'outil, capturée avant tout rendu : écrite une fois
+     par version dans le dossier de la copie locale. */
+  var pristineHtmlTemplate = null;
+  try { pristineHtmlTemplate = '<!DOCTYPE html>\n' + document.documentElement.outerHTML; } catch (e) { pristineHtmlTemplate = null; }
+
+  /* state = données métier (synchronisées) ; ui = état d'affichage (non sauvegardé) */
+  var state = null;
+  var ui = { tab: 'calendar', viewYear: 0, viewMonth: 0, bilanYear: 0 };
+
+  function $(id) { return document.getElementById(id); }
+
+  /* ==== 2. Utilitaires ============================================== */
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function formatDateStr(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function parseDateStr(s) {
+    var p = String(s).split('-');
+    return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+  }
+  function todayStr() { return formatDateStr(new Date()); }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function weekdayKeyOf(d) { return WEEKDAY_KEYS[d.getDay()]; }
+  function frDate(d) { return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  function frDateTime(d) { return frDate(d) + ' à ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+
+  /* « HH:MM » → minutes depuis minuit (null si vide ou invalide) */
+  function toMinutes(hhmm) {
+    if (!hhmm) return null;
+    var parts = String(hhmm).split(':');
+    if (parts.length < 2) return null;
+    var h = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return null;
+    return h * 60 + m;
+  }
+  /* minutes → « 7h30 » (signe « - » si négatif, milliers séparés) */
+  function formatHM(totalMinutes) {
+    var sign = totalMinutes < 0 ? '-' : '';
+    var abs = Math.abs(Math.round(totalMinutes));
+    var h = Math.floor(abs / 60), m = abs % 60;
+    return sign + String(h).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') + 'h' + pad2(m);
+  }
+  /* écart en minutes → « +1h15 » / « -0h30 » */
+  function formatEcart(min) { return (min >= 0 ? '+' : '') + formatHM(min); }
+  function ecartClass(min) { return min > 0.5 ? 'ecart-pos' : (min < -0.5 ? 'ecart-neg' : 'ecart-zero'); }
+  function valClass(min) { return min > 0.5 ? 'val-pos' : (min < -0.5 ? 'val-neg' : ''); }
+  /* nombre de jours → « 4 » ou « 4,5 » */
+  function fmtDays(n) {
+    var r = Math.round(n * 100) / 100;
+    return (r % 1 === 0 ? String(r) : r.toFixed(2).replace(/0$/, '')).replace('.', ',');
+  }
+  function escapeHtml(s) {
+    return String(s === undefined || s === null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  /* Couleur de texte lisible (noir ou blanc) sur une couleur choisie par l'utilisateur */
+  function readableTextColor(hex) {
+    var m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if (!m) return '#ffffff';
+    var h = m[1];
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var c = [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)].map(function (v) {
+      v = v / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    var lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    return lum > 0.45 ? '#1a2233' : '#ffffff';
+  }
+  function safeColor(hex) { return /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(String(hex || '')) ? hex : '#8b7355'; }
+  /* Numéro de semaine ISO 8601 */
+  function isoWeek(d) {
+    var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    var yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
+  }
+  function uid(prefix) { return (prefix || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function datesOfWeekContaining(d) {
+    var monday = addDays(d, -((d.getDay() + 6) % 7));
+    var out = [];
+    for (var i = 0; i < 7; i++) out.push(addDays(monday, i));
+    return out;
+  }
+  function datesOfMonth(year, month) {
+    var out = [], last = new Date(year, month + 1, 0).getDate();
+    for (var i = 1; i <= last; i++) out.push(new Date(year, month, i));
+    return out;
+  }
+  function datesOfYear(year) {
+    var out = [];
+    for (var m = 0; m < 12; m++) out = out.concat(datesOfMonth(year, m));
+    return out;
+  }
+
+  /* ==== 3. Modèle de données ======================================== */
+  /*
+     Structure de l'état (version 2) :
+     {
+       version: 2,
+       params: {
+         theoriqueSemaine: { lundi: 7.5, ..., dimanche: 0 },   // heures décimales par jour de semaine
+         absenceTypes: [ { id, label, color, quota } ],        // quota = droit annuel en jours (null = aucun)
+         joursFeries: [ { date: 'AAAA-MM-JJ', label } ],
+         nomBilan: ''                                          // nom imprimé en tête du bilan (facultatif)
+       },
+       days: {
+         'AAAA-MM-JJ': journée travaillée :
+             { type: 'travail'|'teletravail'|'deplacement', arrivee, sortie, pauseDebut, pauseFin,
+               demiAbsence?: { periode: 'matin'|'apresmidi', absenceType } }
+         ou journée d'absence :
+             { type: 'absence', absenceType, absenceTypeApresMidi? }   // ApresMidi présent seulement s'il diffère
+       }
+     }
+     La version 1 (outil v4) avait la même structure sans « version », sans
+     « quota », sans « nomBilan » et sans demi-journées : migrateState() la
+     complète sans rien perdre.
+  */
+  function defaultParams() {
+    return {
+      theoriqueSemaine: { lundi: 7.5, mardi: 7.5, mercredi: 7.5, jeudi: 7.5, vendredi: 7.5, samedi: 0, dimanche: 0 },
+      absenceTypes: [
+        { id: 'cp', label: 'Congés payés', color: '#c9a227', quota: null },
+        { id: 'rtt', label: 'RTT', color: '#db7c26', quota: null },
+        { id: 'maladie', label: 'Maladie', color: '#b33a3a', quota: null },
+        { id: 'autre', label: 'Autre', color: '#8b7355', quota: null }
+      ],
+      joursFeries: [],
+      nomBilan: ''
+    };
+  }
+  function defaultState() { return { version: EXPORT_VERSION, params: defaultParams(), days: {} }; }
+
+  function normalizeQuota(q) {
+    if (q === null || q === undefined || q === '') return null;
+    var n = typeof q === 'number' ? q : parseFloat(String(q).replace(',', '.'));
+    return isNaN(n) || n < 0 ? null : n;
+  }
+  /* Nettoie une journée ; les champs inconnus d'un type inconnu sont conservés tels quels */
+  function normalizeEntry(e) {
+    if (!e || typeof e !== 'object') return null;
+    if (e.type === 'absence') {
+      var out = { type: 'absence', absenceType: String(e.absenceType || '') };
+      if (e.absenceTypeApresMidi && e.absenceTypeApresMidi !== out.absenceType) out.absenceTypeApresMidi = String(e.absenceTypeApresMidi);
+      return out;
+    }
+    if (WORK_TYPES.indexOf(e.type) !== -1) {
+      var w = {
+        type: e.type,
+        arrivee: e.arrivee || '', sortie: e.sortie || '',
+        pauseDebut: e.pauseDebut || '', pauseFin: e.pauseFin || ''
+      };
+      var da = e.demiAbsence;
+      if (da && (da.periode === 'matin' || da.periode === 'apresmidi') && da.absenceType) {
+        w.demiAbsence = { periode: da.periode, absenceType: String(da.absenceType) };
+      }
+      return w;
+    }
+    return e;
+  }
+  /* Migration automatique : accepte l'état v1 (outil v4) ou v2, renvoie un état v2 complet */
+  function migrateState(raw) {
+    var s = defaultState();
+    if (!raw || typeof raw !== 'object') return s;
+    var p = (raw.params && typeof raw.params === 'object') ? raw.params : {};
+    var ts = p.theoriqueSemaine || {};
+    WEEKDAY_ORDER.forEach(function (k) {
+      var v = typeof ts[k] === 'number' ? ts[k] : parseFloat(ts[k]);
+      if (!isNaN(v) && v >= 0) s.params.theoriqueSemaine[k] = v;
+    });
+    if (Array.isArray(p.absenceTypes) && p.absenceTypes.length) {
+      s.params.absenceTypes = p.absenceTypes.filter(function (t) { return t && t.id; }).map(function (t) {
+        return { id: String(t.id), label: String(t.label || t.id), color: safeColor(t.color), quota: normalizeQuota(t.quota) };
+      });
+      if (!s.params.absenceTypes.length) s.params.absenceTypes = defaultParams().absenceTypes;
+    }
+    if (Array.isArray(p.joursFeries)) {
+      s.params.joursFeries = p.joursFeries.filter(function (h) { return h && /^\d{4}-\d{2}-\d{2}$/.test(h.date); })
+        .map(function (h) { return { date: h.date, label: String(h.label || 'Jour férié') }; });
+    }
+    s.params.nomBilan = typeof p.nomBilan === 'string' ? p.nomBilan : '';
+    var days = (raw.days && typeof raw.days === 'object') ? raw.days : {};
+    Object.keys(days).forEach(function (k) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+      var e = normalizeEntry(days[k]);
+      if (e) s.days[k] = e;
+    });
+    s.version = EXPORT_VERSION;
+    return s;
+  }
+  function loadState() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    if (!raw) { state = defaultState(); return false; }
+    try { state = migrateState(JSON.parse(raw)); } catch (e) { state = defaultState(); }
+    return true;
+  }
+  /* Écrit seulement si la sérialisation a changé (évite boucles de synchro et
+     brouillons fantômes), puis prévient le module Drive. Renvoie true si écrit. */
+  function saveState() {
+    var serialized = JSON.stringify(state);
+    var current = null;
+    try { current = localStorage.getItem(STORAGE_KEY); } catch (e) { current = null; }
+    if (current === serialized) return false;
+    try {
+      localStorage.setItem(STORAGE_KEY, serialized);
+    } catch (e) {
+      showToast('Enregistrement impossible dans ce navigateur (stockage plein ou bloqué). Exportez vos données.', 'error');
+      return false;
+    }
+    if (window.__driveNotifySave) window.__driveNotifySave();
+    return true;
+  }
+  function countDays() { return Object.keys(state.days).length; }
+
+  /* ==== 4. Moteur de calcul ========================================= */
+  function isWorkType(t) { return WORK_TYPES.indexOf(t) !== -1; }
+  function getAbsenceType(id) {
+    var list = state.params.absenceTypes;
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+  function absenceLabel(id) { var t = getAbsenceType(id); return t ? t.label : 'Type supprimé'; }
+  function holidayLabelFor(dateStr) {
+    var list = state.params.joursFeries || [];
+    for (var i = 0; i < list.length; i++) if (list[i].date === dateStr) return list[i].label;
+    return null;
+  }
+  function isNonWorkingWeekday(d) {
+    var v = state.params.theoriqueSemaine[weekdayKeyOf(d)];
+    return !(typeof v === 'number' && v > 0);
+  }
+  /* Heures théoriques d'une journée entière, en minutes (0 si férié ou jour non travaillé) */
+  function theoriqueDayMinutes(d) {
+    if (holidayLabelFor(formatDateStr(d)) !== null) return 0;
+    var v = state.params.theoriqueSemaine[weekdayKeyOf(d)];
+    return (typeof v === 'number' ? v : 0) * 60;
+  }
+  /* Temps travaillé d'une journée (sortie − arrivée − pause), en minutes */
+  function dayReelMinutes(entry) {
+    if (!entry || !isWorkType(entry.type)) return 0;
+    var a = toMinutes(entry.arrivee), s = toMinutes(entry.sortie);
+    if (a === null || s === null) return 0;
+    var pd = toMinutes(entry.pauseDebut), pf = toMinutes(entry.pauseFin);
+    var pause = (pd !== null && pf !== null && pf > pd) ? pf - pd : 0;
+    var worked = s - a - pause;
+    return worked > 0 ? worked : 0;
+  }
+  /* Décompose une journée en fractions : activité travaillée (0, 0,5 ou 1)
+     et absences par type (0,5 par demi-journée). */
+  function dayBreakdown(entry) {
+    var b = { work: null, workFrac: 0, absences: {}, absentFrac: 0 };
+    if (!entry) return b;
+    if (entry.type === 'absence') {
+      var am = entry.absenceType || '?';
+      var pm = entry.absenceTypeApresMidi || am;
+      b.absences[am] = (b.absences[am] || 0) + 0.5;
+      b.absences[pm] = (b.absences[pm] || 0) + 0.5;
+      b.absentFrac = 1;
+      return b;
+    }
+    if (isWorkType(entry.type)) {
+      b.work = entry.type;
+      if (entry.demiAbsence) {
+        b.workFrac = 0.5;
+        b.absentFrac = 0.5;
+        b.absences[entry.demiAbsence.absenceType || '?'] = 0.5;
+      } else {
+        b.workFrac = 1;
+      }
+    }
+    return b;
+  }
+  /* Théorique d'une date compte tenu des absences (demi-journée = moitié) */
+  function dayTheoMinutes(d, entry) { return theoriqueDayMinutes(d) * (1 - dayBreakdown(entry).absentFrac); }
+
+  /* Totaux sur une liste de dates.
+     Règles (identiques à la v4, étendues aux demi-journées) :
+     - jour sans saisie dans le futur : ignoré ;
+     - jour sans saisie passé (ou aujourd'hui) : compte son théorique (déficit) ;
+     - journée saisie : théorique × (1 − part d'absence), réel = horaires saisis ;
+     - absences comptées en jours (0,5 par demi-journée), « planifiées » si futures. */
+  function getPeriodTotals(dateList, today) {
+    var t = {
+      reel: 0, theorique: 0, ecart: 0,
+      presentiel: 0, teletravail: 0, deplacement: 0, travailles: 0,
+      absence: 0, absenceFuture: 0, absenceByType: {}, absenceFutureByType: {},
+      nonSaisis: 0, saisis: 0
+    };
+    for (var i = 0; i < dateList.length; i++) {
+      var d = dateList[i], ds = formatDateStr(d);
+      var entry = state.days[ds];
+      var isFuture = ds > today;
+      var theoDay = theoriqueDayMinutes(d);
+      if (!entry) {
+        if (isFuture) continue;
+        t.theorique += theoDay;
+        if (theoDay > 0) t.nonSaisis++;
+        continue;
+      }
+      t.saisis++;
+      var b = dayBreakdown(entry);
+      for (var id in b.absences) {
+        if (!b.absences.hasOwnProperty(id)) continue;
+        var f = b.absences[id];
+        t.absence += f;
+        t.absenceByType[id] = (t.absenceByType[id] || 0) + f;
+        if (isFuture) {
+          t.absenceFuture += f;
+          t.absenceFutureByType[id] = (t.absenceFutureByType[id] || 0) + f;
+        }
+      }
+      if (b.work === 'travail') t.presentiel += b.workFrac;
+      else if (b.work === 'teletravail') t.teletravail += b.workFrac;
+      else if (b.work === 'deplacement') t.deplacement += b.workFrac;
+      t.theorique += theoDay * (1 - b.absentFrac);
+      t.reel += dayReelMinutes(entry);
+    }
+    t.travailles = t.presentiel + t.teletravail + t.deplacement;
+    t.ecart = t.reel - t.theorique;
+    return t;
+  }
+  /* Bilan d'une année : totaux de chaque mois (avec écart cumulé) + total annuel */
+  function yearBilan(year, today) {
+    var months = [], cumul = 0;
+    for (var m = 0; m < 12; m++) {
+      var mt = getPeriodTotals(datesOfMonth(year, m), today);
+      cumul += mt.ecart;
+      mt.cumul = cumul;
+      mt.month = m;
+      months.push(mt);
+    }
+    return { year: year, months: months, total: getPeriodTotals(datesOfYear(year), today) };
+  }
+  /* Lignes « absences et droits » : types paramétrés + types supprimés encore utilisés */
+  function absenceQuotaRows(totals) {
+    var rows = [], seen = {};
+    state.params.absenceTypes.forEach(function (t) {
+      seen[t.id] = true;
+      rows.push(makeQuotaRow(t.id, t.label, t.color, t.quota, totals));
+    });
+    Object.keys(totals.absenceByType).forEach(function (id) {
+      if (!seen[id]) rows.push(makeQuotaRow(id, 'Type supprimé', '#8b90a4', null, totals));
+    });
+    return rows;
+  }
+  function makeQuotaRow(id, label, color, quota, totals) {
+    var total = totals.absenceByType[id] || 0, futur = totals.absenceFutureByType[id] || 0;
+    return { id: id, label: label, color: color, quota: quota, total: total, planifies: futur, pris: total - futur,
+      solde: quota === null || quota === undefined ? null : quota - total };
+  }
+  /* Libellé texte de l'activité d'une journée (calendrier, impression) */
+  function entryActivityText(entry) {
+    if (!entry) return '';
+    if (entry.type === 'absence') {
+      if (entry.absenceTypeApresMidi) return absenceLabel(entry.absenceType) + ' (matin) / ' + absenceLabel(entry.absenceTypeApresMidi) + ' (après-midi)';
+      return absenceLabel(entry.absenceType);
+    }
+    if (isWorkType(entry.type)) {
+      var s = TYPE_LABELS[entry.type];
+      if (entry.demiAbsence) s += ' + ½ ' + absenceLabel(entry.demiAbsence.absenceType) + ' (' + PERIODE_LABELS[entry.demiAbsence.periode] + ')';
+      return s;
+    }
+    return 'Type inconnu';
+  }
+  function entryHoursText(entry) {
+    if (!entry || !isWorkType(entry.type) || !entry.arrivee) return '';
+    var s = entry.arrivee + ' → ' + entry.sortie;
+    if (entry.pauseDebut && entry.pauseFin) s += ' · pause ' + entry.pauseDebut + '–' + entry.pauseFin;
+    return s;
+  }
+
+  /* ==== 5. Jours fériés France ====================================== */
+  function computeEasterSunday(year) {
+    var a = year % 19, b = Math.floor(year / 100), c = year % 100;
+    var d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+    var g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+    var i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+    var m = Math.floor((a + 11 * h + 22 * l) / 451);
+    var month = Math.floor((h + l - 7 * m + 114) / 31);
+    var day = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(year, month - 1, day);
+  }
+  function computeFrenchHolidays(year) {
+    var easter = computeEasterSunday(year);
+    return [
+      { date: new Date(year, 0, 1), label: "Jour de l'An" },
+      { date: addDays(easter, 1), label: 'Lundi de Pâques' },
+      { date: new Date(year, 4, 1), label: 'Fête du Travail' },
+      { date: new Date(year, 4, 8), label: 'Victoire 1945' },
+      { date: addDays(easter, 39), label: 'Ascension' },
+      { date: addDays(easter, 50), label: 'Lundi de Pentecôte' },
+      { date: new Date(year, 6, 14), label: 'Fête Nationale' },
+      { date: new Date(year, 7, 15), label: 'Assomption' },
+      { date: new Date(year, 10, 1), label: 'Toussaint' },
+      { date: new Date(year, 10, 11), label: 'Armistice' },
+      { date: new Date(year, 11, 25), label: 'Noël' }
+    ].map(function (h) { return { date: formatDateStr(h.date), label: h.label }; });
+  }
+
+  /* ==== 6. Thème (préférence du poste, localStorage, non synchronisée) */
+  function readThemePref() {
+    var t = null;
+    try { t = localStorage.getItem(THEME_KEY); } catch (e) { t = null; }
+    return t === 'dark' ? 'dark' : 'light';
+  }
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+    $('themeToggleBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  function toggleTheme() {
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* préférence non mémorisée */ }
+  }
+
+  /* ==== Toasts ====================================================== */
+  function showToast(message, type) {
+    var c = $('toastContainer');
+    if (!c) return;
+    var el = document.createElement('div');
+    el.className = 'toast' + (type ? ' toast-' + type : '');
+    el.textContent = message;
+    c.appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, type === 'error' ? 6500 : 4000);
+  }
+  window.showToast = showToast; // utilisé aussi par le module Drive s'il est présent
+
+  /* ==== 7. Rendu : onglet Calendrier ================================ */
+  function absenceTagHtml(id, suffix) {
+    var t = getAbsenceType(id);
+    if (!t) return '<span class="day-tag tag-deleted">Type supprimé' + (suffix ? ' ' + escapeHtml(suffix) : '') + '</span>';
+    var col = safeColor(t.color);
+    return '<span class="day-tag" style="background:' + col + ';color:' + readableTextColor(col) + '">' +
+      escapeHtml(t.label) + (suffix ? ' ' + escapeHtml(suffix) : '') + '</span>';
+  }
+  function summaryCardHtml(label, t) {
+    return '<div class="summary-card">' +
+      '<div class="sc-label">' + escapeHtml(label) + '</div>' +
+      '<div class="sc-real">' + formatHM(t.reel) + '</div>' +
+      '<div class="sc-theo">théorique ' + formatHM(t.theorique) + '</div>' +
+      '<div class="ecart-badge ' + ecartClass(t.ecart) + '">' + formatEcart(t.ecart) + '</div>' +
+      '</div>';
+  }
+  function renderSummary() {
+    var now = new Date(), today = todayStr();
+    var y = ui.viewYear, m = ui.viewMonth;
+    var monthTotals = getPeriodTotals(datesOfMonth(y, m), today);
+    $('summaryRow').innerHTML =
+      summaryCardHtml("Aujourd'hui", getPeriodTotals([now], today)) +
+      summaryCardHtml('Cette semaine', getPeriodTotals(datesOfWeekContaining(now), today)) +
+      summaryCardHtml(MONTH_LABELS[m] + ' ' + y, monthTotals) +
+      summaryCardHtml('Année ' + y, getPeriodTotals(datesOfYear(y), today));
+
+    $('monthCountersTitle').textContent = 'Compteurs — ' + MONTH_LABELS[m] + ' ' + y;
+    var mc = monthTotals;
+    var html =
+      '<span class="counter-pill"><span class="dot dot-travail"></span>Présentiel <b>' + fmtDays(mc.presentiel) + '</b></span>' +
+      '<span class="counter-pill"><span class="dot dot-teletravail"></span>Télétravail <b>' + fmtDays(mc.teletravail) + '</b></span>' +
+      '<span class="counter-pill"><span class="dot dot-deplacement"></span>Déplacement <b>' + fmtDays(mc.deplacement) + '</b></span>' +
+      '<span class="counter-pill"><span class="dot dot-absence"></span>Absences <b>' + fmtDays(mc.absence) + '</b></span>' +
+      '<span class="counter-pill"><span class="dot dot-ink"></span>Jours travaillés <b>' + fmtDays(mc.travailles) + '</b></span>';
+    if (mc.nonSaisis > 0) {
+      html += '<span class="counter-pill" style="background:var(--warn-bg);color:var(--warn);border-color:transparent;" title="Jours ouvrés passés (aujourd\'hui inclus) sans aucune saisie : leur théorique compte comme un déficit">⚠️ Non saisis <b>' + mc.nonSaisis + '</b></span>';
+    }
+    $('countersRow').innerHTML = html;
+
+    var ids = Object.keys(mc.absenceByType);
+    $('breakdownRow').innerHTML = ids.map(function (id) {
+      var t = getAbsenceType(id);
+      return '<span class="badge b-neutral"><span class="dot" style="background:' + safeColor(t ? t.color : '#8b90a4') + '"></span>' +
+        escapeHtml(t ? t.label : 'Type supprimé') + ' <b>' + fmtDays(mc.absenceByType[id]) + '</b></span>';
+    }).join('');
+    $('breakdownRow').className = ids.length ? 'breakdown-row' : 'breakdown-row hidden';
+  }
+  function renderCalendar() {
+    var year = ui.viewYear, month = ui.viewMonth;
+    $('monthLabel').textContent = MONTH_LABELS[month] + ' ' + year;
+    var startOffset = (new Date(year, month, 1).getDay() + 6) % 7;
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+    var today = todayStr();
+    var html = '';
+    for (var i = 0; i < totalCells; i++) {
+      var d = new Date(year, month, 1 - startOffset + i);
+      var ds = formatDateStr(d);
+      var entry = state.days[ds];
+      var hLabel = holidayLabelFor(ds);
+      var cls = 'day-cell';
+      if (d.getMonth() !== month) cls += ' other-month';
+      if (ds === today) cls += ' today';
+      var inner = '<div class="day-num">' + d.getDate() + '</div>';
+      if (entry) {
+        if (entry.type === 'absence') {
+          if (entry.absenceTypeApresMidi) {
+            inner += absenceTagHtml(entry.absenceType, '· matin') + absenceTagHtml(entry.absenceTypeApresMidi, '· ap.-midi');
+          } else {
+            inner += absenceTagHtml(entry.absenceType, '');
+          }
+        } else if (isWorkType(entry.type)) {
+          inner += '<span class="day-tag tag-' + entry.type + '">' + TYPE_LABELS[entry.type] + '</span>';
+          if (entry.demiAbsence) {
+            inner += absenceTagHtml(entry.demiAbsence.absenceType, '½ ' + (entry.demiAbsence.periode === 'matin' ? 'matin' : 'ap.-midi')).replace('class="day-tag"', 'class="day-tag half"');
+          }
+          inner += '<span class="day-hours">' + formatHM(dayReelMinutes(entry)) + '</span>';
+        }
+        if (hLabel !== null) inner += '<span class="day-off-label">' + escapeHtml(hLabel) + '</span>';
+      } else if (hLabel !== null) {
+        cls += ' cell-holiday';
+        inner += '<span class="day-off-label">' + escapeHtml(hLabel) + '</span>';
+      } else if (isNonWorkingWeekday(d)) {
+        cls += ' cell-off';
+      }
+      html += '<div class="' + cls + '" data-date="' + ds + '" tabindex="0" role="button" aria-label="Saisir le ' + frDate(d) + '">' + inner + '</div>';
+    }
+    $('calGrid').innerHTML = html;
+  }
+
+  /* ==== 8. Rendu : onglet Bilan annuel ============================== */
+  function statCardHtml(label, value, sub, valueClass) {
+    return '<div class="stat-card"><div class="stat-label">' + escapeHtml(label) + '</div>' +
+      '<div class="stat-value' + (valueClass ? ' ' + valueClass : '') + '">' + value + '</div>' +
+      (sub ? '<div class="stat-sub">' + sub + '</div>' : '') + '</div>';
+  }
+  function pctOf(part, whole) { return whole > 0 ? Math.round(part / whole * 100) + ' %' : '—'; }
+  function yearStatCardsHtml(t) {
+    return statCardHtml('Heures réelles', formatHM(t.reel), 'théorique ' + formatHM(t.theorique)) +
+      statCardHtml('Écart (heures sup. / déficit)', formatEcart(t.ecart), t.ecart >= 0 ? 'au-dessus du théorique' : 'en dessous du théorique', valClass(t.ecart)) +
+      statCardHtml('Jours travaillés', fmtDays(t.travailles), 'présentiel, télétravail et déplacement') +
+      statCardHtml('Présentiel', fmtDays(t.presentiel), pctOf(t.presentiel, t.travailles) + ' des jours travaillés') +
+      statCardHtml('Télétravail', fmtDays(t.teletravail), pctOf(t.teletravail, t.travailles) + ' des jours travaillés') +
+      statCardHtml('Déplacement', fmtDays(t.deplacement), pctOf(t.deplacement, t.travailles) + ' des jours travaillés') +
+      statCardHtml('Absences', fmtDays(t.absence), t.absenceFuture > 0 ? 'dont ' + fmtDays(t.absenceFuture) + ' planifiée(s)' : 'tous types confondus') +
+      statCardHtml('Jours ouvrés non saisis', String(t.nonSaisis), t.nonSaisis ? 'comptés en déficit' : 'aucun oubli', t.nonSaisis ? 'val-neg' : '');
+  }
+  function absenceQuotaTableHtml(totals, withQuota) {
+    var rows = absenceQuotaRows(totals).filter(function (r) { return r.total > 0 || (withQuota && r.quota !== null); });
+    if (!rows.length) return '<div class="empty-state">Aucune absence sur la période.</div>';
+    var h = '<div class="table-wrap"><table class="data auto-layout">' +
+      '<thead><tr><th>Type</th><th>Pris</th><th>Planifiés</th><th>Total</th>' + (withQuota ? '<th>Droit annuel</th><th>Solde</th>' : '') + '</tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr><td><span class="dot" style="background:' + safeColor(r.color) + ';margin-right:7px;vertical-align:-1px;"></span>' + escapeHtml(r.label) + '</td>' +
+        '<td>' + fmtDays(r.pris) + '</td><td class="muted">' + fmtDays(r.planifies) + '</td><td><b>' + fmtDays(r.total) + '</b></td>';
+      if (withQuota) {
+        if (r.quota === null) {
+          h += '<td class="muted">—</td><td class="muted">—</td>';
+        } else {
+          var used = r.quota > 0 ? Math.min(100, r.total / r.quota * 100) : 100;
+          var barColor = r.solde < 0 ? 'var(--danger)' : 'var(--primary)';
+          h += '<td>' + fmtDays(r.quota) + '</td><td><span class="' + (r.solde < 0 ? 'val-neg' : '') + '">' + fmtDays(r.solde) + ' j</span>' +
+            '<div class="quota-bar" title="' + Math.round(used) + ' % du droit utilisé"><span style="width:' + used + '%;background:' + barColor + '"></span></div></td>';
+        }
+      }
+      h += '</tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+  function monthTableHtml(bilan, clickable) {
+    var h = '<table class="data"><colgroup><col style="width:13%"><col><col><col><col><col><col><col><col></colgroup>' +
+      '<thead><tr><th>Mois</th><th>Présentiel</th><th>Télétravail</th><th>Déplacement</th><th>Absences</th><th>Réel</th><th>Théorique</th><th>Écart</th><th>Écart cumulé</th></tr></thead><tbody>';
+    var lastPlotted = lastMonthToPlot(bilan);
+    bilan.months.forEach(function (mt) {
+      var future = mt.month > lastPlotted; // mois à venir sans aucune saisie : grisé
+      var cls = (clickable ? 'clickable' : '') + (future ? ' future-row' : '');
+      h += '<tr' + (cls.trim() ? ' class="' + cls.trim() + '"' : '') + (clickable ? ' data-month="' + mt.month + '" tabindex="0"' : '') + '>' +
+        '<td>' + MONTH_LABELS[mt.month] + '</td>' +
+        '<td>' + fmtDays(mt.presentiel) + '</td><td>' + fmtDays(mt.teletravail) + '</td><td>' + fmtDays(mt.deplacement) + '</td>' +
+        '<td>' + fmtDays(mt.absence) + '</td>' +
+        '<td>' + formatHM(mt.reel) + '</td><td class="muted">' + formatHM(mt.theorique) + '</td>' +
+        '<td class="' + (future ? '' : valClass(mt.ecart)) + '">' + (future ? '—' : formatEcart(mt.ecart)) + '</td>' +
+        '<td class="' + (future ? '' : valClass(mt.cumul)) + '">' + (future ? '—' : formatEcart(mt.cumul)) + '</td></tr>';
+    });
+    var t = bilan.total;
+    h += '<tr class="total-row"><td>Total ' + bilan.year + '</td><td>' + fmtDays(t.presentiel) + '</td><td>' + fmtDays(t.teletravail) + '</td><td>' +
+      fmtDays(t.deplacement) + '</td><td>' + fmtDays(t.absence) + '</td><td>' + formatHM(t.reel) + '</td><td>' + formatHM(t.theorique) + '</td>' +
+      '<td class="' + valClass(t.ecart) + '">' + formatEcart(t.ecart) + '</td><td></td></tr>';
+    return h + '</tbody></table>';
+  }
+  /* Dernier mois à tracer : mois écoulés de l'année + mois contenant déjà des saisies */
+  function lastMonthToPlot(bilan) {
+    var now = new Date(), last = -1;
+    for (var m = 0; m < 12; m++) {
+      var elapsed = bilan.year < now.getFullYear() || (bilan.year === now.getFullYear() && m <= now.getMonth());
+      if (elapsed || bilan.months[m].saisis > 0) last = m;
+    }
+    return last;
+  }
+  /* Graphique SVG : barres = écart mensuel (h), courbe = écart cumulé (h). Couleurs issues des variables CSS. */
+  function yearChartSvg(bilan) {
+    var last = lastMonthToPlot(bilan);
+    if (last < 0) return '<div class="empty-state">Aucune donnée à afficher pour cette année.</div>';
+    var W = 720, H = 240, pl = 54, pr = 14, pt = 14, pb = 30;
+    var iw = W - pl - pr, ih = H - pt - pb;
+    var bars = [], cum = [];
+    for (var m = 0; m <= last; m++) { bars.push(bilan.months[m].ecart / 60); cum.push(bilan.months[m].cumul / 60); }
+    var all = bars.concat(cum, [0]);
+    var vmin = Math.min.apply(null, all), vmax = Math.max.apply(null, all);
+    if (vmax - vmin < 1) { vmax += 0.5; vmin -= 0.5; }
+    var range = vmax - vmin, steps = [0.25, 0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 500], step = steps[steps.length - 1];
+    for (var s = 0; s < steps.length; s++) { if (range / steps[s] <= 6) { step = steps[s]; break; } }
+    vmin = Math.floor(vmin / step) * step; vmax = Math.ceil(vmax / step) * step;
+    function sy(v) { return pt + (vmax - v) / (vmax - vmin) * ih; }
+    var slot = iw / 12;
+    function sx(i) { return pl + slot * i + slot / 2; }
+    var out = '<svg class="chart-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Écart mensuel et cumulé ' + bilan.year + '">';
+    for (var v = vmin; v <= vmax + 1e-9; v += step) {
+      var y = sy(v);
+      out += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" style="stroke:var(--border);stroke-width:' + (Math.abs(v) < 1e-9 ? 1.6 : 1) + '"/>' +
+        '<text x="' + (pl - 6) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" style="fill:var(--ink-muted);font-size:10.5px;">' + formatEcart(v * 60).replace('+0h00', '0h00') + '</text>';
+    }
+    var y0 = sy(0), bw = slot * 0.55;
+    bars.forEach(function (val, i) {
+      var y1 = sy(Math.max(val, 0)), h = Math.max(Math.abs(sy(val) - y0), val === 0 ? 0 : 1);
+      out += '<rect x="' + (sx(i) - bw / 2).toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2" style="fill:' +
+        (val >= 0 ? 'var(--ok)' : 'var(--danger)') + ';opacity:.85"><title>' + MONTH_LABELS[i] + ' : ' + formatEcart(val * 60) + '</title></rect>';
+    });
+    out += '<polyline fill="none" style="stroke:var(--primary);stroke-width:2.2" points="' +
+      cum.map(function (val, i) { return sx(i).toFixed(1) + ',' + sy(val).toFixed(1); }).join(' ') + '"/>';
+    cum.forEach(function (val, i) {
+      out += '<circle cx="' + sx(i).toFixed(1) + '" cy="' + sy(val).toFixed(1) + '" r="3" style="fill:var(--primary)"><title>Cumul fin ' + MONTH_SHORT[i] + ' : ' + formatEcart(val * 60) + '</title></circle>';
+    });
+    for (var k = 0; k < 12; k++) {
+      out += '<text x="' + sx(k).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle" style="fill:var(--ink-muted);font-size:10.5px;">' + MONTH_SHORT[k] + '</text>';
+    }
+    out += '</svg><div class="chart-legend"><span><span class="legend-swatch" style="background:var(--ok)"></span>Mois au-dessus du théorique</span>' +
+      '<span><span class="legend-swatch" style="background:var(--danger)"></span>Mois en dessous</span><span><span class="legend-line"></span>Écart cumulé</span></div>';
+    return out;
+  }
+  function renderBilan() {
+    var bilan = yearBilan(ui.bilanYear, todayStr());
+    $('yearLabel').textContent = 'Année ' + ui.bilanYear;
+    $('yearCountersSub').textContent = ui.bilanYear === new Date().getFullYear()
+      ? 'Situation au ' + frDate(new Date()) + ' : jours écoulés + journées déjà saisies à l\'avance'
+      : 'Année complète';
+    $('yearStatCards').innerHTML = yearStatCardsHtml(bilan.total);
+    $('absenceQuotaTable').innerHTML = absenceQuotaTableHtml(bilan.total, true);
+    $('yearChart').innerHTML = yearChartSvg(bilan);
+    $('monthTableWrap').innerHTML = monthTableHtml(bilan, true);
+  }
+
+  function renderAll() {
+    renderSummary();
+    renderCalendar();
+    renderBilan();
+  }
+  function switchTab(tab) {
+    ui.tab = tab;
+    var tabs = document.querySelectorAll('.tab');
+    for (var i = 0; i < tabs.length; i++) tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === tab);
+    $('panel-calendar').classList.toggle('active', tab === 'calendar');
+    $('panel-bilan').classList.toggle('active', tab === 'bilan');
+  }
+
+  /* ==== Modales : ouverture / fermeture génériques ================== */
+  var openModals = [];
+  function openModal(id) {
+    $(id).classList.remove('hidden');
+    if (openModals.indexOf(id) === -1) openModals.push(id);
+  }
+  function closeModal(id) {
+    $(id).classList.add('hidden');
+    var i = openModals.indexOf(id);
+    if (i !== -1) openModals.splice(i, 1);
+    if (id === 'dayModal') editingDateStr = null;
+  }
+  function showFormError(id, msg) {
+    var el = $(id);
+    if (!msg) { el.classList.add('hidden'); el.textContent = ''; return; }
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  /* ==== 9. Modale « Journée » ======================================= */
+  var editingDateStr = null;
+  var editingType = 'travail';
+
+  /* Remplit un <select> de types d'absence ; ajoute « Type supprimé » si la valeur n'existe plus */
+  function fillAbsenceSelect(selectId, selectedId) {
+    var list = state.params.absenceTypes;
+    var html = list.map(function (t) {
+      return '<option value="' + escapeHtml(t.id) + '"' + (t.id === selectedId ? ' selected' : '') + '>' + escapeHtml(t.label) + '</option>';
+    }).join('');
+    if (selectedId && !getAbsenceType(selectedId)) html += '<option value="' + escapeHtml(selectedId) + '" selected>Type supprimé</option>';
+    $(selectId).innerHTML = html;
+  }
+  function setSegActive(type) {
+    var buttons = document.querySelectorAll('#typeSeg button');
+    for (var i = 0; i < buttons.length; i++) buttons[i].classList.toggle('active', buttons[i].getAttribute('data-type') === type);
+    $('workFields').classList.toggle('hidden', type === 'absence');
+    $('absenceFields').classList.toggle('hidden', type !== 'absence');
+    editingType = type;
+    updateDayModalDynamic();
+  }
+  /* Champs dépendants : type de demi-journée, type de l'après-midi, aperçu des heures */
+  function updateDayModalDynamic() {
+    $('demiTypeGroup').classList.toggle('hidden', !$('fDemiPeriode').value);
+    var split = $('fAbsenceSplit').checked;
+    $('absencePmGroup').classList.toggle('hidden', !split);
+    $('fAbsenceTypeLabel').textContent = split ? "Type d'absence du matin" : "Type d'absence (journée entière)";
+    var preview = '';
+    if (editingType !== 'absence' && $('fArrivee').value && $('fSortie').value) {
+      var probe = { type: editingType, arrivee: $('fArrivee').value, sortie: $('fSortie').value, pauseDebut: $('fPauseDebut').value, pauseFin: $('fPauseFin').value };
+      if ($('fDemiPeriode').value) probe.demiAbsence = { periode: $('fDemiPeriode').value, absenceType: $('fDemiType').value };
+      var d = parseDateStr(editingDateStr);
+      preview = 'Temps travaillé : <b>' + formatHM(dayReelMinutes(probe)) + '</b> · théorique du jour : <b>' + formatHM(dayTheoMinutes(d, probe)) + '</b>';
+    }
+    $('dayWorkedPreview').innerHTML = preview;
+  }
+  function openDayModal(dateStr) {
+    editingDateStr = dateStr;
+    var d = parseDateStr(dateStr);
+    var weekdayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    var holiday = holidayLabelFor(dateStr);
+    var theo = theoriqueDayMinutes(d);
+    $('modalDateLabel').textContent = weekdayNames[d.getDay()] + ' ' + d.getDate() + ' ' + MONTH_LABELS[d.getMonth()].toLowerCase() + ' ' + d.getFullYear() +
+      ' · semaine ' + isoWeek(d) + (holiday ? ' · férié : ' + holiday : (theo > 0 ? ' · théorique ' + formatHM(theo) : ' · jour non travaillé'));
+    showFormError('dayFormError', '');
+
+    var entry = state.days[dateStr] || null;
+    var isWork = entry && isWorkType(entry.type);
+    $('fArrivee').value = isWork ? entry.arrivee || '' : '';
+    $('fSortie').value = isWork ? entry.sortie || '' : '';
+    $('fPauseDebut').value = isWork ? entry.pauseDebut || '' : '';
+    $('fPauseFin').value = isWork ? entry.pauseFin || '' : '';
+    $('fDemiPeriode').value = isWork && entry.demiAbsence ? entry.demiAbsence.periode : '';
+    fillAbsenceSelect('fDemiType', isWork && entry.demiAbsence ? entry.demiAbsence.absenceType : null);
+
+    var isAbs = entry && entry.type === 'absence';
+    fillAbsenceSelect('fAbsenceType', isAbs ? entry.absenceType : null);
+    $('fAbsenceSplit').checked = !!(isAbs && entry.absenceTypeApresMidi);
+    fillAbsenceSelect('fAbsenceTypePm', isAbs ? (entry.absenceTypeApresMidi || entry.absenceType) : null);
+
+    setSegActive(entry && (isWork || isAbs) ? entry.type : 'travail');
+    $('dayDeleteBtn').style.display = entry ? '' : 'none';
+    openModal('dayModal');
+    var firstBtn = document.querySelector('#typeSeg button.active');
+    if (firstBtn) firstBtn.focus();
+  }
+  /* Lit le formulaire et renvoie { entry } ou { error } (aucune écriture ici, pour être testable) */
+  function readDayForm() {
+    if (editingType === 'absence') {
+      var am = $('fAbsenceType').value;
+      if (!am) return { error: "Aucun type d'absence n'est défini : ajoutez-en un dans ⚙️ Paramètres." };
+      var entry = { type: 'absence', absenceType: am };
+      if ($('fAbsenceSplit').checked) {
+        var pm = $('fAbsenceTypePm').value;
+        if (pm && pm !== am) entry.absenceTypeApresMidi = pm;
+      }
+      return { entry: entry };
+    }
+    var arrivee = $('fArrivee').value, sortie = $('fSortie').value;
+    var pauseDebut = $('fPauseDebut').value, pauseFin = $('fPauseFin').value;
+    if (!arrivee || !sortie) return { error: "Merci de renseigner au moins l'heure d'arrivée et l'heure de sortie." };
+    if (toMinutes(sortie) <= toMinutes(arrivee)) return { error: "L'heure de sortie doit être après l'heure d'arrivée." };
+    if (pauseDebut && pauseFin && toMinutes(pauseFin) <= toMinutes(pauseDebut)) return { error: 'La fin de pause doit être après le début de pause.' };
+    var w = { type: editingType, arrivee: arrivee, sortie: sortie, pauseDebut: pauseDebut, pauseFin: pauseFin };
+    var periode = $('fDemiPeriode').value;
+    if (periode) {
+      var dt = $('fDemiType').value;
+      if (!dt) return { error: "Choisissez le type d'absence de la demi-journée." };
+      w.demiAbsence = { periode: periode, absenceType: dt };
+    }
+    return { entry: w };
+  }
+  function saveDay() {
+    if (!editingDateStr) return;
+    var res = readDayForm();
+    if (res.error) { showFormError('dayFormError', res.error); return; }
+    state.days[editingDateStr] = res.entry;
+    saveState();
+    closeModal('dayModal');
+    renderAll();
+  }
+  function deleteDay() {
+    if (!editingDateStr) return;
+    delete state.days[editingDateStr];
+    saveState();
+    closeModal('dayModal');
+    renderAll();
+  }
+
+  /* ==== 10. Modale « Paramètres » =================================== */
+  var tempAbsenceTypes = [];
+  var tempHolidays = [];
+
+  function renderWeekdayGrid() {
+    $('weekdayGrid').innerHTML = WEEKDAY_ORDER.map(function (k) {
+      return '<div class="weekday-row"><label for="wd_' + k + '">' + WEEKDAY_LABELS[k] + '</label>' +
+        '<input type="number" id="wd_' + k + '" step="0.25" min="0" max="24" data-weekday="' + k + '" value="' + state.params.theoriqueSemaine[k] + '"></div>';
+    }).join('');
+  }
+  function usageCount(typeId) {
+    var n = 0;
+    Object.keys(state.days).forEach(function (k) {
+      var e = state.days[k];
+      if (e.absenceType === typeId || e.absenceTypeApresMidi === typeId || (e.demiAbsence && e.demiAbsence.absenceType === typeId)) n++;
+    });
+    return n;
+  }
+  function renderAbsenceTypesList() {
+    $('absenceTypesList').innerHTML = tempAbsenceTypes.map(function (t, i) {
+      return '<div class="list-row" data-index="' + i + '">' +
+        '<input type="color" value="' + safeColor(t.color) + '" data-field="color" title="Couleur" aria-label="Couleur">' +
+        '<input type="text" value="' + escapeHtml(t.label) + '" data-field="label" placeholder="Nom du type" aria-label="Libellé">' +
+        '<input type="text" class="quota-input" inputmode="decimal" value="' + (t.quota === null || t.quota === undefined ? '' : String(t.quota).replace('.', ',')) + '" data-field="quota" placeholder="—" aria-label="Droit annuel en jours">' +
+        '<button type="button" class="btn-tiny danger" data-remove="' + i + '" title="Supprimer ce type">✕</button></div>';
+    }).join('');
+  }
+  function renderHolidaysList() {
+    $('holidaysList').innerHTML = tempHolidays.map(function (h, i) {
+      return '<div class="list-row" data-index="' + i + '">' +
+        '<input type="date" value="' + escapeHtml(h.date) + '" data-field="date" aria-label="Date">' +
+        '<input type="text" value="' + escapeHtml(h.label) + '" data-field="label" placeholder="Nom du jour férié" aria-label="Nom">' +
+        '<button type="button" class="btn-tiny danger" data-remove="' + i + '" title="Supprimer">✕</button></div>';
+    }).join('');
+  }
+  function currentDisplayedYear() { return ui.tab === 'bilan' ? ui.bilanYear : ui.viewYear; }
+  function addFrenchHolidaysForDisplayedYear() {
+    var year = currentDisplayedYear();
+    var existing = {};
+    tempHolidays.forEach(function (h) { existing[h.date] = true; });
+    var added = 0;
+    computeFrenchHolidays(year).forEach(function (h) { if (!existing[h.date]) { tempHolidays.push(h); added++; } });
+    renderHolidaysList();
+    showToast(added ? added + ' jour(s) férié(s) ' + year + ' ajouté(s) — pensez à enregistrer.' : 'Les jours fériés de ' + year + ' sont déjà présents.', added ? 'success' : '');
+  }
+  function openParamsModal() {
+    renderWeekdayGrid();
+    tempAbsenceTypes = JSON.parse(JSON.stringify(state.params.absenceTypes));
+    tempHolidays = JSON.parse(JSON.stringify(state.params.joursFeries || []));
+    renderAbsenceTypesList();
+    renderHolidaysList();
+    $('pNomBilan').value = state.params.nomBilan || '';
+    showFormError('paramsFormError', '');
+    openModal('paramsModal');
+  }
+  function saveParams() {
+    var newWeek = {}, err = null;
+    var inputs = document.querySelectorAll('#weekdayGrid input');
+    for (var i = 0; i < inputs.length; i++) {
+      var v = parseFloat(String(inputs[i].value).replace(',', '.'));
+      newWeek[inputs[i].getAttribute('data-weekday')] = isNaN(v) || v < 0 ? 0 : Math.min(v, 24);
+    }
+    var cleanedTypes = [];
+    tempAbsenceTypes.forEach(function (t) {
+      if (!t.label || !String(t.label).trim()) return;
+      var qRaw = t.quota === null || t.quota === undefined ? '' : String(t.quota).trim();
+      var q = qRaw === '' ? null : normalizeQuota(qRaw);
+      if (qRaw !== '' && q === null) err = 'Droit annuel invalide pour « ' + t.label + ' » : nombre de jours positif attendu (ex. 25 ou 2,5).';
+      cleanedTypes.push({ id: t.id, label: String(t.label).trim(), color: safeColor(t.color), quota: q });
+    });
+    if (!cleanedTypes.length) err = "Merci de conserver au moins un type d'absence.";
+    if (err) { showFormError('paramsFormError', err); return; }
+
+    var cleanedHolidays = [], seen = {};
+    tempHolidays.forEach(function (h) {
+      if (h.date && h.label && String(h.label).trim() && !seen[h.date]) {
+        cleanedHolidays.push({ date: h.date, label: String(h.label).trim() });
+        seen[h.date] = true;
+      }
+    });
+    cleanedHolidays.sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+
+    state.params.theoriqueSemaine = newWeek;
+    state.params.absenceTypes = cleanedTypes;
+    state.params.joursFeries = cleanedHolidays;
+    state.params.nomBilan = $('pNomBilan').value.trim();
+    saveState();
+    closeModal('paramsModal');
+    renderAll();
+    showToast('Paramètres enregistrés.', 'success');
+  }
+
+  /* ==== 11. Export / import JSON ==================================== */
+  function downloadBlob(content, filename, mime) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function stampDate(d) { d = d || new Date(); return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()); }
+  function stampTime(d) { d = d || new Date(); return pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds()); }
+  /* Format commun aux exports et aux copies locales (identique version Drive / version dossier) */
+  function exportPayload() { return { app: APP_ID, version: EXPORT_VERSION, exportedAt: new Date().toISOString(), state: state }; }
+  function exportJson() {
+    downloadBlob(JSON.stringify(exportPayload(), null, 2), stampDate() + '_' + FILE_PREFIX + ' - export.json', 'application/json');
+    showToast('Export JSON téléchargé.', 'success');
+  }
+  /* Analyse un fichier importé. Accepte le format actuel { app, version, state }
+     et les exports bruts { params, days } de l'outil v4. Renvoie { state } ou { error }. */
+  function parseImport(text) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { return { error: 'Fichier JSON invalide.' }; }
+    if (!data || typeof data !== 'object') return { error: 'Fichier JSON invalide.' };
+    if (data.app && data.app !== APP_ID) return { error: 'Ce fichier provient d\'un autre outil (« ' + data.app + ' ») : import refusé.' };
+    if (typeof data.version === 'number' && data.version > EXPORT_VERSION) return { error: 'Ce fichier a été créé par une version plus récente de l\'outil : mettez l\'outil à jour avant de l\'importer.' };
+    var candidate = data.state ? data.state : data;
+    if (!candidate || typeof candidate.params !== 'object' || typeof candidate.days !== 'object' || !candidate.params || !candidate.days) {
+      return { error: 'Ce fichier ne semble pas être un export valide de Pointage.' };
+    }
+    return { state: migrateState(candidate) };
+  }
+  function importJsonFile(file) {
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      var res = parseImport(ev.target.result);
+      if (res.error) { showToast(res.error, 'error'); return; }
+      var n = Object.keys(res.state.days).length;
+      if (!window.confirm('Importer « ' + file.name + ' » (' + n + ' journée(s)) remplacera toutes les données actuelles (' + countDays() + ' journée(s)) et les paramètres. Les données importées seront ensuite synchronisées avec Drive. Continuer ?')) return;
+      state = res.state;
+      saveState();
+      renderAll();
+      showToast('Import réussi : ' + n + ' journée(s).', 'success');
+    };
+    reader.readAsText(file);
+  }
+
+  /* ==== 12. Copie locale (dossier, API File System Access) ==========
+     - le dossier est choisi au premier clic puis mémorisé sur le poste
+       (handle en IndexedDB) : les fois suivantes, seule l'autorisation
+       d'accès est redemandée ; Maj + clic permet d'en choisir un autre ;
+     - chaque clic (ou Ctrl+S) écrit Pointage_copie_AAAAMMJJ_HHMMSS.json,
+       plus la trame HTML vide de l'outil, une seule fois par version ;
+     - navigateurs sans l'API (Firefox…) : la copie est téléchargée.
+     Les copies sont un historique : l'outil ne les relit jamais seul
+     (Importer (JSON) permet d'en recharger une).                       */
+  var FS_SUPPORTED = typeof window.showDirectoryPicker === 'function';
+  var HANDLE_DB = 'axelPointage_fs', HANDLE_STORE = 'handles', HANDLE_KEY = 'localCopyDir';
+  var localCopyDirHandle = null;
+  function fsIdbOpen() {
+    return new Promise(function (resolve, reject) {
+      if (!window.indexedDB) { reject(new Error('IndexedDB indisponible')); return; }
+      var req = indexedDB.open(HANDLE_DB, 1);
+      req.onupgradeneeded = function () { req.result.createObjectStore(HANDLE_STORE); };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function fsIdbGetHandle() {
+    return fsIdbOpen().then(function (db) {
+      return new Promise(function (resolve) {
+        var r = db.transaction(HANDLE_STORE, 'readonly').objectStore(HANDLE_STORE).get(HANDLE_KEY);
+        r.onsuccess = function () { db.close(); resolve(r.result || null); };
+        r.onerror = function () { db.close(); resolve(null); };
+      });
+    }).catch(function () { return null; });
+  }
+  function fsIdbSetHandle(handle) {
+    return fsIdbOpen().then(function (db) {
+      return new Promise(function (resolve) {
+        var tx = db.transaction(HANDLE_STORE, 'readwrite');
+        tx.objectStore(HANDLE_STORE).put(handle, HANDLE_KEY);
+        tx.oncomplete = function () { db.close(); resolve(); };
+        tx.onerror = function () { db.close(); resolve(); };
+      });
+    }).catch(function () {});
+  }
+  function ensurePermission(handle) {
+    if (!handle || typeof handle.queryPermission !== 'function') return Promise.resolve(!!handle);
+    var opts = { mode: 'readwrite' };
+    return handle.queryPermission(opts).then(function (p) {
+      if (p === 'granted') return true;
+      return handle.requestPermission(opts).then(function (p2) { return p2 === 'granted'; });
+    }).catch(function () { return false; });
+  }
+  function pickLocalCopyDir() {
+    return window.showDirectoryPicker({ id: 'pointage', mode: 'readwrite' }).then(function (h) {
+      localCopyDirHandle = h;
+      fsIdbSetHandle(h);
+      return h;
+    });
+  }
+  function getLocalCopyDir(forcePick) {
+    if (forcePick) return pickLocalCopyDir();
+    if (localCopyDirHandle) {
+      return ensurePermission(localCopyDirHandle).then(function (ok) { return ok ? localCopyDirHandle : pickLocalCopyDir(); });
+    }
+    return fsIdbGetHandle().then(function (stored) {
+      if (!stored) return pickLocalCopyDir();
+      return ensurePermission(stored).then(function (ok) {
+        if (!ok) return pickLocalCopyDir();
+        localCopyDirHandle = stored;
+        return stored;
+      });
+    });
+  }
+  function localCopyFileName() { return FILE_PREFIX + '_copie_' + stampDate() + '_' + stampTime() + '.json'; }
+  function templateFileName() { return FILE_PREFIX + '_trame_' + TOOL_VERSION + '.html'; }
+  function writeFileInDir(dirHandle, filename, content) {
+    return dirHandle.getFileHandle(filename, { create: true }).then(function (fh) {
+      return fh.createWritable().then(function (w) { return w.write(content).then(function () { return w.close(); }); });
+    });
+  }
+  /* Trame vierge écrite une seule fois par version (son nom contient TOOL_VERSION) */
+  function writeTemplateIfNeeded(dirHandle) {
+    if (!pristineHtmlTemplate) return Promise.resolve(false);
+    var name = templateFileName();
+    return dirHandle.getFileHandle(name, { create: false }).then(function () { return false; }, function () {
+      return writeFileInDir(dirHandle, name, pristineHtmlTemplate).then(function () { return true; });
+    }).catch(function () { return false; /* la trame est un bonus : son échec ne fait pas échouer la copie */ });
+  }
+  var localCopyInProgress = false;
+  function localCopy(forcePick) {
+    if (localCopyInProgress) return Promise.resolve();
+    var filename = localCopyFileName();
+    var json = JSON.stringify(exportPayload(), null, 2);
+    if (!FS_SUPPORTED) {
+      downloadBlob(json, filename, 'application/json');
+      showToast('Copie locale téléchargée (' + filename + ').', 'success');
+      return Promise.resolve();
+    }
+    localCopyInProgress = true;
+    return getLocalCopyDir(!!forcePick).then(function (dir) {
+      return writeFileInDir(dir, filename, json).then(function () { return writeTemplateIfNeeded(dir); }).then(function () {
+        showToast('Copie locale enregistrée dans « ' + dir.name + ' » (' + filename + ').', 'success');
+      });
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') return; // choix du dossier annulé
+      localCopyDirHandle = null;
+      downloadBlob(json, filename, 'application/json');
+      showToast('Écriture dans le dossier impossible : la copie a été téléchargée à la place.', 'warning');
+    }).then(function () { localCopyInProgress = false; });
+  }
+
+  /* ==== 13. Impression du bilan (PDF) =============================== */
+  function openPrintModal(kind) {
+    var k = kind || (ui.tab === 'bilan' ? 'year' : 'month');
+    $('printKindYear').checked = k === 'year';
+    $('printKindMonth').checked = k === 'month';
+    $('printMonth').innerHTML = MONTH_LABELS.map(function (l, i) { return '<option value="' + i + '"' + (i === ui.viewMonth ? ' selected' : '') + '>' + l + '</option>'; }).join('');
+    $('printYear').value = k === 'year' ? ui.bilanYear : ui.viewYear;
+    $('printDetail').checked = k === 'month';
+    updatePrintModal();
+    openModal('printModal');
+  }
+  function updatePrintModal() { $('printMonthGroup').classList.toggle('hidden', !$('printKindMonth').checked); }
+  /* Tableau détaillé jour par jour, avec sous-total à chaque fin de semaine */
+  function detailTableHtml(dates, today) {
+    var h = '<div class="table-wrap"><table class="data"><thead><tr><th>Date</th><th style="text-align:left">Activité</th><th style="text-align:left">Horaires</th><th>Réel</th><th>Théorique</th><th>Écart</th></tr></thead><tbody>';
+    var weekDates = [];
+    function flushWeek() {
+      if (!weekDates.length) return;
+      var wt = getPeriodTotals(weekDates, today);
+      h += '<tr class="week-row"><td>Semaine ' + isoWeek(weekDates[0]) + '</td><td style="text-align:left">' + fmtDays(wt.travailles) + ' j travaillé(s)' +
+        (wt.absence ? ' · ' + fmtDays(wt.absence) + ' j d\'absence' : '') + '</td><td></td><td>' + formatHM(wt.reel) + '</td><td>' + formatHM(wt.theorique) + '</td><td>' + formatEcart(wt.ecart) + '</td></tr>';
+      weekDates = [];
+    }
+    dates.forEach(function (d) {
+      var ds = formatDateStr(d), entry = state.days[ds], holiday = holidayLabelFor(ds);
+      var future = ds > today, theoFull = theoriqueDayMinutes(d);
+      weekDates.push(d);
+      var show = entry || (!future && (theoFull > 0 || (holiday !== null && !isNonWorkingWeekday(d))));
+      if (show) {
+        var activity, hours = '', reel = 0, theo = 0;
+        if (entry) {
+          activity = escapeHtml(entryActivityText(entry)) + (holiday ? ' <span class="muted">(férié : ' + escapeHtml(holiday) + ')</span>' : '');
+          hours = escapeHtml(entryHoursText(entry));
+          reel = dayReelMinutes(entry);
+          theo = dayTheoMinutes(d, entry);
+        } else if (holiday !== null) {
+          activity = '<span class="muted">Férié : ' + escapeHtml(holiday) + '</span>';
+        } else {
+          activity = '<span class="val-neg">Non saisi</span>';
+          theo = theoFull;
+        }
+        h += '<tr><td>' + WEEKDAY_SHORT[d.getDay()] + ' ' + pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '</td><td style="text-align:left">' + activity + '</td>' +
+          '<td style="text-align:left">' + hours + '</td><td>' + (reel ? formatHM(reel) : '') + '</td><td>' + (theo ? formatHM(theo) : '') + '</td>' +
+          '<td class="' + valClass(reel - theo) + '">' + (reel || theo ? formatEcart(reel - theo) : '') + '</td></tr>';
+      }
+      if (d.getDay() === 0) flushWeek();
+    });
+    flushWeek();
+    return h + '</tbody></table></div>';
+  }
+  /* Construit le contenu de #printArea (bilan annuel ou mensuel) */
+  function buildPrintHtml(kind, year, month, withDetail) {
+    var today = todayStr(), now = new Date();
+    var title = kind === 'year' ? 'Bilan de pointage — Année ' + year : 'Bilan de pointage — ' + MONTH_LABELS[month] + ' ' + year;
+    var dates = kind === 'year' ? datesOfYear(year) : datesOfMonth(year, month);
+    var totals = getPeriodTotals(dates, today);
+    var periodEnd = dates[dates.length - 1];
+    var situation = formatDateStr(periodEnd) > today && dates[0] <= now ? 'Situation au ' + frDate(now) + ' (jours écoulés et journées déjà saisies)' : 'Période ' + (formatDateStr(dates[0]) > today ? 'à venir' : 'complète');
+    var h = '<div class="pr-head"><div><h1>' + escapeHtml(title) + '</h1>' +
+      (state.params.nomBilan ? '<div style="font-size:12px;font-weight:700;margin-top:3px;">' + escapeHtml(state.params.nomBilan) + '</div>' : '') +
+      '</div><div class="pr-meta">' + escapeHtml(situation) + '<br>Édité le ' + frDateTime(now) + '</div></div>';
+    h += '<div class="pr-section pr-keep"><h2>Synthèse</h2><div class="stat-cards-grid">' +
+      statCardHtml('Heures réelles', formatHM(totals.reel), '') +
+      statCardHtml('Heures théoriques', formatHM(totals.theorique), '') +
+      statCardHtml('Écart', formatEcart(totals.ecart), totals.ecart >= 0 ? 'heures sup.' : 'déficit', valClass(totals.ecart)) +
+      statCardHtml('Jours travaillés', fmtDays(totals.travailles), 'prés. ' + fmtDays(totals.presentiel) + ' · télétr. ' + fmtDays(totals.teletravail) + ' · dépl. ' + fmtDays(totals.deplacement)) +
+      statCardHtml('Absences', fmtDays(totals.absence), (totals.absenceFuture ? 'dont ' + fmtDays(totals.absenceFuture) + ' planifiée(s)' : '') + (totals.nonSaisis ? (totals.absenceFuture ? ' · ' : '') + totals.nonSaisis + ' jour(s) non saisi(s)' : '')) +
+      '</div></div>';
+    h += '<div class="pr-section pr-keep"><h2>Absences' + (kind === 'year' ? ' et droits annuels' : ' du mois') + '</h2>' + absenceQuotaTableHtml(totals, kind === 'year') + '</div>';
+    if (kind === 'year') {
+      var bilan = yearBilan(year, today);
+      h += '<div class="pr-section pr-keep"><h2>Mois par mois</h2><div class="table-wrap">' + monthTableHtml(bilan, false) + '</div></div>';
+      h += '<div class="pr-section pr-keep"><h2>Écart mensuel et cumulé</h2>' + yearChartSvg(bilan) + '</div>';
+    }
+    if (withDetail) h += '<div class="pr-section"><h2>Détail jour par jour</h2>' + detailTableHtml(dates, today) + '</div>';
+    return h;
+  }
+  /* Thème clair forcé pendant l'impression puis restauré */
+  function runPrint() {
+    var kind = $('printKindYear').checked ? 'year' : 'month';
+    var year = parseInt($('printYear').value, 10);
+    if (isNaN(year) || year < 1900 || year > 2200) { showToast('Année invalide.', 'error'); return; }
+    var month = parseInt($('printMonth').value, 10) || 0;
+    var previousTheme = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', 'light');
+    $('printArea').innerHTML = buildPrintHtml(kind, year, month, $('printDetail').checked);
+    closeModal('printModal');
+    var restore = function () {
+      document.documentElement.setAttribute('data-theme', previousTheme || 'light');
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+    setTimeout(function () { window.print(); }, 50);
+  }
+
+  /* ==== 14. Mode d'emploi =========================================== */
+  var HELP_TOPICS = ['Sauvegarde et synchronisation', 'Principe des calculs', 'Saisir une journée', 'Demi-journées d\'absence', 'Calendrier et compteurs du mois',
+    'Bilan annuel et droits', 'Paramètres', 'Imprimer un bilan PDF', 'Export / import JSON', 'Reprise des données de la v4', 'Thème et raccourcis'];
+  function helpHtml() {
+    var p = FILE_PREFIX;
+    return '<div class="help-toc">' + HELP_TOPICS.map(function (t, i) { return '<a class="badge b-primary" href="#help-' + i + '">' + t + '</a>'; }).join('') + '</div>' +
+      '<h3 id="help-0">1. Sauvegarde et synchronisation (Google Drive)</h3>' +
+      '<p>Vos données (journées et paramètres) sont enregistrées automatiquement <strong>dans ce navigateur</strong> à chaque modification, puis synchronisées avec votre <strong>Google Drive</strong> pour les retrouver sur vos autres appareils.</p><ul>' +
+      '<li><strong>Drive : non connecté</strong> → cliquez une fois pour autoriser l\'accès. Les données sont stockées dans un espace privé de l\'application sur votre Drive (invisible dans vos dossiers). La connexion est ensuite rétablie automatiquement à chaque ouverture et renouvelée toutes les 45 minutes.</li>' +
+      '<li>Pastille : <strong>grise</strong> non connecté, <strong>verte</strong> connecté / synchronisé, <strong>orange clignotante</strong> synchronisation en cours, <strong>rouge</strong> erreur.</li>' +
+      '<li>En cas de conflit entre deux appareils, <strong>la modification la plus récente l\'emporte</strong>. Si Drive contient des données plus récentes que ce navigateur, la page se recharge d\'elle-même pour les afficher.</li>' +
+      '<li><strong>Forcer synchro</strong> : envoie immédiatement les données de ce poste vers Drive (elles deviennent la référence).</li>' +
+      '<li><strong>📁 Copie locale</strong> (ou <strong>Ctrl+S</strong>) : enregistre en plus une copie horodatée <code>' + p + '_copie_AAAAMMJJ_HHMMSS.json</code> dans un dossier de votre choix, pour garder un historique. Le dossier est demandé au premier clic puis mémorisé sur le poste (seule l\'autorisation d\'accès est redemandée ensuite) ; <strong>Maj + clic</strong> permet d\'en choisir un autre. Une trame vide de l\'outil (<code>' + p + '_trame_' + TOOL_VERSION + '.html</code>) y est écrite une seule fois par version. Sans accès aux dossiers (ex. Firefox), la copie est téléchargée. Une copie se recharge avec <strong>Importer (JSON)</strong>.</li>' +
+      '<li>Le thème (clair / sombre) est une préférence propre à chaque poste : il n\'est ni synchronisé, ni exporté.</li></ul>' +
+      '<h3 id="help-1">2. Principe des calculs</h3><ul>' +
+      '<li><strong>Réel</strong> d\'une journée = sortie − arrivée − pause (si début et fin de pause sont renseignés).</li>' +
+      '<li><strong>Théorique</strong> = heures prévues pour ce jour de la semaine (⚙️ Paramètres) ; 0 pour un jour férié ou non travaillé ; divisé par deux en cas de demi-journée d\'absence ; 0 pour une journée d\'absence.</li>' +
+      '<li><strong>Écart</strong> = réel − théorique : positif (vert) = heures supplémentaires, négatif (rouge) = déficit.</li>' +
+      '<li>Un jour ouvré <strong>passé sans saisie</strong> (aujourd\'hui compris) compte son théorique sans réel : il apparaît en déficit et dans le compteur « Non saisis ». Un jour futur sans saisie n\'est pas compté ; une journée saisie à l\'avance (ex. congé posé) est comptée.</li>' +
+      '<li>Les compteurs de jours utilisent des <strong>demi-journées</strong> : une journée de télétravail avec un après-midi de RTT compte 0,5 télétravail et 0,5 RTT.</li></ul>' +
+      '<h3 id="help-2">3. Saisir une journée</h3><ol>' +
+      '<li>Dans l\'onglet <strong>📅 Calendrier</strong>, cliquez sur un jour (ou sélectionnez-le au clavier puis Entrée).</li>' +
+      '<li>Choisissez <strong>Présentiel</strong>, <strong>Télétravail</strong>, <strong>Déplacement</strong> ou <strong>Absence</strong>.</li>' +
+      '<li>Pour une journée travaillée, saisissez l\'arrivée et la sortie (obligatoires) et, si besoin, la pause. Le temps travaillé et le théorique du jour s\'affichent sous les champs.</li>' +
+      '<li><strong>Enregistrer</strong> ; <strong>🗑️ Effacer la journée</strong> supprime la saisie. Échap ou un clic hors de la fenêtre annule.</li></ol>' +
+      '<h3 id="help-3">4. Demi-journées d\'absence</h3><ul>' +
+      '<li><strong>Demi-journée d\'absence + demi-journée travaillée</strong> : choisissez le type d\'activité (Présentiel, Télétravail, Déplacement), saisissez les horaires de la partie travaillée, puis dans « 🌗 Demi-journée d\'absence » indiquez la période absente (matin ou après-midi) et son type. Le théorique du jour est divisé par deux.</li>' +
+      '<li><strong>Deux demi-journées d\'absence de types différents</strong> (ex. congé le matin, RTT l\'après-midi) : choisissez <strong>Absence</strong> et cochez « Types différents le matin et l\'après-midi ».</li>' +
+      '<li>Dans le calendrier, la demi-journée apparaît sous l\'activité (ex. « RTT ½ ap.-midi »).</li></ul>' +
+      '<h3 id="help-4">5. Calendrier et compteurs du mois</h3><ul>' +
+      '<li>‹ / › changent de mois, <strong>Aujourd\'hui</strong> revient au mois courant. Le jour courant est encadré.</li>' +
+      '<li>Les quatre cartes donnent réel, théorique et écart pour aujourd\'hui, la semaine en cours, le mois affiché et l\'année du mois affiché.</li>' +
+      '<li>Les compteurs du mois affichent les jours de présentiel, télétravail, déplacement, absence et travaillés, le détail par type d\'absence et, le cas échéant, les jours ouvrés non saisis.</li>' +
+      '<li>Hachures grises : jour non travaillé ; hachures dorées : jour férié.</li></ul>' +
+      '<h3 id="help-5">6. Bilan annuel et droits</h3><ul>' +
+      '<li>L\'onglet <strong>📊 Bilan annuel</strong> présente, pour l\'année choisie (‹ / ›) : heures réelles et théoriques, écart, jours travaillés et leur répartition (avec la part de télétravail), absences et jours non saisis.</li>' +
+      '<li><strong>Absences et droits annuels</strong> : pour chaque type, jours <em>pris</em> (passés), <em>planifiés</em> (saisis à l\'avance), total, et — si un droit annuel est renseigné dans ⚙️ Paramètres — le <strong>solde</strong> (droit − total) avec une jauge. Un solde négatif s\'affiche en rouge. Les droits sont comptés sur l\'année civile.</li>' +
+      '<li><strong>Écart mensuel et cumulé</strong> : barres vertes ou rouges par mois, courbe de l\'écart cumulé depuis janvier (survolez pour les valeurs).</li>' +
+      '<li><strong>Mois par mois</strong> : tableau récapitulatif ; cliquez sur un mois pour l\'ouvrir dans le calendrier.</li></ul>' +
+      '<h3 id="help-6">7. Paramètres</h3><ul>' +
+      '<li><strong>Heures théoriques par jour</strong> de la semaine, en heures décimales (7.5 = 7 h 30) ; 0 = jour non travaillé.</li>' +
+      '<li><strong>Types d\'absence</strong> : couleur, libellé et droit annuel facultatif (en jours, demi-journées acceptées : 2,5). Supprimer un type déjà utilisé demande confirmation ; les journées concernées restent comptées sous « Type supprimé ».</li>' +
+      '<li><strong>Jours fériés</strong> : ajout manuel ou bouton 🇫🇷 pour ajouter ceux de l\'année affichée (calcul automatique de Pâques, Ascension, Pentecôte).</li>' +
+      '<li><strong>Nom affiché sur le bilan</strong> : facultatif, imprimé en tête du bilan PDF.</li>' +
+      '<li>Les modifications ne sont prises en compte qu\'après <strong>Enregistrer</strong>.</li></ul>' +
+      '<h3 id="help-7">8. Imprimer un bilan PDF</h3><ul>' +
+      '<li><strong>🖨️ Imprimer PDF</strong> (en-tête) ou <strong>🖨️ Imprimer ce bilan</strong> (onglet Bilan) : choisissez un bilan <strong>annuel</strong> ou <strong>mensuel</strong>, la période, et si le <strong>détail jour par jour</strong> doit être inclus (avec sous-totaux à chaque fin de semaine, jours non saisis signalés).</li>' +
+      '<li>Bilan annuel : synthèse, absences et droits, tableau mois par mois et graphique. Bilan mensuel : synthèse, absences du mois et détail.</li>' +
+      '<li>Dans la fenêtre d\'impression, choisissez « Enregistrer au format PDF ». Le bilan est toujours imprimé en thème clair, puis votre thème est restauré.</li></ul>' +
+      '<h3 id="help-8">9. Export / import JSON</h3><ul>' +
+      '<li><strong>Exporter (JSON)</strong> télécharge toutes les données au format <code>{ app: "pointage", version, exportedAt, state }</code>, le même que celui des copies locales.</li>' +
+      '<li><strong>Importer (JSON)</strong> <strong>remplace</strong> toutes les journées et les paramètres après confirmation, puis les synchronise avec Drive. Les exports de l\'ancienne version (v4) sont acceptés et convertis automatiquement ; un fichier d\'un autre outil est refusé.</li></ul>' +
+      '<h3 id="help-9">10. Reprise des données de la v4</h3><ul>' +
+      '<li>À la première ouverture de cette version sur un poste, si elle ne contient encore aucune donnée, l\'outil reprend automatiquement les journées et le thème enregistrés par la v4 dans ce navigateur, avec leur date de dernière modification (pour que la synchronisation Drive garde bien la version la plus récente entre vos appareils).</li>' +
+      '<li>Si un appareil n\'a jamais ouvert la v4 dans ce navigateur, connectez simplement Drive : il récupérera les données synchronisées par un autre appareil. À défaut, exportez depuis la v4 puis importez ici.</li></ul>' +
+      '<h3 id="help-10">11. Thème et raccourcis</h3><ul>' +
+      '<li>🌙 / ☀️ : thème clair ou sombre, mémorisé sur ce poste.</li>' +
+      '<li><strong>Ctrl+S</strong> : copie locale · <strong>Échap</strong> : ferme la fenêtre ouverte · <strong>Entrée</strong> sur un jour ou un mois sélectionné : l\'ouvre.</li></ul>';
+  }
+
+  /* ==== 15. Reprise des données de la v4 (IndexedDB « gdsync_pointage ») ====
+     La v4 stockait ses données dans IndexedDB (clés « data » et « theme »).
+     Si cette version n'a encore rien en localStorage, on reprend ces données
+     une seule fois, avec leur horodatage d'origine pour que la règle « la plus
+     récente l'emporte » du module Drive départage correctement les appareils.
+     La base v4 n'est ni modifiée ni supprimée. On ne crée pas la base si elle
+     n'existe pas (la transaction de création est annulée). */
+  function readLegacyV4() {
+    return new Promise(function (resolve) {
+      if (!window.indexedDB) { resolve(null); return; }
+      var req;
+      try { req = indexedDB.open('gdsync_pointage'); } catch (e) { resolve(null); return; }
+      req.onupgradeneeded = function (e) { try { e.target.transaction.abort(); } catch (err) { /* ignore */ } };
+      req.onerror = function () { resolve(null); };
+      req.onblocked = function () { resolve(null); };
+      req.onsuccess = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains('kv')) { db.close(); resolve(null); return; }
+        var out = {};
+        try {
+          var tx = db.transaction('kv', 'readonly'), store = tx.objectStore('kv');
+          var r1 = store.get('data'), r2 = store.get('theme');
+          r1.onsuccess = function () { out.data = r1.result || null; };
+          r2.onsuccess = function () { out.theme = r2.result || null; };
+          tx.oncomplete = function () { db.close(); resolve(out); };
+          tx.onerror = function () { db.close(); resolve(null); };
+        } catch (e) { db.close(); resolve(null); }
+      };
+    });
+  }
+  function importLegacyV4IfNeeded() {
+    var hasData = false, checked = false;
+    try { hasData = !!localStorage.getItem(STORAGE_KEY); checked = localStorage.getItem(LEGACY_DONE_KEY) === '1'; } catch (e) { return Promise.resolve(0); }
+    if (hasData || checked) return Promise.resolve(0);
+    return readLegacyV4().then(function (legacy) {
+      try { localStorage.setItem(LEGACY_DONE_KEY, '1'); } catch (e) { /* ignore */ }
+      if (!legacy) return 0;
+      if (legacy.theme && legacy.theme.value && !localStorage.getItem(THEME_KEY)) {
+        try { localStorage.setItem(THEME_KEY, legacy.theme.value === 'dark' ? 'dark' : 'light'); } catch (e) { /* ignore */ }
+      }
+      if (!legacy.data || !legacy.data.value) return 0;
+      if (localStorage.getItem(STORAGE_KEY)) return 0; // Drive a été plus rapide : ses données priment
+      var parsed;
+      try { parsed = JSON.parse(legacy.data.value); } catch (e) { return 0; }
+      var migrated = migrateState(parsed);
+      var n = Object.keys(migrated.days).length;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        localStorage.setItem(DRIVE_MODIFIED_KEY, String(legacy.data.modified || Date.now()));
+      } catch (e) { return 0; }
+      return n || -1; // -1 : paramètres repris sans journée
+    });
+  }
+
+  /* ==== 16. Événements et initialisation ============================ */
+  function goToMonth(delta) {
+    var d = new Date(ui.viewYear, ui.viewMonth + delta, 1);
+    ui.viewYear = d.getFullYear(); ui.viewMonth = d.getMonth();
+    renderSummary(); renderCalendar();
+  }
+  function goToToday() {
+    var now = new Date();
+    ui.viewYear = now.getFullYear(); ui.viewMonth = now.getMonth();
+    renderSummary(); renderCalendar();
+  }
+  function on(id, ev, fn) { $(id).addEventListener(ev, fn); }
+
+  function bindEvents() {
+    on('themeToggleBtn', 'click', toggleTheme);
+    on('btnExport', 'click', exportJson);
+    on('btnImport', 'click', function () { $('importInput').click(); });
+    on('importInput', 'change', function (e) {
+      if (e.target.files && e.target.files[0]) importJsonFile(e.target.files[0]);
+      e.target.value = '';
+    });
+    on('btnLocalCopy', 'click', function (e) { localCopy(e.shiftKey); });
+    on('btnPrintPdf', 'click', function () { openPrintModal(); });
+    on('btnPrintYear', 'click', function () { openPrintModal('year'); });
+    on('btnHelp', 'click', function () { $('helpBody').innerHTML = helpHtml(); openModal('helpModal'); });
+    on('btnParams', 'click', openParamsModal);
+
+    var tabs = document.querySelectorAll('.tab');
+    for (var i = 0; i < tabs.length; i++) tabs[i].addEventListener('click', function () { switchTab(this.getAttribute('data-tab')); });
+
+    on('prevMonth', 'click', function () { goToMonth(-1); });
+    on('nextMonth', 'click', function () { goToMonth(1); });
+    on('todayBtn', 'click', goToToday);
+    on('prevYear', 'click', function () { ui.bilanYear--; renderBilan(); });
+    on('nextYear', 'click', function () { ui.bilanYear++; renderBilan(); });
+    on('thisYearBtn', 'click', function () { ui.bilanYear = new Date().getFullYear(); renderBilan(); });
+
+    // Calendrier : délégation (clic / Entrée sur un jour)
+    on('calGrid', 'click', function (e) {
+      var cell = e.target.closest ? e.target.closest('.day-cell') : null;
+      if (cell) openDayModal(cell.getAttribute('data-date'));
+    });
+    on('calGrid', 'keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var cell = e.target.closest ? e.target.closest('.day-cell') : null;
+      if (cell) { e.preventDefault(); openDayModal(cell.getAttribute('data-date')); }
+    });
+    // Bilan : clic sur un mois → calendrier de ce mois
+    function openMonthFromRow(e) {
+      var row = e.target.closest ? e.target.closest('tr[data-month]') : null;
+      if (!row) return;
+      ui.viewYear = ui.bilanYear; ui.viewMonth = parseInt(row.getAttribute('data-month'), 10);
+      renderSummary(); renderCalendar();
+      switchTab('calendar');
+    }
+    on('monthTableWrap', 'click', openMonthFromRow);
+    on('monthTableWrap', 'keydown', function (e) { if (e.key === 'Enter') openMonthFromRow(e); });
+
+    // Modale journée
+    var segButtons = document.querySelectorAll('#typeSeg button');
+    for (var j = 0; j < segButtons.length; j++) segButtons[j].addEventListener('click', function () { setSegActive(this.getAttribute('data-type')); });
+    ['fArrivee', 'fSortie', 'fPauseDebut', 'fPauseFin'].forEach(function (id) { on(id, 'input', updateDayModalDynamic); });
+    ['fDemiPeriode', 'fDemiType', 'fAbsenceSplit'].forEach(function (id) { on(id, 'change', updateDayModalDynamic); });
+    on('daySaveBtn', 'click', saveDay);
+    on('dayDeleteBtn', 'click', deleteDay);
+
+    // Modale paramètres (listes éditables : délégation)
+    on('absenceTypesList', 'input', function (e) {
+      var row = e.target.closest('.list-row'); if (!row) return;
+      var t = tempAbsenceTypes[parseInt(row.getAttribute('data-index'), 10)];
+      var f = e.target.getAttribute('data-field');
+      if (t && f) t[f] = e.target.value;
+    });
+    on('absenceTypesList', 'click', function (e) {
+      var btn = e.target.closest('[data-remove]'); if (!btn) return;
+      var idx = parseInt(btn.getAttribute('data-remove'), 10), t = tempAbsenceTypes[idx];
+      var used = t ? usageCount(t.id) : 0;
+      if (used && !window.confirm('« ' + t.label + ' » est utilisé par ' + used + ' journée(s). Elles resteront comptées sous « Type supprimé ». Supprimer ce type ?')) return;
+      tempAbsenceTypes.splice(idx, 1);
+      renderAbsenceTypesList();
+    });
+    on('addAbsenceTypeBtn', 'click', function () {
+      tempAbsenceTypes.push({ id: uid('type'), label: 'Nouveau type', color: '#8b7355', quota: null });
+      renderAbsenceTypesList();
+    });
+    on('holidaysList', 'input', function (e) {
+      var row = e.target.closest('.list-row'); if (!row) return;
+      var h = tempHolidays[parseInt(row.getAttribute('data-index'), 10)];
+      var f = e.target.getAttribute('data-field');
+      if (h && f) h[f] = e.target.value;
+    });
+    on('holidaysList', 'click', function (e) {
+      var btn = e.target.closest('[data-remove]'); if (!btn) return;
+      tempHolidays.splice(parseInt(btn.getAttribute('data-remove'), 10), 1);
+      renderHolidaysList();
+    });
+    on('addHolidayBtn', 'click', function () { tempHolidays.push({ date: todayStr(), label: 'Nouveau jour férié' }); renderHolidaysList(); });
+    on('quickHolidayBtn', 'click', addFrenchHolidaysForDisplayedYear);
+    on('paramsSaveBtn', 'click', saveParams);
+
+    // Modale impression
+    on('printKindYear', 'change', function () { $('printDetail').checked = false; $('printYear').value = ui.bilanYear; updatePrintModal(); });
+    on('printKindMonth', 'change', function () { $('printDetail').checked = true; $('printYear').value = ui.viewYear; updatePrintModal(); });
+    on('printGoBtn', 'click', runPrint);
+
+    // Fermeture des modales : boutons [data-close], clic sur le fond, Échap
+    document.addEventListener('click', function (e) {
+      var closer = e.target.closest ? e.target.closest('[data-close]') : null;
+      if (closer) { closeModal(closer.getAttribute('data-close')); return; }
+      if (e.target.classList && e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && openModals.length) { closeModal(openModals[openModals.length - 1]); return; }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        localCopy(false);
+      }
+    });
+  }
+
+  function init() {
+    applyTheme(readThemePref());
+    loadState();
+    var now = new Date();
+    ui.viewYear = now.getFullYear(); ui.viewMonth = now.getMonth(); ui.bilanYear = now.getFullYear();
+    bindEvents();
+    renderAll();
+    // Reprise unique des données de la v4 (asynchrone) puis nouveau rendu
+    importLegacyV4IfNeeded().then(function (n) {
+      if (!n) return;
+      loadState();
+      applyTheme(readThemePref());
+      renderAll();
+      showToast(n > 0 ? 'Données de la version précédente reprises : ' + n + ' journée(s).' : 'Paramètres de la version précédente repris.', 'success');
+    });
+  }
+
+  /* Accès réservé aux tests automatisés (aucun effet sur l'utilisation normale) */
+  window.__pointageTest = {
+    getState: function () { return state; },
+    setState: function (s) { state = migrateState(s); renderAll(); },
+    ui: ui, migrateState: migrateState, getPeriodTotals: getPeriodTotals, yearBilan: yearBilan,
+    dayBreakdown: dayBreakdown, dayReelMinutes: dayReelMinutes, absenceQuotaRows: absenceQuotaRows,
+    parseImport: parseImport, saveState: saveState, loadState: loadState, openDayModal: openDayModal,
+    saveDay: saveDay, readDayForm: readDayForm, setSegActive: setSegActive, buildPrintHtml: buildPrintHtml,
+    localCopy: localCopy, importLegacyV4IfNeeded: importLegacyV4IfNeeded, exportPayload: exportPayload,
+    fmtDays: fmtDays, formatHM: formatHM, computeFrenchHolidays: computeFrenchHolidays, helpHtml: helpHtml,
+    openParamsModal: openParamsModal, saveParams: saveParams, yearChartSvg: yearChartSvg
+  };
+
+  init();
+})();
+</script>
+</body>
+</html>
